@@ -375,7 +375,7 @@ function initQuickNotes() {
 // ── Application Init ──────────────────────────────────────────
 // ── Journey Mode Selection ────────────────────────────────────
 
-var JMS_MODES = {
+const JMS_MODES = {
   working: {
     desc: 'Authentic deep work in a distraction-free session. Track your focused work time with full timer controls.',
     submodes: [
@@ -416,7 +416,7 @@ var JMS_MODES = {
   }
 };
 
-var jmsState = { mode: 'working', subMode: 60 };
+let jmsState = { mode: 'working', subMode: 60 };
 
 function jmsSelectMode(mode) {
   jmsState.mode = mode;

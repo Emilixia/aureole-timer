@@ -2684,11 +2684,6 @@ body.focus-mode #tab-journey .journey-right {
   border-radius: 14px;
 }
 
-/* Fix: spotify frame should only expand when a real URL is loaded (not about:blank) */
-#spotifyFrame[src]:not([src=""]):not([src="about:blank"]) {
-  height: 380px;
-}
-
 /* ═══════════════════════════════════════════════════════════
    TOP NAV — LoL-style PLAY button + profile widget
    ═══════════════════════════════════════════════════════════ */
