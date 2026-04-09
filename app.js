@@ -2309,17 +2309,6 @@ function setupKeyboardShortcuts() {
       toggleFocusMode();
     }
 
-    if (e.key === ' ') {
-      e.preventDefault();
-      if (state.timer.isRunning) {
-        pauseTimer();
-      } else if (state.timer.isPaused) {
-        resumeTimer();
-      } else {
-        startTimer();
-      }
-    }
-
     if (e.key === 'q' || e.key === 'Q') {
       openQuickCapture();
     }

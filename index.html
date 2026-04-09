@@ -66,81 +66,6 @@
           <div id="motivational-quote" class="motivational-quote"></div>
         </div>
 
-        <div class="timer-container ornate-border">
-          <!-- Energy Check-in -->
-          <div class="energy-checkin" id="energy-checkin">
-            <div class="section-label">⚡ Energy Level</div>
-            <div class="energy-buttons">
-              <button class="energy-btn" data-level="1">😴<span>1</span></button>
-              <button class="energy-btn" data-level="2">😐<span>2</span></button>
-              <button class="energy-btn" data-level="3">😊<span>3</span></button>
-              <button class="energy-btn" data-level="4">😄<span>4</span></button>
-              <button class="energy-btn" data-level="5">⚡<span>5</span></button>
-            </div>
-            <div id="energy-suggestion" class="energy-suggestion"></div>
-          </div>
-
-          <!-- Timer Setup -->
-          <div class="timer-setup">
-            <div class="setup-row">
-              <div class="setup-group">
-                <label class="setup-label">Start Time</label>
-                <input type="time" id="start-time-input" class="time-input">
-              </div>
-              <div class="setup-group">
-                <label class="setup-label">End Time</label>
-                <input type="time" id="end-time-input" class="time-input">
-              </div>
-              <div class="setup-group">
-                <label class="setup-label">Category</label>
-                <select id="category-select" class="category-select"></select>
-              </div>
-            </div>
-            <div class="setup-row pomodoro-row">
-              <label class="pomodoro-label">
-                <input type="checkbox" id="pomodoro-toggle" class="pomodoro-checkbox">
-                <span>🍅 Pomodoro Mode</span>
-              </label>
-              <div id="pomodoro-info" class="pomodoro-info hidden">
-                <span id="pomodoro-phase-display">Work Phase</span> •
-                <span id="pomodoro-count-display">0 cycles</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Time Display -->
-          <div class="time-display-area">
-            <div id="time-left-display" class="time-left-large">00:00:00</div>
-            <div id="time-in-words" class="time-in-words">Set a timer to begin your quest</div>
-            <div id="time-percentage" class="time-percentage">0%</div>
-          </div>
-
-          <!-- Progress Bar -->
-          <div class="progress-container">
-            <div class="progress-track">
-              <div class="progress-fill" id="progress-fill">
-                <div class="progress-shimmer"></div>
-              </div>
-            </div>
-            <div id="walking-character" class="walking-character">
-              <div class="character-emoji">🧙</div>
-            </div>
-          </div>
-
-          <!-- Timer Controls -->
-          <div class="timer-controls" id="timer-controls">
-            <button id="start-btn" class="btn btn-primary">▶ Begin Quest</button>
-            <button id="pause-btn" class="btn btn-secondary hidden">⏸ Pause</button>
-            <button id="reset-btn" class="btn btn-secondary hidden">↺ Reset</button>
-          </div>
-
-          <!-- Session Notes -->
-          <div class="session-notes-area">
-            <label class="section-label">📝 Session Notes</label>
-            <textarea id="session-notes" class="session-notes" placeholder="What are you working on today?"></textarea>
-          </div>
-        </div>
-
         <!-- Reminders -->
         <div class="reminders-section ornate-border">
           <div class="section-header">
@@ -186,7 +111,7 @@
             <div class="youtube-placeholder">
               <p>Set a YouTube URL in Settings to enable music</p>
             </div>
-            <iframe id="youtube-iframe" class="youtube-iframe hidden" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            <iframe id="youtube-iframe" class="youtube-iframe hidden" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
           </div>
         </div>
       </section>
