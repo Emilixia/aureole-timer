@@ -4,34 +4,48 @@
 
 /* ── CSS Variables ──────────────────────────────────────────── */
 :root {
-  --bg-base: #050510;
-  --bg-surface: #0d0d1f;
-  --bg-elevated: #12122a;
-  --bg-panel: rgba(13, 13, 31, 0.92);
+  /* LoL-inspired dark backgrounds */
+  --bg-base: #010a13;
+  --bg-surface: #0f1923;
+  --bg-elevated: #1e2328;
+  --bg-panel: rgba(8, 14, 26, 0.96);
+  /* Fantasy purple accent (kept) */
   --accent: #7c5cbf;
   --accent-hover: #9b7dd4;
-  --accent-glow: rgba(124, 92, 191, 0.4);
+  --accent-glow: rgba(124, 92, 191, 0.35);
   --secondary: #3d8b7a;
   --secondary-hover: #4da090;
-  --gold: #d4a843;
-  --gold-light: #f0c860;
-  --text-primary: #e2d9f3;
-  --text-secondary: #9b8fc0;
-  --text-muted: #5a5080;
+  /* LoL warm gold */
+  --gold: #c8aa6e;
+  --gold-light: #f0e6d3;
+  --gold-dark: #785a28;
+  --gold-border: rgba(120, 90, 40, 0.55);
+  /* Teal — the "Find Match" color */
+  --teal: #0ac8b9;
+  --teal-dark: #0597ab;
+  --teal-glow: rgba(10, 200, 185, 0.45);
+  /* Text */
+  --text-primary: #f0e6d3;
+  --text-secondary: #a09b8c;
+  --text-muted: #5b5a56;
+  /* Status */
   --danger: #c0485f;
   --success: #4a9a6f;
-  --border: rgba(124, 92, 191, 0.3);
-  --border-gold: rgba(212, 168, 67, 0.3);
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  /* Borders & shadows */
+  --border: rgba(120, 90, 40, 0.45);
+  --border-gold: rgba(200, 170, 110, 0.4);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.85);
   --glow-accent: 0 0 20px rgba(124, 92, 191, 0.5);
-  --glow-gold: 0 0 15px rgba(212, 168, 67, 0.4);
+  --glow-gold: 0 0 15px rgba(200, 170, 110, 0.35);
+  /* Layout */
   --sidebar-width: 220px;
   --titlebar-height: 32px;
-  --topnav-height: 48px;
+  --topnav-height: 52px;
+  --bottombar-height: 68px;
   --font-size: 14px;
-  --transition: all 0.25s ease;
-  --radius: 8px;
-  --radius-lg: 16px;
+  --transition: all 0.22s ease;
+  --radius: 4px;
+  --radius-lg: 8px;
 }
 
 /* ── Global Reset ────────────────────────────────────────────── */
@@ -46,6 +60,22 @@ html, body {
   height: 100%;
   overflow: hidden;
   background: var(--bg-base);
+  /* Subtle diamond-mesh texture like LoL client */
+  background-image:
+    repeating-linear-gradient(
+      60deg,
+      rgba(200, 170, 110, 0.018) 0px,
+      rgba(200, 170, 110, 0.018) 1px,
+      transparent 1px,
+      transparent 55px
+    ),
+    repeating-linear-gradient(
+      -60deg,
+      rgba(200, 170, 110, 0.018) 0px,
+      rgba(200, 170, 110, 0.018) 1px,
+      transparent 1px,
+      transparent 55px
+    );
   color: var(--text-primary);
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
   font-size: var(--font-size);
@@ -80,8 +110,8 @@ html, body {
   left: 0;
   right: 0;
   height: var(--titlebar-height);
-  background: rgba(5, 5, 16, 0.95);
-  border-bottom: 1px solid var(--border);
+  background: #060c14;
+  border-bottom: 1px solid rgba(120, 90, 40, 0.4);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -91,12 +121,14 @@ html, body {
 
 .title-drag-area {
   padding: 0 16px;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  color: var(--text-secondary);
-  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
   user-select: none;
   flex: 1;
+  font-family: 'Cinzel', 'Georgia', serif;
+  text-transform: uppercase;
 }
 
 .title-controls {
@@ -128,9 +160,10 @@ html, body {
   left: 0;
   right: 0;
   height: var(--topnav-height);
-  background: linear-gradient(180deg, #090921 0%, #0a0a22 100%);
-  border-bottom: 2px solid;
-  border-image: linear-gradient(to right, transparent, var(--accent), var(--gold), var(--accent), transparent) 1;
+  background: linear-gradient(180deg, #07111e 0%, #070e1a 100%);
+  border-bottom: 1px solid rgba(120, 90, 40, 0.55);
+  /* thin gold shimmer line at very bottom */
+  box-shadow: 0 1px 0 rgba(200, 170, 110, 0.2);
   display: flex;
   align-items: stretch;
   z-index: 999;
@@ -141,8 +174,8 @@ html, body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 20px;
-  border-right: 1px solid var(--border);
+  padding: 0 22px;
+  border-right: 1px solid rgba(120, 90, 40, 0.4);
   flex-shrink: 0;
   -webkit-app-region: drag;
 }
@@ -150,16 +183,17 @@ html, body {
 .topnav-logo .logo-gem {
   font-size: 1.1rem;
   color: var(--gold);
-  text-shadow: 0 0 10px var(--gold), 0 0 20px rgba(212,168,67,0.4);
+  text-shadow: 0 0 10px var(--gold), 0 0 20px rgba(200,170,110,0.35);
   animation: gemFloat 3s ease-in-out infinite;
 }
 
 .topnav-logo .logo-text {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
   font-family: 'Cinzel', 'Georgia', serif;
-  background: linear-gradient(135deg, var(--accent-hover), var(--gold));
+  background: linear-gradient(135deg, var(--gold-light), var(--gold));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -177,79 +211,77 @@ html, body {
 .topnav-tabs .nav-tab {
   background: none;
   border: none;
-  border-right: 1px solid var(--border);
+  border-right: 1px solid rgba(120, 90, 40, 0.3);
   border-radius: 0;
   color: var(--text-secondary);
-  padding: 0 22px;
+  padding: 0 26px;
   cursor: pointer;
-  font-size: 0.88rem;
-  font-weight: 500;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
   transition: var(--transition);
   position: relative;
   white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   transform: none;
 }
 
-/* Override the sidebar left-bar indicator for topnav */
+/* Override sidebar left-bar for topnav */
 .topnav-tabs .nav-tab::before { display: none !important; }
 
-/* Bottom-bar active indicator */
+/* Bottom gold bar active indicator */
 .topnav-tabs .nav-tab::after {
   content: '';
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: linear-gradient(to right, var(--accent), var(--gold));
-  border-radius: 2px 2px 0 0;
+  height: 2px;
+  background: linear-gradient(to right, var(--gold-dark), var(--gold), var(--gold-dark));
   transform: scaleX(0);
-  transition: transform 0.25s ease;
+  transition: transform 0.22s ease;
 }
 
 .topnav-tabs .nav-tab:hover {
-  background: rgba(124, 92, 191, 0.15);
-  color: var(--text-primary);
+  background: rgba(200, 170, 110, 0.07);
+  color: var(--gold-light);
   transform: none;
 }
 .topnav-tabs .nav-tab:hover::after { transform: scaleX(1); }
 
 .topnav-tabs .nav-tab.active {
-  background: linear-gradient(180deg, rgba(124,92,191,0.2), rgba(124,92,191,0.05));
-  color: var(--accent-hover);
-  font-weight: 600;
+  background: linear-gradient(180deg, rgba(200,170,110,0.12), rgba(200,170,110,0.03));
+  color: var(--gold-light);
+  font-weight: 700;
   box-shadow: none;
 }
 .topnav-tabs .nav-tab.active::after {
   transform: scaleX(1);
-  box-shadow: 0 0 8px var(--accent-glow);
+  box-shadow: 0 0 8px rgba(200, 170, 110, 0.5);
 }
 
 .topnav-clock {
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  font-size: 0.85rem;
-  color: var(--accent-hover);
+  padding: 0 22px;
+  font-size: 0.82rem;
+  color: var(--gold);
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   letter-spacing: 0.5px;
-  text-shadow: 0 0 8px var(--accent-glow);
-  border-left: 1px solid var(--border);
+  text-shadow: 0 0 8px rgba(200, 170, 110, 0.4);
+  border-left: 1px solid rgba(120, 90, 40, 0.4);
   white-space: nowrap;
   -webkit-app-region: drag;
 }
 
-/* Focus mode hides the top nav */
-body.focus-mode #topNav {
-  display: none;
-}
-body.focus-mode #appLayout {
-  padding-top: var(--titlebar-height);
-}
+/* Focus mode hides nav */
+body.focus-mode #topNav { display: none; }
+body.focus-mode #appLayout { padding-top: var(--titlebar-height); }
+body.focus-mode #tab-journey { height: calc(100vh - var(--titlebar-height)); }
 
 /* ── App Layout ──────────────────────────────────────────────── */
 #appLayout {
@@ -260,74 +292,26 @@ body.focus-mode #appLayout {
   z-index: 1;
 }
 
-/* ── Sidebar ─────────────────────────────────────────────────── */
-#sidebar {
-  width: var(--sidebar-width);
-  min-width: var(--sidebar-width);
-  background: linear-gradient(180deg, #080820 0%, #0a0a22 50%, #070718 100%);
-  border-right: 1px solid;
-  border-image: linear-gradient(to bottom, transparent, var(--accent), var(--gold), var(--accent), transparent) 1;
-  display: flex;
-  flex-direction: column;
-  padding: 12px 0;
-  overflow: hidden;
+/* ── Main Content ────────────────────────────────────────────── */
+#content {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  background: transparent;
   position: relative;
-  transition: width 0.3s ease;
+  height: 100%;
 }
 
-/* Starfield texture overlay on sidebar */
-#sidebar::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(124,92,191,0.04) 1px, transparent 1px),
-    radial-gradient(circle at 80% 60%, rgba(212,168,67,0.03) 1px, transparent 1px),
-    radial-gradient(circle at 50% 80%, rgba(61,139,122,0.03) 1px, transparent 1px);
-  background-size: 40px 40px, 50px 50px, 60px 60px;
-  pointer-events: none;
-}
+/* ── Sidebar (legacy — kept for CSS rules that may still reference it) */
+#sidebar { display: none; }
 
-.sidebar-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 20px 16px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 8px;
-}
-
-.logo-gem {
-  font-size: 1.4rem;
-  color: var(--gold);
-  text-shadow: 0 0 10px var(--gold), 0 0 20px rgba(212,168,67,0.4);
-  animation: gemFloat 3s ease-in-out infinite;
-}
-
+/* ── gemFloat keyframe ─────────────────────────────────────── */
 @keyframes gemFloat {
   0%, 100% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-4px) rotate(10deg); }
 }
 
-.sidebar-logo span {
-  font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: 2px;
-  font-family: 'Cinzel', 'Georgia', serif;
-  background: linear-gradient(135deg, var(--accent-hover), var(--gold));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-#sidebar nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 0 10px;
-  flex: 1;
-}
-
+/* ── nav-tab base (used by sidebar if ever re-enabled) ─────── */
 .nav-tab {
   background: none;
   border: none;
@@ -343,56 +327,7 @@ body.focus-mode #appLayout {
   overflow: hidden;
   white-space: nowrap;
 }
-
-.nav-tab::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%) scaleY(0);
-  width: 3px;
-  height: 70%;
-  background: linear-gradient(to bottom, var(--accent), var(--gold));
-  border-radius: 0 2px 2px 0;
-  transition: transform 0.25s ease;
-}
-
-.nav-tab:hover {
-  background: rgba(124, 92, 191, 0.15);
-  color: var(--text-primary);
-  transform: translateX(3px);
-}
-.nav-tab:hover::before { transform: translateY(-50%) scaleY(1); }
-
-.nav-tab.active {
-  background: linear-gradient(135deg, rgba(124,92,191,0.25), rgba(61,139,122,0.12));
-  color: var(--accent-hover);
-  font-weight: 600;
-  box-shadow: inset 0 0 20px rgba(124,92,191,0.1);
-}
-.nav-tab.active::before { transform: translateY(-50%) scaleY(1); background: var(--accent); }
-
-.sidebar-clock {
-  padding: 12px 20px;
-  font-size: 0.85rem;
-  color: var(--accent-hover);
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-shadow: 0 0 8px var(--accent-glow);
-  border-top: 1px solid var(--border);
-  margin-top: auto;
-}
-
-/* ── Main Content ────────────────────────────────────────────── */
-#content {
-  flex: 1;
-  min-width: 0;
-  overflow-y: auto;
-  background: var(--bg-base);
-  position: relative;
-}
+.nav-tab::before { display: none; }
 
 /* ── Tab Panels ──────────────────────────────────────────────── */
 .tab-panel {
@@ -428,103 +363,109 @@ body.focus-mode #appLayout {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   JOURNEY TAB
+   JOURNEY TAB — LoL-client style
    ═══════════════════════════════════════════════════════════ */
-.journey-topbar {
+
+/* Journey tab fills the content area entirely (no padding) */
+#tab-journey.tab-panel {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--titlebar-height) - var(--topnav-height));
+  overflow: hidden;
+  min-height: unset;
+}
+
+/* Lobby: main area left + right panel */
+.journey-lobby {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Left: scrollable main area */
+.lobby-main {
+  display: flex;
+  flex-direction: column;
+  padding: 18px 24px 14px;
+  gap: 12px;
+  overflow-y: auto;
+  background:
+    radial-gradient(ellipse at 25% 15%, rgba(124,92,191,0.08) 0%, transparent 45%),
+    radial-gradient(ellipse at 75% 85%, rgba(10,200,185,0.05) 0%, transparent 45%);
+}
+
+/* Compact header row */
+.lobby-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 18px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .live-datetime {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   flex: 1;
-  min-width: 200px;
+  min-width: 180px;
+  letter-spacing: 0.3px;
 }
 
-.journey-main {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 18px;
-  min-height: 0;
-}
-
-/* ── Journey Frame (The Star Piece) ───────────────────────── */
+/* ── Journey Frame — the game lobby center panel ───────────── */
 .journey-frame {
   position: relative;
-  border: 2px solid transparent;
-  border-radius: var(--radius-lg);
-  background:
-    linear-gradient(var(--bg-panel), var(--bg-panel)) padding-box,
-    linear-gradient(135deg, var(--accent), var(--gold), var(--secondary), var(--accent)) border-box;
-  padding: 28px;
+  flex: 1;
+  border: 1px solid rgba(120, 90, 40, 0.5);
+  border-top: 2px solid rgba(200, 170, 110, 0.4);
+  border-radius: var(--radius);
+  background: rgba(5, 10, 20, 0.85);
+  padding: 28px 32px;
   overflow: hidden;
-  animation: borderGlow 4s ease-in-out infinite;
-  background-size: 200% 200%;
+  animation: none;
 }
 
-.journey-frame::before,
-.journey-frame::after {
-  font-size: 1.2rem;
-  color: var(--gold);
+/* Gold shimmer top bar */
+.journey-frame::before {
+  content: '';
   position: absolute;
-  z-index: 2;
-  text-shadow: var(--glow-gold);
-  animation: float 3s ease-in-out infinite;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(200,170,110,0.15) 20%, rgba(200,170,110,0.6) 50%, rgba(200,170,110,0.15) 80%, transparent 100%);
   pointer-events: none;
 }
-.journey-frame::before {
-  content: '◈';
-  top: 8px;
-  left: 12px;
-}
-.journey-frame::after {
-  content: '◈';
-  bottom: 8px;
-  right: 12px;
-  animation-delay: -1.5s;
-}
+.journey-frame::after { display: none; }
 
-.journey-frame.no-animation {
-  animation: none;
-}
-.journey-frame.no-animation::before,
-.journey-frame.no-animation::after {
-  animation: none;
-}
+.journey-frame.no-animation { animation: none; }
 
 .frame-bg {
   position: absolute;
   inset: 0;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius);
   background-size: cover;
   background-position: center;
-  opacity: 0.18;
+  opacity: 0.15;
   pointer-events: none;
 }
 
-.frame-content {
-  position: relative;
-  z-index: 1;
-}
+.frame-content { position: relative; z-index: 1; }
 
 .frame-title {
   text-align: center;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  letter-spacing: 3px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
   font-family: 'Cinzel', 'Georgia', serif;
-  background: linear-gradient(135deg, var(--accent-hover), var(--gold), var(--accent-hover));
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-light) 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 18px;
-  animation: titleShimmer 4s linear infinite;
+  margin-bottom: 16px;
+  animation: titleShimmer 5s linear infinite;
   text-shadow: none;
 }
 
@@ -538,59 +479,60 @@ body.focus-mode #appLayout {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
 }
 .time-inputs label {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
 }
 
 /* ── Timer Display ────────────────────────────────────────── */
 .timer-display {
   text-align: center;
-  font-size: 4.5rem;
+  font-size: 5rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   font-family: 'Courier New', 'Consolas', monospace;
-  color: var(--text-primary);
-  text-shadow: 0 0 30px var(--accent-glow), 0 0 60px rgba(124,92,191,0.2);
-  letter-spacing: 2px;
+  color: var(--gold-light);
+  text-shadow:
+    0 0 20px rgba(200, 170, 110, 0.5),
+    0 0 60px rgba(200, 170, 110, 0.2);
+  letter-spacing: 4px;
   line-height: 1;
-  margin: 10px 0 6px;
+  margin: 12px 0 6px;
 }
 
 .time-left {
   text-align: center;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
+  font-size: 0.85rem;
+  color: var(--text-muted);
   margin-bottom: 18px;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
 }
 
 /* ── Progress Bar ─────────────────────────────────────────── */
-.progress-container {
-  margin-bottom: 20px;
-}
+.progress-container { margin-bottom: 18px; }
 
 .progress-track {
   position: relative;
-  height: 10px;
-  background: rgba(124,92,191,0.15);
-  border-radius: 5px;
+  height: 8px;
+  background: rgba(120, 90, 40, 0.2);
+  border-radius: 2px;
   overflow: visible;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(120, 90, 40, 0.35);
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--gold), var(--secondary));
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--teal));
   background-size: 200% 100%;
   animation: progressShimmer 3s linear infinite;
-  border-radius: 5px;
+  border-radius: 2px;
   transition: width 0.8s ease;
   position: relative;
 }
@@ -615,28 +557,172 @@ body.focus-mode #appLayout {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 0 6px var(--accent-glow));
+  filter: drop-shadow(0 0 6px rgba(200,170,110,0.5));
 }
 
 .progress-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
-  margin-top: 28px;
+  margin-top: 26px;
   padding: 0 2px;
 }
 
-/* ── Timer Controls ───────────────────────────────────────── */
-.timer-controls {
+/* ── Secondary controls (Pause / Stop / Reset) inside frame ── */
+.session-secondary-controls {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   justify-content: center;
   flex-wrap: wrap;
-  margin-bottom: 18px;
+  margin-top: 8px;
 }
 
-/* ── Customization Row ────────────────────────────────────── */
+/* (timer-controls kept for backwards compat with any JS that reads it) */
+.timer-controls { display: none; }
+
+/* ── Right social/tools panel (LoL sidebar style) ─────────── */
+.journey-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  background: #060e18;
+  border-left: 1px solid rgba(120, 90, 40, 0.4);
+}
+
+.journey-right .panel {
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid rgba(120, 90, 40, 0.25);
+  background: transparent;
+  padding: 14px 16px;
+}
+.journey-right .panel::before {
+  border-radius: 0;
+  background: linear-gradient(90deg, transparent, rgba(200,170,110,0.35), transparent);
+}
+
+/* ── Bottom action bar — "FIND MATCH" zone ─────────────────── */
+.journey-bottom-bar {
+  height: var(--bottombar-height);
+  background: #040b13;
+  border-top: 1px solid rgba(120, 90, 40, 0.5);
+  box-shadow: 0 -1px 0 rgba(200,170,110,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  flex-shrink: 0;
+  /* span both columns */
+  grid-column: 1 / -1;
+}
+
+.bottom-bar-left,
+.bottom-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 200px;
+}
+.bottom-bar-right { justify-content: flex-end; }
+
+/* ── "BEGIN SESSION" = FIND MATCH button ───────────────────── */
+.btn-begin-session {
+  position: relative;
+  background: linear-gradient(180deg, #0bd4c4 0%, #0aadaa 50%, #0597ab 100%);
+  border: 1px solid rgba(10, 200, 185, 0.8);
+  color: #012d2d;
+  font-family: 'Cinzel', 'Georgia', serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 0 56px;
+  height: 44px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow:
+    0 0 18px rgba(10, 200, 185, 0.45),
+    0 0 40px rgba(10, 200, 185, 0.15),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+  min-width: 220px;
+  white-space: nowrap;
+}
+.btn-begin-session::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 50%);
+  pointer-events: none;
+}
+.btn-begin-session:hover {
+  background: linear-gradient(180deg, #0de8d6 0%, #0bd4c4 50%, #0aadaa 100%);
+  box-shadow:
+    0 0 26px rgba(10, 200, 185, 0.65),
+    0 0 60px rgba(10, 200, 185, 0.25);
+  transform: translateY(-1px);
+  color: #011f1f;
+}
+.btn-begin-session:disabled {
+  background: linear-gradient(180deg, #1e3a3a 0%, #152828 100%);
+  border-color: rgba(10, 200, 185, 0.25);
+  color: #2a5555;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Ghost buttons (Pause / Stop / Reset / Focus / Pomodoro) ── */
+.btn-ghost {
+  background: rgba(200, 170, 110, 0.07);
+  border: 1px solid rgba(120, 90, 40, 0.5);
+  color: var(--text-secondary);
+  padding: 7px 16px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.btn-ghost:hover {
+  background: rgba(200, 170, 110, 0.14);
+  border-color: var(--gold);
+  color: var(--gold-light);
+}
+.btn-ghost:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-ghost-danger {
+  background: rgba(192, 72, 95, 0.07);
+  border: 1px solid rgba(192, 72, 95, 0.35);
+  color: var(--text-secondary);
+  padding: 7px 16px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.btn-ghost-danger:hover {
+  background: rgba(192, 72, 95, 0.2);
+  border-color: var(--danger);
+  color: #ff8080;
+}
+.btn-ghost-danger:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Customization Row (kept for compat) ──────────────────── */
 .customization-row {
   display: flex;
   gap: 10px;
@@ -644,19 +730,10 @@ body.focus-mode #appLayout {
   flex-wrap: wrap;
 }
 
-/* ── Right Panel ──────────────────────────────────────────── */
-.journey-right {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  overflow-y: auto;
-  max-height: calc(100vh - 180px);
-}
-
 /* ── Panels ───────────────────────────────────────────────── */
 .panel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
+  background: rgba(8, 14, 26, 0.9);
+  border: 1px solid rgba(120, 90, 40, 0.4);
   border-radius: var(--radius);
   padding: 14px;
   position: relative;
@@ -668,18 +745,18 @@ body.focus-mode #appLayout {
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--accent), var(--gold), var(--secondary));
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(200,170,110,0.5), transparent);
   border-radius: var(--radius) var(--radius) 0 0;
 }
 
 .panel-title {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gold);
   margin-bottom: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 1.2px;
 }
 
 /* Music Panel — Spotify */

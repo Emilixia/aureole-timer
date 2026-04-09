@@ -53,162 +53,154 @@
            ═══════════════════════════════════════════════════ -->
       <div id="tab-journey" class="tab-panel active">
 
-        <!-- Top bar: date/time, type selector, focus/pomodoro -->
-        <div class="journey-topbar">
-          <div class="live-datetime" id="liveDatetime"></div>
-          <select id="timerTypeSelect">
-            <option value="working">⚔️ Working</option>
-            <option value="studying">📖 Studying</option>
-            <option value="custom">✨ Custom</option>
-          </select>
-          <input type="text" id="customTimerLabel" placeholder="Custom label..." style="display:none; width:140px;">
-          <button id="focusModeBtn" class="btn-secondary">🧠 Focus Mode</button>
-          <button id="pomodoroBtn" class="btn-secondary">🍅 Pomodoro</button>
-        </div>
+        <!-- Lobby: main area + right panel -->
+        <div class="journey-lobby">
 
-        <!-- Main content: timer frame + right panels -->
-        <div class="journey-main">
+          <!-- Left: Main timer area -->
+          <div class="lobby-main">
 
-          <!-- Timer Frame -->
-          <div class="journey-frame" id="journeyFrame">
-            <div class="frame-bg" id="timerBgOverlay"></div>
-            <div class="frame-content">
-              <h2 class="frame-title">⚜ Frieren Chronomark ⚜</h2>
-
-              <!-- Manual time inputs -->
-              <div class="time-inputs">
-                <label>Start <input type="time" id="startTimeInput"></label>
-                <label>End <input type="time" id="endTimeInput"></label>
-                <button id="applyTimesBtn" class="btn-primary btn-sm">Apply</button>
-              </div>
-
-              <!-- Custom duration setter -->
-              <div class="duration-row">
-                <span class="duration-label">⏱ Set Duration</span>
-                <input type="number" id="durationHours" min="0" max="23" value="1" title="Hours">
-                <span class="duration-sep">h</span>
-                <input type="number" id="durationMinutes" min="0" max="59" value="0" title="Minutes">
-                <span class="duration-sep">min</span>
-                <button id="setDurationBtn" class="btn-primary btn-sm">✓ Set</button>
-              </div>
-
-              <!-- Timer display -->
-              <div class="timer-display" id="timerDisplay">00:00:00</div>
-              <div class="time-left" id="timeLeft">Time Left: --:--:--</div>
-
-              <!-- Progress bar with walker -->
-              <div class="progress-container" id="progressContainer">
-
-                <!-- ── Style: Classic Bar (default) ─────────────────── -->
-                <div class="progress-bar-wrap" id="progressBarWrap">
-                  <div class="progress-track">
-                    <div class="progress-fill" id="progressFill" style="width:0%"></div>
-                    <div class="progress-walker" id="progressWalker" style="left: -16px;">
-                      <img id="walkerImg" src="" alt="🧝">
-                    </div>
-                  </div>
-                  <div class="progress-labels">
-                    <span id="progressStart">--:--</span>
-                    <span id="progressPercent">0%</span>
-                    <span id="progressEnd">--:--</span>
-                  </div>
-                </div>
-
-                <!-- ── Style: Doughnut ───────────────────────────────── -->
-                <div class="progress-doughnut-wrap" id="progressDoughnutWrap">
-                  <svg class="doughnut-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                      <linearGradient id="doughnutGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%"   stop-color="var(--accent)"/>
-                        <stop offset="50%"  stop-color="var(--gold)"/>
-                        <stop offset="100%" stop-color="var(--secondary)"/>
-                      </linearGradient>
-                    </defs>
-                    <!-- Track ring -->
-                    <circle class="doughnut-track" cx="100" cy="100" r="80"/>
-                    <!-- Progress ring -->
-                    <circle class="doughnut-fill" id="doughnutFill" cx="100" cy="100" r="80"
-                            stroke="url(#doughnutGrad)"
-                            stroke-dasharray="502.65"
-                            stroke-dashoffset="502.65"/>
-                    <!-- Centre percent text -->
-                    <text class="doughnut-pct" id="doughnutPct" x="100" y="107">0%</text>
-                  </svg>
-                </div>
-
-                <!-- ── Style: Hourglass ──────────────────────────────── -->
-                <div class="progress-hourglass-wrap" id="progressHourglassWrap">
-                  <svg class="hourglass-svg" id="hourglassSvg" viewBox="0 0 120 200" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                      <clipPath id="hourglassClipTop">
-                        <polygon id="hourglassClipTopPoly" points="10,10 110,10 60,100"/>
-                      </clipPath>
-                      <clipPath id="hourglassClipBot">
-                        <polygon id="hourglassClipBotPoly" points="10,190 110,190 60,100"/>
-                      </clipPath>
-                      <linearGradient id="sandGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%"  stop-color="#d4a843"/>
-                        <stop offset="100%" stop-color="#f0c860"/>
-                      </linearGradient>
-                    </defs>
-                    <!-- Hourglass outline -->
-                    <polygon class="hg-outline" points="10,10 110,10 60,100 110,190 10,190 60,100"/>
-                    <!-- Middle pinch line -->
-                    <line class="hg-pinch" x1="10" y1="100" x2="110" y2="100"/>
-                    <!-- Sand top (elapsed sand falls out) -->
-                    <polygon class="hg-sand-top" id="hgSandTop"
-                             points="10,10 110,10 60,100"
-                             clip-path="url(#hourglassClipTop)"/>
-                    <!-- Sand bot (elapsed sand fills bottom) -->
-                    <polygon class="hg-sand-bot" id="hgSandBot"
-                             points="10,190 110,190 60,100"
-                             clip-path="url(#hourglassClipBot)"/>
-                    <!-- Falling sand particle -->
-                    <circle class="hg-particle" id="hgParticle" cx="60" cy="100" r="3"/>
-                    <!-- Percent label -->
-                    <text class="hg-pct" id="hgPct" x="60" y="220">0%</text>
-                  </svg>
-                </div>
-
-                <!-- ── Style: Mana Bar ───────────────────────────────── -->
-                <div class="progress-mana-wrap" id="progressManaWrap">
-                  <div class="mana-bar-container">
-                    <div class="mana-label-row">
-                      <span class="mana-label-icon">💎</span>
-                      <span class="mana-label-text">Mana</span>
-                      <span class="mana-pct" id="manaPct">0%</span>
-                    </div>
-                    <div class="mana-track">
-                      <div class="mana-fill" id="manaFill" style="width:0%">
-                        <canvas class="mana-sparkle-canvas" id="manaSparkleCanvas"></canvas>
-                      </div>
-                      <div class="mana-shine"></div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-
-              <!-- Timer controls -->
-              <div class="timer-controls">
-                <button id="timerStart" class="btn-primary btn-lg">▶ Start</button>
-                <button id="timerPause" class="btn-secondary btn-lg" disabled>⏸ Pause</button>
-                <button id="timerStop" class="btn-danger btn-lg" disabled>■ Stop</button>
-                <button id="timerReset" class="btn-secondary btn-lg" disabled>↺ Reset</button>
-              </div>
-
-
+            <!-- Compact header: date/time + session type -->
+            <div class="lobby-header">
+              <div class="live-datetime" id="liveDatetime"></div>
+              <select id="timerTypeSelect">
+                <option value="working">⚔️ Working</option>
+                <option value="studying">📖 Studying</option>
+                <option value="custom">✨ Custom</option>
+              </select>
+              <input type="text" id="customTimerLabel" placeholder="Custom label..." style="display:none; width:140px;">
             </div>
-          </div>
 
-          <!-- Right panel -->
+            <!-- Timer Frame (game lobby center) -->
+            <div class="journey-frame" id="journeyFrame">
+              <div class="frame-bg" id="timerBgOverlay"></div>
+              <div class="frame-content">
+                <h2 class="frame-title">⚜ Frieren Chronomark ⚜</h2>
+
+                <!-- Manual time inputs -->
+                <div class="time-inputs">
+                  <label>Start <input type="time" id="startTimeInput"></label>
+                  <label>End <input type="time" id="endTimeInput"></label>
+                  <button id="applyTimesBtn" class="btn-primary btn-sm">Apply</button>
+                </div>
+
+                <!-- Custom duration setter -->
+                <div class="duration-row">
+                  <span class="duration-label">⏱ Set Duration</span>
+                  <input type="number" id="durationHours" min="0" max="23" value="1" title="Hours">
+                  <span class="duration-sep">h</span>
+                  <input type="number" id="durationMinutes" min="0" max="59" value="0" title="Minutes">
+                  <span class="duration-sep">min</span>
+                  <button id="setDurationBtn" class="btn-primary btn-sm">✓ Set</button>
+                </div>
+
+                <!-- Timer display -->
+                <div class="timer-display" id="timerDisplay">00:00:00</div>
+                <div class="time-left" id="timeLeft">Time Left: --:--:--</div>
+
+                <!-- Progress bar with walker -->
+                <div class="progress-container" id="progressContainer">
+
+                  <!-- ── Style: Classic Bar (default) ─────────────────── -->
+                  <div class="progress-bar-wrap" id="progressBarWrap">
+                    <div class="progress-track">
+                      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+                      <div class="progress-walker" id="progressWalker" style="left: -16px;">
+                        <img id="walkerImg" src="" alt="🧝">
+                      </div>
+                    </div>
+                    <div class="progress-labels">
+                      <span id="progressStart">--:--</span>
+                      <span id="progressPercent">0%</span>
+                      <span id="progressEnd">--:--</span>
+                    </div>
+                  </div>
+
+                  <!-- ── Style: Doughnut ───────────────────────────────── -->
+                  <div class="progress-doughnut-wrap" id="progressDoughnutWrap">
+                    <svg class="doughnut-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="doughnutGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%"   stop-color="var(--accent)"/>
+                          <stop offset="50%"  stop-color="var(--gold)"/>
+                          <stop offset="100%" stop-color="var(--secondary)"/>
+                        </linearGradient>
+                      </defs>
+                      <circle class="doughnut-track" cx="100" cy="100" r="80"/>
+                      <circle class="doughnut-fill" id="doughnutFill" cx="100" cy="100" r="80"
+                              stroke="url(#doughnutGrad)"
+                              stroke-dasharray="502.65"
+                              stroke-dashoffset="502.65"/>
+                      <text class="doughnut-pct" id="doughnutPct" x="100" y="107">0%</text>
+                    </svg>
+                  </div>
+
+                  <!-- ── Style: Hourglass ──────────────────────────────── -->
+                  <div class="progress-hourglass-wrap" id="progressHourglassWrap">
+                    <svg class="hourglass-svg" id="hourglassSvg" viewBox="0 0 120 200" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <clipPath id="hourglassClipTop">
+                          <polygon id="hourglassClipTopPoly" points="10,10 110,10 60,100"/>
+                        </clipPath>
+                        <clipPath id="hourglassClipBot">
+                          <polygon id="hourglassClipBotPoly" points="10,190 110,190 60,100"/>
+                        </clipPath>
+                        <linearGradient id="sandGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%"  stop-color="#d4a843"/>
+                          <stop offset="100%" stop-color="#f0c860"/>
+                        </linearGradient>
+                      </defs>
+                      <polygon class="hg-outline" points="10,10 110,10 60,100 110,190 10,190 60,100"/>
+                      <line class="hg-pinch" x1="10" y1="100" x2="110" y2="100"/>
+                      <polygon class="hg-sand-top" id="hgSandTop"
+                               points="10,10 110,10 60,100"
+                               clip-path="url(#hourglassClipTop)"/>
+                      <polygon class="hg-sand-bot" id="hgSandBot"
+                               points="10,190 110,190 60,100"
+                               clip-path="url(#hourglassClipBot)"/>
+                      <circle class="hg-particle" id="hgParticle" cx="60" cy="100" r="3"/>
+                      <text class="hg-pct" id="hgPct" x="60" y="220">0%</text>
+                    </svg>
+                  </div>
+
+                  <!-- ── Style: Mana Bar ───────────────────────────────── -->
+                  <div class="progress-mana-wrap" id="progressManaWrap">
+                    <div class="mana-bar-container">
+                      <div class="mana-label-row">
+                        <span class="mana-label-icon">💎</span>
+                        <span class="mana-label-text">Mana</span>
+                        <span class="mana-pct" id="manaPct">0%</span>
+                      </div>
+                      <div class="mana-track">
+                        <div class="mana-fill" id="manaFill" style="width:0%">
+                          <canvas class="mana-sparkle-canvas" id="manaSparkleCanvas"></canvas>
+                        </div>
+                        <div class="mana-shine"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- Secondary session controls (shown once running) -->
+                <div class="session-secondary-controls">
+                  <button id="timerPause" class="btn-ghost" disabled>⏸ Pause</button>
+                  <button id="timerStop" class="btn-ghost-danger" disabled>■ Stop</button>
+                  <button id="timerReset" class="btn-ghost" disabled>↺ Reset</button>
+                </div>
+
+              </div>
+            </div>
+
+          </div><!-- /.lobby-main -->
+
+          <!-- Right panel (social/tools) -->
           <div class="journey-right">
 
             <!-- Music Player -->
             <div class="panel music-panel">
               <h3 class="panel-title">🎵 Arcane Melodies</h3>
               <button id="spotifyLoginBtn" class="btn-secondary btn-sm" style="width:100%;margin-bottom:8px;">🔑 Log in to Spotify</button>
-              <input type="text" id="spotifyUrl" placeholder="Paste Spotify playlist / track / album URL...">
+              <input type="text" id="spotifyUrl" placeholder="Paste Spotify URL...">
               <button id="loadSpotifyBtn" class="btn-primary btn-sm" style="margin-top:6px;width:100%;">▶ Load</button>
               <div id="spotifyContainer">
                 <iframe id="spotifyFrame" src="" frameborder="0" allowfullscreen
@@ -236,7 +228,18 @@
             </div>
 
           </div><!-- /.journey-right -->
-        </div><!-- /.journey-main -->
+
+        </div><!-- /.journey-lobby -->
+
+        <!-- ── Bottom action bar — the "FIND MATCH" zone ─────────── -->
+        <div class="journey-bottom-bar">
+          <div class="bottom-bar-left">
+            <button id="focusModeBtn" class="btn-ghost">🧠 Focus Mode</button>
+            <button id="pomodoroBtn" class="btn-ghost">🍅 Pomodoro</button>
+          </div>
+          <button id="timerStart" class="btn-begin-session">⚔ BEGIN SESSION</button>
+          <div class="bottom-bar-right"></div>
+        </div>
 
         <!-- Pomodoro floating panel -->
         <div id="pomodoroPanel" class="floating-panel" style="display:none;">
