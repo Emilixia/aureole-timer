@@ -1944,7 +1944,7 @@ button {
 }
 
 /* High contrast mode */
-.high-contrast body {
+body.high-contrast {
   --bg-primary: #000;
   --text-primary: #fff;
   --accent-primary: #ffff00;

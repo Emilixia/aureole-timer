@@ -1,5 +1,15 @@
 // ===== STATE & STORAGE =====
 
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 const STORAGE_KEY = 'aureole_state';
 
 const DEFAULT_STATE = {
@@ -684,11 +694,11 @@ function renderNotesList(notes) {
   notes.forEach(note => {
     const card = document.createElement('div');
     card.className = 'note-card' + (note.id === currentNoteId ? ' active' : '');
-    const tagsHtml = (note.tags || []).map(t => `<span class="note-tag">${t}</span>`).join('');
+    const tagsHtml = (note.tags || []).map(t => `<span class="note-tag">${escapeHtml(t)}</span>`).join('');
     const date = note.createdAt ? new Date(note.createdAt).toLocaleDateString() : '';
     card.innerHTML = `
-      <div class="note-card-title">${note.pinned ? '📌 ' : ''}${note.title || 'Untitled'}</div>
-      <div class="note-meta">${note.category || ''} · ${date}</div>
+      <div class="note-card-title">${note.pinned ? '📌 ' : ''}${escapeHtml(note.title || 'Untitled')}</div>
+      <div class="note-meta">${escapeHtml(note.category || '')} · ${escapeHtml(date)}</div>
       <div class="note-tags">${tagsHtml}</div>
     `;
     card.addEventListener('click', () => openNote(note.id));
@@ -911,10 +921,10 @@ function renderChronicle(items) {
     });
 
     content.innerHTML = `
-      <span class="timeline-icon">${icon}</span>
-      <strong class="timeline-title">${item.title}</strong>
-      <span class="timeline-desc">${item.description}</span>
-      <span class="timeline-time">${formatted}</span>
+      <span class="timeline-icon">${escapeHtml(icon)}</span>
+      <strong class="timeline-title">${escapeHtml(item.title)}</strong>
+      <span class="timeline-desc">${escapeHtml(item.description)}</span>
+      <span class="timeline-time">${escapeHtml(formatted)}</span>
     `;
 
     div.appendChild(dot);
@@ -1264,12 +1274,20 @@ function renderAchievementRack() {
 
       const tooltip = document.createElement('div');
       tooltip.className = 'badge-tooltip';
-      let tooltipContent = `<strong>${a.name}</strong><br>${a.desc}`;
+      const nameEl = document.createElement('strong');
+      nameEl.textContent = a.name;
+      const descEl = document.createElement('span');
+      descEl.textContent = a.desc;
+      tooltip.appendChild(nameEl);
+      tooltip.appendChild(document.createElement('br'));
+      tooltip.appendChild(descEl);
       if (isUnlocked) {
         const unlockDate = new Date(state.profile.achievements[a.id].unlockedAt).toLocaleDateString();
-        tooltipContent += `<br><em>Unlocked: ${unlockDate}</em>`;
+        tooltip.appendChild(document.createElement('br'));
+        const dateEl = document.createElement('em');
+        dateEl.textContent = 'Unlocked: ' + unlockDate;
+        tooltip.appendChild(dateEl);
       }
-      tooltip.innerHTML = tooltipContent;
       badge.appendChild(tooltip);
       badgesRow.appendChild(badge);
     });
@@ -1365,7 +1383,15 @@ function applySettings() {
 
   const walkingChar = document.getElementById('walking-character');
   if (walkingChar && s.walkingCharacter) {
-    walkingChar.innerHTML = `<img src="${s.walkingCharacter}" alt="Character" style="height:100%;width:auto;">`;
+    const img = document.createElement('img');
+    img.alt = 'Character';
+    img.style.height = '100%';
+    img.style.width = 'auto';
+    img.src = s.walkingCharacter;
+    walkingChar.innerHTML = '';
+    walkingChar.appendChild(img);
+  } else if (walkingChar && !s.walkingCharacter) {
+    walkingChar.innerHTML = '<div class="character-emoji">🧙</div>';
   }
 
   if (s.youtubeUrl) {
@@ -1409,8 +1435,8 @@ function renderCategoriesList() {
     const item = document.createElement('div');
     item.className = 'category-item';
     item.innerHTML = `
-      <span class="cat-icon">${cat.icon}</span>
-      <span class="cat-name">${cat.name}</span>
+      <span class="cat-icon">${escapeHtml(cat.icon)}</span>
+      <span class="cat-name">${escapeHtml(cat.name)}</span>
       <button class="btn-delete-cat" data-idx="${idx}" title="Delete category">✕</button>
     `;
     item.querySelector('.btn-delete-cat').addEventListener('click', () => {
@@ -1845,8 +1871,8 @@ function loadReminders() {
     const item = document.createElement('div');
     item.className = 'reminder-item';
     item.innerHTML = `
-      <span class="reminder-time">${reminder.time}</span>
-      <span class="reminder-msg">${reminder.message}</span>
+      <span class="reminder-time">${escapeHtml(reminder.time)}</span>
+      <span class="reminder-msg">${escapeHtml(reminder.message)}</span>
       <button class="btn-toggle-reminder" data-idx="${idx}">${reminder.enabled ? '🔔' : '🔕'}</button>
       <button class="btn-delete-reminder" data-idx="${idx}">✕</button>
     `;
@@ -1948,8 +1974,8 @@ function renderTaskList() {
     item.className = 'task-item priority-' + (task.priority || 'normal') + (task.done ? ' done' : '');
     item.innerHTML = `
       <input type="checkbox" class="task-checkbox" ${task.done ? 'checked' : ''}>
-      <span class="task-text">${task.text}</span>
-      <span class="task-priority">${task.priority || 'normal'}</span>
+      <span class="task-text">${escapeHtml(task.text)}</span>
+      <span class="task-priority">${escapeHtml(task.priority || 'normal')}</span>
       <button class="btn-delete-task" data-idx="${idx}">✕</button>
     `;
     item.querySelector('.task-checkbox').addEventListener('change', e => {
@@ -1994,8 +2020,8 @@ function loadRoutines() {
     item.className = 'routine-item';
     item.innerHTML = `
       <div class="routine-info">
-        <span class="routine-name">${routine.name}</span>
-        <span class="routine-meta">${routine.category} · ${routine.durationMinutes}min</span>
+        <span class="routine-name">${escapeHtml(routine.name)}</span>
+        <span class="routine-meta">${escapeHtml(routine.category)} · ${escapeHtml(String(routine.durationMinutes))}min</span>
       </div>
       <div class="routine-actions">
         <button class="btn-start-routine" data-idx="${idx}">▶ Start</button>
