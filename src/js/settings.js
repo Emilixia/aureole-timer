@@ -312,7 +312,7 @@ const Settings = (function () {
 
   async function clearAllData() {
     if (!confirm('⚠️ This will permanently delete ALL your data (sessions, journal, tasks, achievements). Are you sure?')) return;
-    const keys = ['chronicle', 'journal', 'spells', 'habits', 'achievements', 'profile', 'reminders', 'customBg', 'customWalker', 'lastDailyReminder'];
+    const keys = ['chronicle', 'journal', 'spells', 'habits', 'achievements', 'profile', 'reminders', 'customBg', 'customWalker', 'customSplashLogo', 'customThumbsUp', 'musicUrl', 'lastDailyReminder'];
     for (const key of keys) {
       await Storage.remove(key);
     }

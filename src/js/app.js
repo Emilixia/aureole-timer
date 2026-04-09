@@ -113,6 +113,9 @@ function stopParticles() {
 }
 
 // ── Toast Notification System ────────────────────────────────
+// Cached thumbs-up data URL (loaded once from Storage at startup)
+let _thumbsUpUrl = null;
+
 function showToast(message, type) {
   type = type || 'info';
   const container = document.getElementById('toastContainer');
@@ -127,7 +130,17 @@ function showToast(message, type) {
   else if (type === 'achievement') icon = '🏆 ';
   else icon = 'ℹ️ ';
 
-  toast.textContent = icon + message;
+  // Build toast contents with optional thumbs-up image
+  if (_thumbsUpUrl) {
+    const img = document.createElement('img');
+    img.src = _thumbsUpUrl;
+    img.className = 'toast-thumb';
+    img.alt = '👍';
+    toast.appendChild(img);
+  }
+  const textNode = document.createTextNode(icon + message);
+  toast.appendChild(textNode);
+
   container.appendChild(toast);
 
   // Trigger animation
@@ -277,62 +290,64 @@ function initWindowControls() {
   }
 }
 
-// ── YouTube Music Player ──────────────────────────────────────
-function initMusicPlayer() {  // formerly initSpotifyPlayer
-  const loadBtn = document.getElementById('loadYtBtn');
-  const urlInput = document.getElementById('ytUrl');
-  const frame = document.getElementById('ytFrame');
+// ── Music Player (HTML5 audio + SoundCloud embed) ─────────────
+function initMusicPlayer() {
+  const loadBtn = document.getElementById('loadMusicBtn');
+  const urlInput = document.getElementById('musicUrl');
+  const audioEl = document.getElementById('audioPlayer');
+  const frameEl = document.getElementById('musicFrame');
 
-  function loadYoutube() {
-    const raw = urlInput ? urlInput.value.trim() : '';
-    if (!raw) {
-      if (window.showToast) showToast('Please enter a YouTube URL or search term.', 'error');
-      return;
-    }
-    const videoId = extractYouTubeId(raw);
-    if (videoId && frame) {
-      // videoId is validated to match [a-zA-Z0-9_-]{11} by extractYouTubeId
-      const embedUrl = new URL('/embed/' + videoId, 'https://www.youtube.com');
-      embedUrl.searchParams.set('autoplay', '1');
-      embedUrl.searchParams.set('rel', '0');
-      // Guard: only allow youtube.com
-      if (embedUrl.origin === 'https://www.youtube.com') {
-        frame.setAttribute('src', embedUrl.href);
-      }
-      if (window.showToast) showToast('Loading YouTube video... 🎵', 'info');
-    } else {
-      // Treat as search term — open YouTube search as embed
-      if (frame) {
-        const searchUrl = 'https://www.youtube.com/embed?listType=search&list=' + encodeURIComponent(raw) + '&autoplay=1';
-        frame.setAttribute('src', searchUrl);
-        if (window.showToast) showToast('Searching YouTube... 🎵', 'info');
-      }
-    }
-    if (urlInput) Storage.set('ytUrl', raw);
+  function isSoundCloudUrl(url) {
+    return /soundcloud\.com\//i.test(url);
   }
 
-  if (loadBtn) loadBtn.addEventListener('click', loadYoutube);
+  function loadMusic() {
+    const raw = urlInput ? urlInput.value.trim() : '';
+    if (!raw) {
+      if (window.showToast) showToast('Please enter an audio URL or SoundCloud link.', 'error');
+      return;
+    }
+
+    if (isSoundCloudUrl(raw)) {
+      // SoundCloud embed
+      const embedUrl = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(raw) +
+        '&auto_play=true&hide_related=true&show_comments=false&show_user=true&show_reposts=false&visual=false&color=7c5cbf';
+      if (audioEl) { audioEl.pause(); audioEl.style.display = 'none'; }
+      if (frameEl) {
+        frameEl.setAttribute('src', embedUrl);
+        frameEl.style.display = 'block';
+      }
+      if (window.showToast) showToast('Loading SoundCloud track... 🎵', 'info');
+    } else {
+      // Treat as direct audio URL (mp3, ogg, wav, etc.)
+      if (frameEl) { frameEl.setAttribute('src', 'about:blank'); frameEl.style.display = 'none'; }
+      if (audioEl) {
+        audioEl.src = raw;
+        audioEl.style.display = 'block';
+        audioEl.load();
+        audioEl.play().catch(function () {
+          if (window.showToast) showToast('Could not play audio. Check the URL.', 'error');
+        });
+      }
+      if (window.showToast) showToast('Loading audio... 🎵', 'info');
+    }
+    Storage.set('musicUrl', raw);
+  }
+
+  if (loadBtn) loadBtn.addEventListener('click', loadMusic);
   if (urlInput) {
     urlInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') loadYoutube();
+      if (e.key === 'Enter') loadMusic();
     });
     urlInput.addEventListener('input', function () {
-      Storage.set('ytUrl', this.value);
+      Storage.set('musicUrl', this.value);
     });
   }
 
   // Restore saved URL
-  Storage.get('ytUrl').then(function (savedUrl) {
+  Storage.get('musicUrl').then(function (savedUrl) {
     if (savedUrl && urlInput) urlInput.value = savedUrl;
   });
-}
-
-// Extract YouTube video ID from various URL formats, returns null if not found
-function extractYouTubeId(url) {
-  if (!url || typeof url !== 'string') return null;
-  // youtu.be/ID  or  youtube.com/watch?v=ID  or  youtube.com/embed/ID  or  youtube.com/shorts/ID
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|v\/))([a-zA-Z0-9_-]{11})/);
-  return match ? match[1] : null;
 }
 
 // ── Quick Notes ───────────────────────────────────────────────
@@ -616,6 +631,21 @@ async function initNavProfile() {
 window.refreshNavProfile = initNavProfile;
 
 async function initApp() {
+  // 0. Load custom assets (splash logo, thumbs-up) before anything else shows
+  const [savedSplashLogo, savedThumbsUp] = await Promise.all([
+    Storage.get('customSplashLogo'),
+    Storage.get('customThumbsUp')
+  ]);
+
+  // Apply custom splash logo if set
+  const splashLogoEl = document.getElementById('splashLogo');
+  if (splashLogoEl && savedSplashLogo) {
+    splashLogoEl.src = savedSplashLogo;
+  }
+
+  // Cache thumbs-up URL for use in showToast
+  _thumbsUpUrl = savedThumbsUp || null;
+
   // 1. Load settings first (sets AppSettings global)
   await Settings.init();
 
@@ -659,6 +689,48 @@ async function initApp() {
     overlay.addEventListener('click', function () {
       if (focusModeActive) toggleFocusMode();
     });
+  }
+
+  // 10. Splash logo upload
+  const uploadSplashLogoEl = document.getElementById('uploadSplashLogo');
+  if (uploadSplashLogoEl) {
+    uploadSplashLogoEl.addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function (ev) {
+        const dataUrl = ev.target.result;
+        await Storage.set('customSplashLogo', dataUrl);
+        if (window.showToast) showToast('Startup logo updated! ✨', 'success');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // 11. Thumbs-up upload
+  const uploadThumbsUpEl = document.getElementById('uploadThumbsUp');
+  if (uploadThumbsUpEl) {
+    uploadThumbsUpEl.addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function (ev) {
+        const dataUrl = ev.target.result;
+        _thumbsUpUrl = dataUrl;
+        await Storage.set('customThumbsUp', dataUrl);
+        if (window.showToast) showToast('Thumbs-up image updated! 👍', 'success');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // 12. Fade out splash screen
+  const splash = document.getElementById('splashScreen');
+  if (splash) {
+    splash.classList.add('splash-fade');
+    setTimeout(function () {
+      splash.style.display = 'none';
+    }, 800);
   }
 }
 

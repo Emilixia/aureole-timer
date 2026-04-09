@@ -4,13 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; frame-src https://www.youtube.com https://youtube.com https://open.spotify.com; img-src * blob: data:; media-src * blob: data:; connect-src 'self'; font-src 'self' data: https://fonts.gstatic.com;">
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; frame-src https://www.youtube.com https://youtube.com https://open.spotify.com https://w.soundcloud.com https://soundcloud.com; img-src * blob: data:; media-src * blob: data:; connect-src 'self'; font-src 'self' data: https://fonts.gstatic.com;">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <title>Frieren Chronomark</title>
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
+
+  <!-- Startup splash screen -->
+  <div id="splashScreen">
+    <img id="splashLogo" src="https://github.com/user-attachments/assets/fff765b4-a84b-4829-abff-75c77ec4307c" alt="Chronomark Logo">
+    <div id="splashText">Chronomark</div>
+  </div>
 
   <!-- Particle canvas background -->
   <canvas id="particleCanvas"></canvas>
@@ -308,13 +314,19 @@
             <!-- Music Player -->
             <div class="panel music-panel">
               <h3 class="panel-title">🎵 Arcane Melodies</h3>
-              <input type="text" id="ytUrl" placeholder="YouTube URL or search term...">
-              <button id="loadYtBtn" class="btn-primary btn-sm" style="margin-top:6px;width:100%;">▶ Load</button>
-              <div id="ytContainer">
-                <iframe id="ytFrame" src="about:blank" frameborder="0" allowfullscreen
-                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                  loading="lazy"></iframe>
+              <div class="music-url-row">
+                <input type="text" id="musicUrl" placeholder="Paste audio URL or SoundCloud link...">
+                <button id="loadMusicBtn" class="btn-primary btn-sm">▶ Load</button>
               </div>
+              <div id="musicPlayerWrap">
+                <!-- HTML5 player for direct audio links -->
+                <audio id="audioPlayer" controls style="display:none;width:100%;margin-top:8px;"></audio>
+                <!-- Embed iframe for SoundCloud -->
+                <iframe id="musicFrame" src="about:blank" frameborder="0"
+                  allow="autoplay" loading="lazy"
+                  style="display:none;width:100%;height:120px;margin-top:8px;border-radius:var(--radius);"></iframe>
+              </div>
+              <p class="music-hint">Supports direct mp3/ogg/wav URLs and SoundCloud links.</p>
             </div>
 
             <!-- Quick Notes -->
@@ -764,6 +776,14 @@
                   🧝 Upload Walker
                 </label>
               </div>
+              <div class="setting-group" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+                <label>Startup Logo (.gif recommended)</label>
+                <label class="btn-upload">
+                  <input type="file" id="uploadSplashLogo" accept="image/*,image/gif">
+                  ✨ Upload Startup Logo
+                </label>
+                <small style="color:var(--text-muted);margin-top:4px;display:block;">Shown on app startup. Replace with your own .gif!</small>
+              </div>
             </div>
 
             <!-- Timer settings -->
@@ -829,6 +849,14 @@
                 <button id="testNotification" class="btn-secondary">🔔 Test Notification</button>
                 <button id="saveNotifSettings" class="btn-primary">Save</button>
               </div>
+              <div class="setting-group" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+                <label>Notification Thumbs-Up Image (.gif recommended)</label>
+                <label class="btn-upload">
+                  <input type="file" id="uploadThumbsUp" accept="image/*,image/gif">
+                  👍 Upload Thumbs-Up
+                </label>
+                <small style="color:var(--text-muted);margin-top:4px;display:block;">Shown in toast notifications. Use a fun .gif!</small>
+              </div>
             </div>
 
             <!-- ADHD/Focus settings -->
@@ -890,7 +918,9 @@
                 <div class="about-logo"><img src="https://github.com/user-attachments/assets/fff765b4-a84b-4829-abff-75c77ec4307c" alt="Frieren Chronomark" style="width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 0 12px rgba(200,170,110,0.6));"></div>
                 <h2>Frieren Chronomark</h2>
                 <p>Version 1.0.0</p>
-                <p>A magical productivity companion for neurodivergent adventurers.</p>
+                <p class="about-tagline">For Tards, by Tards</p>
+                <p class="about-credit">Vibecoded by Emy, Inspired by KissToFear</p>
+                <p style="margin-top:10px;">A magical productivity companion for neurodivergent adventurers.</p>
                 <p>Frieren-themed • ADHD-friendly • Dark Mode</p>
                 <div class="about-features">
                   <p>🎯 Customizable focus timer with visual progress</p>
@@ -899,7 +929,7 @@
                   <p>📜 Detailed session chronicle with CSV export</p>
                   <p>🏆 Achievement system with ribbon rack</p>
                   <p>🍅 Pomodoro technique support</p>
-                  <p>🎵 YouTube music player integration</p>
+                  <p>🎵 Music player (audio URL &amp; SoundCloud)</p>
                   <p>🧠 ADHD-friendly focus mode</p>
                   <p>🌱 Daily habit/ritual tracker</p>
                 </div>
