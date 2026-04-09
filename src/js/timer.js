@@ -395,11 +395,13 @@ const Timer = (function () {
 
     // Track early-bird (before 7 AM) and night-owl (after 10 PM) session counts
     const earlyBirdSessions = allSessions.filter(function (s) {
-      var h = parseInt((s.startTime || s.endTimestamp ? new Date(s.startTimestamp || 0).getHours() : 12));
+      var ts = s.startTimestamp || s.endTimestamp;
+      var h = ts ? new Date(ts).getHours() : 12;
       return h < 7;
     }).length;
     const nightOwlSessions = allSessions.filter(function (s) {
-      var h = parseInt((s.startTimestamp ? new Date(s.startTimestamp).getHours() : 12));
+      var ts = s.startTimestamp || s.endTimestamp;
+      var h = ts ? new Date(ts).getHours() : 12;
       return h >= 22;
     }).length;
     if (earlyBirdSessions >= 5)  specialStats.medal_early_bird = true;

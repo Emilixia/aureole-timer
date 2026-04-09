@@ -319,6 +319,11 @@ function initMusicPlayer() {
       if (window.showToast) showToast('Not a Spotify URL. Paste a track, album or playlist link.', 'error');
       return;
     }
+    // Guard: only allow the Spotify embed origin we constructed
+    if (!/^https:\/\/open\.spotify\.com\/embed\//.test(embedUrl)) {
+      if (window.showToast) showToast('Invalid Spotify embed URL.', 'error');
+      return;
+    }
     if (spotifyFrame) {
       spotifyFrame.setAttribute('src', embedUrl);
       spotifyFrame.style.display = 'block';
