@@ -27,7 +27,7 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'src', 'index.html'));
 
-  // Strip "Electron/..." from the User-Agent so YouTube embeds work (fixes Error 153)
+  // Strip "Electron/..." from the User-Agent so YouTube and Spotify embeds work.
   mainWindow.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {
     const ua = details.requestHeaders['User-Agent'];
     if (ua) {
@@ -36,8 +36,15 @@ function createWindow() {
     callback({ requestHeaders: details.requestHeaders });
   });
 
-  // Set Content-Security-Policy header
+  // Set Content-Security-Policy header for the main app page only.
+  // We intentionally skip non-file:// URLs so that embedded iframes
+  // (Spotify, YouTube, etc.) receive their own CSP from their servers
+  // and can load their scripts, styles and media without interference.
   mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    if (!details.url.startsWith('file://')) {
+      callback({});
+      return;
+    }
     callback({
       responseHeaders: {
         ...details.responseHeaders,

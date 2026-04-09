@@ -524,6 +524,7 @@ const Timer = (function () {
     updateButtonStates();
     document.title = 'Frieren Chronomark';
     if (window.App) window.App.stopEncouragement();
+    if (window.SoundSystem) window.SoundSystem.play('timer');
     if (window.showToast) window.showToast('✨ Session complete! Amazing work!', 'success');
 
     showBellOverlay();

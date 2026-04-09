@@ -160,17 +160,232 @@ function showToast(message, type) {
 
 window.showToast = showToast;
 
+// ── Sound System ─────────────────────────────────────────────
+// Custom audio for timer-complete, toast and achievement events.
+var SoundSystem = (function () {
+  var _volume = 0.8; // 0-1
+  var _sounds = { timer: null, toast: null, achieve: null };
+
+  function setVolume(v) { _volume = Math.max(0, Math.min(1, v)); }
+
+  function play(type) {
+    var dataUrl = _sounds[type];
+    if (!dataUrl) return;
+    var audio = new Audio(dataUrl);
+    audio.volume = _volume;
+    audio.play().catch(function () {});
+  }
+
+  function setSound(type, dataUrl) { _sounds[type] = dataUrl; }
+  function clearSound(type) { _sounds[type] = null; }
+
+  async function load() {
+    var vol = await Storage.get('soundVolume', 80);
+    _volume = Math.max(0, Math.min(100, vol)) / 100;
+    _sounds.timer   = await Storage.get('timerSound', null);
+    _sounds.toast   = await Storage.get('toastSound', null);
+    _sounds.achieve = await Storage.get('achieveSound', null);
+  }
+
+  return { play: play, setSound: setSound, clearSound: clearSound, setVolume: setVolume, load: load };
+})();
+window.SoundSystem = SoundSystem;
+
+// Play toast sound on every toast call
+var _origShowToast = window.showToast;
+window.showToast = function (message, type) {
+  if (type === 'achievement') {
+    SoundSystem.play('achieve');
+  } else {
+    SoundSystem.play('toast');
+  }
+  return _origShowToast(message, type);
+};
+// Keep internal reference in sync
+showToast = window.showToast;
+
+function initSoundSettings() {
+  function wireSound(uploadId, playBtnId, clearBtnId, nameId, storageKey, soundType) {
+    var upload = document.getElementById(uploadId);
+    var playBtn = document.getElementById(playBtnId);
+    var clearBtn = document.getElementById(clearBtnId);
+    var nameEl = document.getElementById(nameId);
+
+    // Restore saved name label
+    Storage.get(storageKey + '_name', '').then(function (n) {
+      if (nameEl && n) nameEl.textContent = n;
+    });
+
+    if (upload) {
+      upload.addEventListener('change', function () {
+        var file = upload.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          var dataUrl = e.target.result;
+          SoundSystem.setSound(soundType, dataUrl);
+          Storage.set(storageKey, dataUrl);
+          Storage.set(storageKey + '_name', file.name);
+          if (nameEl) nameEl.textContent = file.name;
+          if (window.showToast) showToast('Sound uploaded: ' + file.name + ' 🔊', 'success');
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    if (playBtn) {
+      playBtn.addEventListener('click', function () { SoundSystem.play(soundType); });
+    }
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function () {
+        SoundSystem.clearSound(soundType);
+        Storage.set(storageKey, null);
+        Storage.set(storageKey + '_name', '');
+        if (nameEl) nameEl.textContent = '';
+        if (upload) upload.value = '';
+      });
+    }
+  }
+
+  wireSound('uploadTimerSound',  'playTimerSound',  'clearTimerSound',  'timerSoundName',  'timerSound',  'timer');
+  wireSound('uploadToastSound',  'playToastSound',  'clearToastSound',  'toastSoundName',  'toastSound',  'toast');
+  wireSound('uploadAchieveSound','playAchieveSound','clearAchieveSound','achieveSoundName','achieveSound','achieve');
+
+  var volSlider = document.getElementById('soundVolume');
+  var volLabel  = document.getElementById('soundVolumeLabel');
+  if (volSlider) {
+    Storage.get('soundVolume', 80).then(function (v) {
+      volSlider.value = v;
+      if (volLabel) volLabel.textContent = v + '%';
+      SoundSystem.setVolume(v / 100);
+    });
+    volSlider.addEventListener('input', function () {
+      var v = parseInt(volSlider.value);
+      if (volLabel) volLabel.textContent = v + '%';
+      SoundSystem.setVolume(v / 100);
+      Storage.set('soundVolume', v);
+    });
+  }
+}
+
 // ── Live Clock ───────────────────────────────────────────────
+var _worldClockTz   = null;  // IANA timezone string
+var _worldClockName = '🌍';   // display label
+
 function updateClock() {
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
   const sidebarClock = document.getElementById('sidebarClock');
   if (sidebarClock) sidebarClock.textContent = timeStr;
 
+  const sidebarDate = document.getElementById('sidebarDate');
+  if (sidebarDate) sidebarDate.textContent = dateStr;
+
   const liveDatetime = document.getElementById('liveDatetime');
-  if (liveDatetime) liveDatetime.textContent = dateStr + ' · ' + timeStr;
+  if (liveDatetime) liveDatetime.textContent =
+    now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + ' · ' + timeStr;
+
+  // World clock
+  if (_worldClockTz) {
+    try {
+      const wcTime = now.toLocaleTimeString('en-US', {
+        hour: '2-digit', minute: '2-digit',
+        timeZone: _worldClockTz
+      });
+      const wcEl = document.getElementById('worldClockTime');
+      if (wcEl) wcEl.textContent = wcTime;
+    } catch (e) {}
+  }
+}
+
+function _buildTzList() {
+  // Standard IANA timezone list
+  return [
+    'Africa/Cairo','Africa/Lagos','Africa/Nairobi','Africa/Johannesburg',
+    'America/Anchorage','America/Chicago','America/Denver','America/Los_Angeles',
+    'America/Mexico_City','America/New_York','America/Sao_Paulo','America/Toronto',
+    'America/Vancouver','America/Phoenix',
+    'Asia/Bangkok','Asia/Colombo','Asia/Dubai','Asia/Hong_Kong','Asia/Jakarta',
+    'Asia/Karachi','Asia/Kolkata','Asia/Kuala_Lumpur','Asia/Manila','Asia/Seoul',
+    'Asia/Shanghai','Asia/Singapore','Asia/Taipei','Asia/Tehran','Asia/Tokyo',
+    'Asia/Vladivostok','Asia/Yangon',
+    'Atlantic/Azores','Atlantic/Cape_Verde','Atlantic/Reykjavik',
+    'Australia/Adelaide','Australia/Brisbane','Australia/Melbourne','Australia/Perth',
+    'Australia/Sydney',
+    'Europe/Amsterdam','Europe/Athens','Europe/Berlin','Europe/Brussels',
+    'Europe/Budapest','Europe/Dublin','Europe/Helsinki','Europe/Istanbul',
+    'Europe/Kiev','Europe/Lisbon','Europe/London','Europe/Madrid','Europe/Moscow',
+    'Europe/Oslo','Europe/Paris','Europe/Prague','Europe/Rome','Europe/Stockholm',
+    'Europe/Vienna','Europe/Warsaw','Europe/Zurich',
+    'Pacific/Auckland','Pacific/Fiji','Pacific/Guam','Pacific/Honolulu',
+    'Pacific/Midway','Pacific/Noumea','Pacific/Port_Moresby',
+    'UTC'
+  ];
+}
+
+async function initWorldClock() {
+  var saved = await Storage.get('worldClock', null);
+  if (saved) {
+    _worldClockTz   = saved.tz || null;
+    _worldClockName = saved.label || '🌍';
+    var labelEl = document.getElementById('worldClockLabel');
+    if (labelEl) labelEl.textContent = _worldClockName;
+    var timeEl = document.getElementById('worldClockTime');
+    if (timeEl && !_worldClockTz) timeEl.textContent = '--:--';
+  }
+
+  // Populate tz select
+  var select = document.getElementById('wcTzSelect');
+  if (select) {
+    _buildTzList().forEach(function (tz) {
+      var opt = document.createElement('option');
+      opt.value = tz;
+      opt.textContent = tz.replace(/_/g, ' ');
+      if (tz === (_worldClockTz || 'UTC')) opt.selected = true;
+      select.appendChild(opt);
+    });
+  }
+
+  // Config button opens modal
+  var configBtn = document.getElementById('worldClockConfigBtn');
+  var modal = document.getElementById('worldClockModal');
+  if (configBtn && modal) {
+    configBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      // Pre-fill
+      var labelInput = document.getElementById('wcLabelInput');
+      if (labelInput) labelInput.value = _worldClockName === '🌍' ? '' : _worldClockName;
+      modal.style.display = 'flex';
+    });
+  }
+
+  var cancelBtn = document.getElementById('wcModalCancel');
+  if (cancelBtn && modal) {
+    cancelBtn.addEventListener('click', function () { modal.style.display = 'none'; });
+  }
+  if (modal) {
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+  }
+
+  var saveBtn = document.getElementById('wcModalSave');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', function () {
+      var labelInput = document.getElementById('wcLabelInput');
+      var tzSelect   = document.getElementById('wcTzSelect');
+      var label = (labelInput && labelInput.value.trim()) || (tzSelect ? tzSelect.value.split('/').pop().replace(/_/g,' ') : '🌍');
+      var tz = tzSelect ? tzSelect.value : 'UTC';
+      _worldClockTz   = tz;
+      _worldClockName = label;
+      var labelEl = document.getElementById('worldClockLabel');
+      if (labelEl) labelEl.textContent = label;
+      Storage.set('worldClock', { tz: tz, label: label });
+      if (modal) modal.style.display = 'none';
+      if (window.showToast) showToast('World clock set to ' + label + ' (' + tz + ') 🌍', 'success');
+    });
+  }
 }
 
 // ── Tab Navigation ───────────────────────────────────────────
@@ -650,12 +865,16 @@ async function initApp() {
   // 1. Load settings first (sets AppSettings global)
   await Settings.init();
 
+  // 1b. Load custom sounds
+  await SoundSystem.load();
+
   // 2. Initialize window chrome
   initWindowControls();
 
-  // 3. Start clock
+  // 3. Start clock + world clock
   updateClock();
   setInterval(updateClock, 1000);
+  await initWorldClock();
 
   // 4. Particle system
   initParticles();
@@ -672,9 +891,10 @@ async function initApp() {
   Chronicle.init();
   Profile.init();
 
-  // 6. Initialize music + quick notes
+  // 6. Initialize music + quick notes + sounds
   initMusicPlayer();
   initQuickNotes();
+  initSoundSettings();
 
   // 7. Mode selection + nav profile widget
   initModeSelection();

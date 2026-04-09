@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; frame-src https://www.youtube.com https://youtube.com https://open.spotify.com https://w.soundcloud.com https://soundcloud.com; img-src * blob: data:; media-src * blob: data:; connect-src 'self'; font-src 'self' data: https://fonts.gstatic.com;">
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; frame-src https://www.youtube.com https://youtube.com https://open.spotify.com https://w.soundcloud.com https://soundcloud.com; img-src * blob: data:; media-src * blob: data:; connect-src 'self' https://open.spotify.com https://*.spotify.com https://*.scdn.co; font-src 'self' data: https://fonts.gstatic.com;">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <title>Frieren Chronomark</title>
@@ -56,8 +56,18 @@
     <!-- Flexible spacer (drag area) -->
     <div class="topnav-spacer"></div>
 
-    <!-- Clock -->
-    <div class="topnav-clock" id="sidebarClock"></div>
+    <!-- Date + Clock + World Clock -->
+    <div class="topnav-clock-area">
+      <div class="topnav-clock-main">
+        <span class="topnav-date" id="sidebarDate"></span>
+        <span class="topnav-time" id="sidebarClock"></span>
+      </div>
+      <div class="topnav-worldclock" id="worldClockWidget" title="World Clock">
+        <span class="wc-label" id="worldClockLabel">🌍</span>
+        <span class="wc-time" id="worldClockTime">--:--</span>
+        <button class="wc-config-btn" id="worldClockConfigBtn" title="Configure world clock">⚙</button>
+      </div>
+    </div>
 
     <!-- Profile mini-widget — like the LoL profile in top-right -->
     <div class="topnav-profile" id="navProfileWidget" title="View Profile">
@@ -595,11 +605,6 @@
           <!-- ═══ LEFT SIDEBAR ═══ -->
           <div class="prf-sidebar">
 
-            <!-- Profile Banner -->
-            <div class="prf-banner">
-              <img src="../assets/Profile Banner.png" class="prf-banner-img" alt="Profile Banner">
-            </div>
-
             <!-- Level badge (like LoL "300" badge in top-left of profile) -->
             <div class="prf-level-badge">
               <span class="prf-level-num" id="prfLevelNum">1</span>
@@ -645,6 +650,11 @@
 
             <!-- Edit button -->
             <button id="editProfileBtn" class="btn-ghost btn-sm prf-edit-btn">✏️ Edit Profile</button>
+
+            <!-- Profile Banner — decorative emblem at the bottom of the sidebar (LoL-style) -->
+            <div class="prf-banner">
+              <img src="../assets/Profile Banner.png" class="prf-banner-img" alt="Profile Banner">
+            </div>
 
           </div><!-- /.prf-sidebar -->
 
@@ -852,6 +862,51 @@
                 <label>Daily reminder time</label>
                 <input type="time" id="dailyReminderTime" value="09:00">
               </div>
+
+              <!-- Custom sounds -->
+              <h4 style="margin:18px 0 10px;color:var(--gold-light);font-size:0.85rem;letter-spacing:1px;">🔊 Custom Sounds</h4>
+              <div class="setting-group">
+                <label>Timer complete sound</label>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <label class="btn-upload">
+                    <input type="file" id="uploadTimerSound" accept="audio/*">
+                    🎵 Upload
+                  </label>
+                  <button id="playTimerSound" class="btn-secondary btn-sm">▶ Test</button>
+                  <button id="clearTimerSound" class="btn-ghost btn-sm">✕ Clear</button>
+                  <span id="timerSoundName" style="font-size:0.75rem;color:var(--text-muted);"></span>
+                </div>
+              </div>
+              <div class="setting-group">
+                <label>Toast notification sound</label>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <label class="btn-upload">
+                    <input type="file" id="uploadToastSound" accept="audio/*">
+                    🎵 Upload
+                  </label>
+                  <button id="playToastSound" class="btn-secondary btn-sm">▶ Test</button>
+                  <button id="clearToastSound" class="btn-ghost btn-sm">✕ Clear</button>
+                  <span id="toastSoundName" style="font-size:0.75rem;color:var(--text-muted);"></span>
+                </div>
+              </div>
+              <div class="setting-group">
+                <label>Achievement sound</label>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <label class="btn-upload">
+                    <input type="file" id="uploadAchieveSound" accept="audio/*">
+                    🎵 Upload
+                  </label>
+                  <button id="playAchieveSound" class="btn-secondary btn-sm">▶ Test</button>
+                  <button id="clearAchieveSound" class="btn-ghost btn-sm">✕ Clear</button>
+                  <span id="achieveSoundName" style="font-size:0.75rem;color:var(--text-muted);"></span>
+                </div>
+              </div>
+              <div class="setting-group">
+                <label>Sound volume</label>
+                <input type="range" id="soundVolume" min="0" max="100" value="80" style="width:140px;">
+                <span id="soundVolumeLabel" style="font-size:0.8rem;color:var(--text-muted);min-width:36px;">80%</span>
+              </div>
+
               <div style="margin-top:16px;display:flex;gap:10px;">
                 <button id="testNotification" class="btn-secondary">🔔 Test Notification</button>
                 <button id="saveNotifSettings" class="btn-primary">Save</button>
@@ -1024,6 +1079,25 @@
   <div id="bellOverlay" style="display:none;">
     <img id="bellGif" src="../assets/frieren-bell.gif" alt="Session complete!">
     <button id="bellClose" class="bell-close-btn" title="Close">✕</button>
+  </div>
+
+  <!-- World Clock config modal -->
+  <div id="worldClockModal" class="wc-modal" style="display:none;">
+    <div class="wc-modal-box">
+      <h3 class="wc-modal-title">🌍 World Clock</h3>
+      <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px;">Choose a timezone and a display label.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <label style="font-size:0.82rem;">Label (e.g. Tokyo, UTC, NYC)</label>
+        <input type="text" id="wcLabelInput" placeholder="e.g. Tokyo" maxlength="16"
+          style="padding:6px 10px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem;">
+        <label style="font-size:0.82rem;">Timezone</label>
+        <select id="wcTzSelect" style="padding:6px 10px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.82rem;max-height:200px;"></select>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+        <button id="wcModalCancel" class="btn-ghost btn-sm">Cancel</button>
+        <button id="wcModalSave" class="btn-primary btn-sm">Save</button>
+      </div>
+    </div>
   </div>
 
   <!-- JS files — load in order (no ES6 modules) -->
