@@ -94,6 +94,14 @@ const MEDALS = [
   { id: 'medal_early_bird',   name: 'Dawn Sentinel',        desc: 'Complete 5 sessions before 7 AM',       icon: '🌅', color: '#fb923c', glow: 'rgba(251,146,60,0.7)',  category: 'special',  threshold: 0 },
   { id: 'medal_night_owl',    name: 'Moonwatch Mage',       desc: 'Complete 5 sessions after 10 PM',       icon: '🦉', color: '#6366f1', glow: 'rgba(99,102,241,0.7)',  category: 'special',  threshold: 0 },
   { id: 'medal_pomodoro_25',  name: 'Tomato Sorcerer',      desc: 'Complete 25 Pomodoro cycles',           icon: '🍅', color: '#ef4444', glow: 'rgba(239,68,68,0.6)',   category: 'special',  threshold: 0 },
+
+  // Reader medals
+  { id: 'medal_reader_1doc',  name: 'First Page Turner',    desc: 'Read your first document in-app',       icon: '📄', color: '#60a5fa', glow: 'rgba(96,165,250,0.5)',  category: 'reader',   threshold: 1 },
+  { id: 'medal_reader_5docs', name: 'Eager Learner',        desc: 'Open 5 documents in the reader',        icon: '📚', color: '#3b82f6', glow: 'rgba(59,130,246,0.6)',  category: 'reader',   threshold: 5 },
+  { id: 'medal_reader_20docs',name: 'Bibliophile',          desc: 'Open 20 documents in the reader',       icon: '🗂️', color: '#2563eb', glow: 'rgba(37,99,235,0.7)',   category: 'reader',   threshold: 20 },
+  { id: 'medal_reader_50p',   name: 'Page Pilgrim',         desc: 'Read 50 pages total in the reader',     icon: '📖', color: '#818cf8', glow: 'rgba(129,140,248,0.6)', category: 'reader',   threshold: 50 },
+  { id: 'medal_reader_500p',  name: 'Scroll Sage',          desc: 'Read 500 pages total in the reader',    icon: '📜', color: '#a78bfa', glow: 'rgba(167,139,250,0.8)', category: 'reader',   threshold: 500 },
+  { id: 'medal_reader_2000p', name: 'Tome Master',          desc: 'Read 2,000 pages — a true scholar',     icon: '🌟', color: '#e0c87a', glow: 'rgba(224,200,122,1.0)', category: 'reader',   threshold: 2000 },
 ];
 
 window.MEDALS = MEDALS;
@@ -105,7 +113,8 @@ const RIBBON_COLORS = {
   sessions: ['#006400', '#32cd32'],
   journal:  ['#4b0082', '#9370db'],
   tasks:    ['#008080', '#20b2aa'],
-  special:  ['#2f2f2f', '#c0c0c0']
+  special:  ['#2f2f2f', '#c0c0c0'],
+  reader:   ['#1e3a8a', '#60a5fa']
 };
 
 window.RIBBON_COLORS = RIBBON_COLORS;
@@ -180,6 +189,10 @@ const Achievements = (function () {
         case 'sessions': met = (stats.totalSessions || 0) >= medal.threshold; break;
         case 'tasks':    met = (stats.tasksDone || 0) >= medal.threshold; break;
         case 'journal':  met = (stats.journalEntries || 0) >= medal.threshold; break;
+        case 'reader':
+          if (medal.id.includes('doc'))  met = (stats.readerDocs  || 0) >= medal.threshold;
+          else                           met = (stats.readerPages || 0) >= medal.threshold;
+          break;
         case 'special':  met = !!(stats[medal.id]); break;
       }
 
@@ -294,13 +307,19 @@ const Achievements = (function () {
     }
   }
 
+  async function getEarnedMedalIds() {
+    const medals = await getUnlockedMedals();
+    return Object.keys(medals);
+  }
+
   return {
     ACHIEVEMENTS,
     checkAchievements,
     renderAchievementsGrid,
     renderRibbonRack,
     renderMedalRack,
-    getUnlocked
+    getUnlocked,
+    getEarnedMedalIds
   };
 })();
 

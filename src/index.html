@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; frame-src https://www.youtube.com https://youtube.com https://open.spotify.com https://w.soundcloud.com https://soundcloud.com; img-src * blob: data:; media-src * blob: data:; connect-src 'self' https://open.spotify.com https://*.spotify.com https://*.scdn.co; font-src 'self' data: https://fonts.gstatic.com;">
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; frame-src https://www.youtube.com https://youtube.com https://open.spotify.com https://w.soundcloud.com https://soundcloud.com; img-src * blob: data:; media-src * blob: data:; connect-src 'self' https://open.spotify.com https://*.spotify.com https://*.scdn.co https://cdnjs.cloudflare.com; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; worker-src blob:;">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <title>Frieren Chronomark</title>
@@ -50,6 +50,7 @@
       <button class="nav-tab" data-tab="journal">JOURNAL</button>
       <button class="nav-tab" data-tab="grimoire">GRIMOIRE</button>
       <button class="nav-tab" data-tab="chronicle">CHRONICLE</button>
+      <button class="nav-tab" data-tab="reader">READER</button>
       <button class="nav-tab" data-tab="settings">SETTINGS</button>
     </div>
 
@@ -602,15 +603,18 @@
         <!-- LoL-style profile layout: sidebar identity + main stats/achievements -->
         <div class="prf-layout">
 
-          <!-- ═══ LEFT SIDEBAR ═══ -->
+          <!-- ═══ LEFT SIDEBAR ═══  (LoL-style profile card) -->
           <div class="prf-sidebar">
 
-            <!-- Level badge (like LoL "300" badge in top-left of profile) -->
+            <!-- Gradient/art background layers inside the sidebar card -->
+            <div class="prf-card-bg"></div>
+
+            <!-- Level badge at the top center -->
             <div class="prf-level-badge">
               <span class="prf-level-num" id="prfLevelNum">1</span>
             </div>
 
-            <!-- Avatar with decorative frame -->
+            <!-- Ornate avatar frame -->
             <div class="prf-avatar-frame">
               <img id="profileAvatar" src="" alt="Avatar" class="prf-avatar">
               <label class="prf-avatar-upload" title="Upload photo">
@@ -648,12 +652,17 @@
               </div>
             </div>
 
-            <!-- Edit button -->
-            <button id="editProfileBtn" class="btn-ghost btn-sm prf-edit-btn">✏️ Edit Profile</button>
+            <!-- Medals showcase row (top 3 earned medals displayed as badges) -->
+            <div class="prf-medals-row" id="prfMedalsRow"></div>
 
-            <!-- Profile Banner — decorative emblem at the bottom of the sidebar (LoL-style) -->
-            <div class="prf-banner">
-              <img src="../assets/Profile Banner.png" class="prf-banner-img" alt="Profile Banner">
+            <!-- Edit button -->
+            <button id="editProfileBtn" class="btn-ghost btn-sm prf-edit-btn">✏️ Edit</button>
+
+            <!-- Decorative sword/banner bottom ornament -->
+            <div class="prf-banner-bottom">
+              <div class="prf-sword prf-sword-left">⚔</div>
+              <div class="prf-sword-divider"></div>
+              <div class="prf-sword prf-sword-right">⚔</div>
             </div>
 
           </div><!-- /.prf-sidebar -->
@@ -715,6 +724,61 @@
 
         </div><!-- /.prf-layout -->
       </div><!-- /#tab-profile -->
+
+
+      <!-- ═══════════════════════════════════════════════════
+           READER TAB
+           ═══════════════════════════════════════════════════ -->
+      <div id="tab-reader" class="tab-panel reader-panel">
+
+        <!-- Left sidebar: document library -->
+        <div class="reader-sidebar">
+          <div class="reader-sidebar-header">
+            <span class="reader-sidebar-title">📚 Library</span>
+            <label class="btn-upload reader-upload-btn" title="Add document">
+              <input type="file" id="readerFileInput" accept=".pdf,.docx,.doc" multiple>
+              ＋
+            </label>
+          </div>
+          <!-- Drag-and-drop zone when library is empty -->
+          <div id="readerDropZone" class="reader-drop-zone">
+            <div class="reader-drop-icon">📂</div>
+            <p class="reader-drop-text">Drop PDF or Word files here<br><span style="font-size:0.75rem;opacity:0.6;">or click ＋ above</span></p>
+          </div>
+          <ul id="readerDocList" class="reader-doc-list"></ul>
+        </div>
+
+        <!-- Main viewer area -->
+        <div class="reader-main" id="readerMain">
+          <div id="readerEmpty" class="reader-empty">
+            <div class="reader-empty-icon">📖</div>
+            <p>Open a document from your library to start reading.</p>
+          </div>
+          <!-- PDF canvas container -->
+          <div id="readerPdfContainer" class="reader-pdf-container" style="display:none;">
+            <div class="reader-toolbar">
+              <button id="readerPrevPage" class="btn-ghost btn-sm">◀ Prev</button>
+              <span class="reader-page-info">Page <span id="readerPageNum">1</span> / <span id="readerPageTotal">1</span></span>
+              <button id="readerNextPage" class="btn-ghost btn-sm">Next ▶</button>
+              <button id="readerZoomOut" class="btn-ghost btn-sm" title="Zoom out">－</button>
+              <span id="readerZoomLabel" class="reader-zoom-label">100%</span>
+              <button id="readerZoomIn" class="btn-ghost btn-sm" title="Zoom in">＋</button>
+              <button id="readerCloseDoc" class="btn-ghost btn-sm" title="Close document" style="margin-left:auto;">✕ Close</button>
+            </div>
+            <div id="readerPdfScroll" class="reader-pdf-scroll">
+              <canvas id="readerPdfCanvas"></canvas>
+            </div>
+          </div>
+          <!-- DOCX HTML container -->
+          <div id="readerDocxContainer" class="reader-docx-container" style="display:none;">
+            <div class="reader-toolbar">
+              <button id="readerDocxClose" class="btn-ghost btn-sm" title="Close document" style="margin-left:auto;">✕ Close</button>
+            </div>
+            <div id="readerDocxContent" class="reader-docx-content"></div>
+          </div>
+        </div>
+
+      </div><!-- /#tab-reader -->
 
 
       <!-- ═══════════════════════════════════════════════════
@@ -875,18 +939,6 @@
                   <button id="playTimerSound" class="btn-secondary btn-sm">▶ Test</button>
                   <button id="clearTimerSound" class="btn-ghost btn-sm">✕ Clear</button>
                   <span id="timerSoundName" style="font-size:0.75rem;color:var(--text-muted);"></span>
-                </div>
-              </div>
-              <div class="setting-group">
-                <label>Toast notification sound</label>
-                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                  <label class="btn-upload">
-                    <input type="file" id="uploadToastSound" accept="audio/*">
-                    🎵 Upload
-                  </label>
-                  <button id="playToastSound" class="btn-secondary btn-sm">▶ Test</button>
-                  <button id="clearToastSound" class="btn-ghost btn-sm">✕ Clear</button>
-                  <span id="toastSoundName" style="font-size:0.75rem;color:var(--text-muted);"></span>
                 </div>
               </div>
               <div class="setting-group">
@@ -1101,6 +1153,10 @@
   </div>
 
   <!-- JS files — load in order (no ES6 modules) -->
+  <!-- PDF.js: in-app PDF rendering -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- mammoth.js: DOCX → HTML conversion -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/achievements.js"></script>
   <script src="js/reminders.js"></script>
@@ -1110,6 +1166,7 @@
   <script src="js/chronicle.js"></script>
   <script src="js/profile.js"></script>
   <script src="js/settings.js"></script>
+  <script src="js/reader.js"></script>
   <script src="js/app.js"></script>
 
 </body>

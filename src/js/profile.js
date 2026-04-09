@@ -145,10 +145,29 @@ const Profile = (function () {
       await window.Achievements.renderAchievementsGrid('achievementsGrid');
       await window.Achievements.renderRibbonRack('ribbonRack');
       await window.Achievements.renderMedalRack('medalRack');
+      await renderSidebarMedals();
     }
 
     // Keep the nav-bar level badge in sync
     if (window.refreshNavProfile) window.refreshNavProfile();
+  }
+
+  async function renderSidebarMedals() {
+    const row = document.getElementById('prfMedalsRow');
+    if (!row) return;
+    const earned = await window.Achievements ? window.Achievements.getEarnedMedalIds() : [];
+    if (!earned || earned.length === 0) {
+      row.innerHTML = '<span class="prf-medals-empty">No medals yet</span>';
+      return;
+    }
+    // Show up to 3 most recently-earned medals
+    const allMedals = window.MEDALS || [];
+    const display = earned.slice(-3).reverse().map(function (id) {
+      return allMedals.find(function (m) { return m.id === id; });
+    }).filter(Boolean);
+    row.innerHTML = display.map(function (m) {
+      return '<div class="prf-medal-badge" style="border-color:' + m.color + ';box-shadow:0 0 8px ' + (m.glow || 'transparent') + ';" title="' + m.name + ': ' + m.desc + '">' + m.icon + '</div>';
+    }).join('');
   }
 
   async function handleAvatarUpload(file) {

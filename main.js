@@ -4,6 +4,12 @@ const { app, BrowserWindow, ipcMain, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+// Fix Windows 10/11 toast notification sender name (shows "Frieren Chronomark" instead of "electron.app.Electron")
+app.setName('Frieren Chronomark');
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.frieren.chronomark');
+}
+
 let mainWindow;
 
 function createWindow() {
@@ -50,13 +56,14 @@ function createWindow() {
         ...details.responseHeaders,
         'Content-Security-Policy': [
           "default-src 'self'; " +
-          "script-src 'self' 'unsafe-inline'; " +
-          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+          "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; " +
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; " +
           "frame-src https://www.youtube.com https://youtube.com https://open.spotify.com https://w.soundcloud.com https://soundcloud.com; " +
           "img-src * blob: data:; " +
           "media-src * blob: data:; " +
-          "connect-src 'self' https://open.spotify.com https://*.spotify.com https://*.scdn.co; " +
-          "font-src 'self' data: https://fonts.gstatic.com;"
+          "connect-src 'self' https://open.spotify.com https://*.spotify.com https://*.scdn.co https://cdnjs.cloudflare.com; " +
+          "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; " +
+          "worker-src blob:;"
         ]
       }
     });
@@ -137,7 +144,11 @@ ipcMain.handle('open-spotify-window', async (event) => {
 ipcMain.handle('show-notification', async (event, title, body) => {
   try {
     if (Notification.isSupported()) {
-      const notif = new Notification({ title, body });
+      const notif = new Notification({
+        title,
+        body,
+        icon: path.join(__dirname, 'assets', 'icon.ico')
+      });
       notif.show();
     }
   } catch (e) {

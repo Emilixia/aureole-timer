@@ -164,7 +164,7 @@ window.showToast = showToast;
 // Custom audio for timer-complete, toast and achievement events.
 var SoundSystem = (function () {
   var _volume = 0.8; // 0-1
-  var _sounds = { timer: null, toast: null, achieve: null };
+  var _sounds = { timer: null, achieve: null };
 
   function setVolume(v) { _volume = Math.max(0, Math.min(1, v)); }
 
@@ -183,7 +183,6 @@ var SoundSystem = (function () {
     var vol = await Storage.get('soundVolume', 80);
     _volume = Math.max(0, Math.min(100, vol)) / 100;
     _sounds.timer   = await Storage.get('timerSound', null);
-    _sounds.toast   = await Storage.get('toastSound', null);
     _sounds.achieve = await Storage.get('achieveSound', null);
   }
 
@@ -191,13 +190,11 @@ var SoundSystem = (function () {
 })();
 window.SoundSystem = SoundSystem;
 
-// Play toast sound on every toast call
+// Play achievement sound on achievement toasts
 var _origShowToast = window.showToast;
 window.showToast = function (message, type) {
   if (type === 'achievement') {
     SoundSystem.play('achieve');
-  } else {
-    SoundSystem.play('toast');
   }
   return _origShowToast(message, type);
 };
@@ -247,7 +244,6 @@ function initSoundSettings() {
   }
 
   wireSound('uploadTimerSound',  'playTimerSound',  'clearTimerSound',  'timerSoundName',  'timerSound',  'timer');
-  wireSound('uploadToastSound',  'playToastSound',  'clearToastSound',  'toastSoundName',  'toastSound',  'toast');
   wireSound('uploadAchieveSound','playAchieveSound','clearAchieveSound','achieveSoundName','achieveSound','achieve');
 
   var volSlider = document.getElementById('soundVolume');
@@ -903,6 +899,9 @@ async function initApp() {
   initMusicPlayer();
   initQuickNotes();
   initSoundSettings();
+
+  // 6b. Initialize document reader
+  if (window.Reader) Reader.init();
 
   // 7. Mode selection + nav profile widget
   initModeSelection();
