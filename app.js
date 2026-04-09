@@ -2106,6 +2106,8 @@ const REINFORCEMENT_MESSAGES = [
   "🧙 A true mage of productivity!",
 ];
 
+const QUOTE_FADE_MS = 500; // matches CSS opacity transition duration
+
 function rotateMotivationalQuote() {
   const el = document.getElementById('motivational-quote');
   if (!el) return;
@@ -2114,7 +2116,7 @@ function rotateMotivationalQuote() {
   setTimeout(() => {
     el.textContent = '"' + quote + '"';
     el.style.opacity = '1';
-  }, 500);
+  }, QUOTE_FADE_MS);
 }
 
 function showReinforcementMessage(msg) {
