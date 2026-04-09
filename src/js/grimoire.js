@@ -3,6 +3,8 @@
 const Grimoire = (function () {
   let editingSpellId = null;
   let draggedCardId = null;
+  let dragOverCardId = null;
+  let dragInsertBefore = true;
 
   function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -73,6 +75,54 @@ const Grimoire = (function () {
     card.addEventListener('dragend', function () {
       card.classList.remove('dragging');
       draggedCardId = null;
+      dragOverCardId = null;
+      // Remove all drop-indicators
+      document.querySelectorAll('.spell-card').forEach(function (c) {
+        c.classList.remove('drag-above', 'drag-below');
+      });
+    });
+
+    card.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!draggedCardId || draggedCardId === spell.id) return;
+      const rect = card.getBoundingClientRect();
+      dragInsertBefore = e.clientY < rect.top + rect.height / 2;
+      dragOverCardId = spell.id;
+      // Visual indicator
+      document.querySelectorAll('.spell-card').forEach(function (c) {
+        c.classList.remove('drag-above', 'drag-below');
+      });
+      card.classList.add(dragInsertBefore ? 'drag-above' : 'drag-below');
+    });
+
+    card.addEventListener('drop', async function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!draggedCardId || draggedCardId === spell.id) return;
+      card.classList.remove('drag-above', 'drag-below');
+
+      const spells = await loadSpells();
+      const draggedIdx = spells.findIndex(function (s) { return s.id === draggedCardId; });
+      const targetIdx = spells.findIndex(function (s) { return s.id === spell.id; });
+      if (draggedIdx < 0 || targetIdx < 0) return;
+
+      const draggedSpell = spells.splice(draggedIdx, 1)[0];
+      const newTargetIdx = spells.findIndex(function (s) { return s.id === spell.id; });
+      const insertIdx = dragInsertBefore ? newTargetIdx : newTargetIdx + 1;
+
+      // Move to target column if different
+      draggedSpell.status = spell.status;
+      draggedSpell.updatedAt = Date.now();
+      spells.splice(insertIdx, 0, draggedSpell);
+
+      await saveSpells(spells);
+      await renderBoards();
+
+      const doneTasks = spells.filter(function (s) { return s.status === 'done'; }).length;
+      if (window.Achievements) {
+        await window.Achievements.checkAchievements({ tasksDone: doneTasks });
+      }
     });
 
     return card;
@@ -86,24 +136,29 @@ const Grimoire = (function () {
         e.dataTransfer.dropEffect = 'move';
         board.classList.add('drag-over');
       });
-      board.addEventListener('dragleave', function () {
-        board.classList.remove('drag-over');
+      board.addEventListener('dragleave', function (e) {
+        // Only remove if leaving the board entirely (not entering a child card)
+        if (!board.contains(e.relatedTarget)) {
+          board.classList.remove('drag-over');
+        }
       });
       board.addEventListener('drop', async function (e) {
         e.preventDefault();
         board.classList.remove('drag-over');
+        // If drop was handled by a child card, skip
         if (!draggedCardId) return;
+        if (dragOverCardId) { dragOverCardId = null; return; }
 
+        // Dropped on empty board area — append to end of column
         const newStatus = board.closest('.grimoire-board').dataset.status;
         const spells = await loadSpells();
         const spell = spells.find(function (s) { return s.id === draggedCardId; });
-        if (spell) {
+        if (spell && spell.status !== newStatus) {
           spell.status = newStatus;
           spell.updatedAt = Date.now();
           await saveSpells(spells);
           await renderBoards();
 
-          // Check task achievement
           const doneTasks = spells.filter(function (s) { return s.status === 'done'; }).length;
           if (window.Achievements) {
             await window.Achievements.checkAchievements({ tasksDone: doneTasks });

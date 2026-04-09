@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; frame-src https://www.youtube.com https://*.youtube.com; img-src * blob: data:; media-src * blob: data:; font-src 'self' data:;">
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; frame-src https://www.youtube.com https://*.youtube.com https://open.spotify.com; img-src * blob: data:; media-src * blob: data:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <title>Aureole Timer</title>
   <link rel="stylesheet" href="css/app.css">
 </head>
@@ -80,6 +82,16 @@
                 <button id="applyTimesBtn" class="btn-primary btn-sm">Apply</button>
               </div>
 
+              <!-- Custom duration setter -->
+              <div class="duration-row">
+                <span class="duration-label">⏱ Set Duration</span>
+                <input type="number" id="durationHours" min="0" max="23" value="1" title="Hours">
+                <span class="duration-sep">h</span>
+                <input type="number" id="durationMinutes" min="0" max="59" value="0" title="Minutes">
+                <span class="duration-sep">min</span>
+                <button id="setDurationBtn" class="btn-primary btn-sm">✓ Set</button>
+              </div>
+
               <!-- Timer display -->
               <div class="timer-display" id="timerDisplay">00:00:00</div>
               <div class="time-left" id="timeLeft">Time Left: --:--:--</div>
@@ -107,17 +119,7 @@
                 <button id="timerReset" class="btn-secondary btn-lg" disabled>↺ Reset</button>
               </div>
 
-              <!-- Upload custom background & walker -->
-              <div class="customization-row">
-                <label class="btn-upload">
-                  <input type="file" id="uploadBg" accept="image/*">
-                  🖼 Background
-                </label>
-                <label class="btn-upload">
-                  <input type="file" id="uploadWalker" accept="image/*,image/gif">
-                  🧝 Walker
-                </label>
-              </div>
+
             </div>
           </div>
 
@@ -127,11 +129,12 @@
             <!-- Music Player -->
             <div class="panel music-panel">
               <h3 class="panel-title">🎵 Arcane Melodies</h3>
-              <input type="text" id="ytUrl" placeholder="Paste YouTube URL...">
-              <button id="loadYtBtn" class="btn-primary btn-sm" style="margin-top:6px;width:100%;">▶ Load</button>
-              <div id="ytContainer">
-                <iframe id="ytFrame" src="" frameborder="0" allowfullscreen
-                  allow="autoplay; encrypted-media"></iframe>
+              <input type="text" id="spotifyUrl" placeholder="Paste Spotify playlist / track / album URL...">
+              <button id="loadSpotifyBtn" class="btn-primary btn-sm" style="margin-top:6px;width:100%;">▶ Load</button>
+              <div id="spotifyContainer">
+                <iframe id="spotifyFrame" src="" frameborder="0" allowfullscreen
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"></iframe>
               </div>
             </div>
 
@@ -440,8 +443,13 @@
           <div class="achievements-section">
             <!-- Ribbon rack -->
             <div class="ribbon-rack-section">
-              <h3 class="section-title">🎖 Achievement Rack</h3>
+              <h3 class="section-title">🎖 Ribbon Rack</h3>
               <div id="ribbonRack" class="ribbon-rack"></div>
+            </div>
+            <!-- Medal rack -->
+            <div class="medal-rack-section">
+              <h3 class="section-title">🏅 Medal Rack</h3>
+              <div id="medalRack" class="medal-rack"></div>
             </div>
             <!-- All achievements -->
             <div class="achievements-grid-section">
@@ -508,6 +516,20 @@
               </div>
               <div style="margin-top:16px;">
                 <button id="resetAppearance" class="btn-secondary">↺ Reset Defaults</button>
+              </div>
+              <div class="setting-group" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+                <label>Timer Background Image</label>
+                <label class="btn-upload">
+                  <input type="file" id="uploadBg" accept="image/*">
+                  🖼 Upload Background
+                </label>
+              </div>
+              <div class="setting-group">
+                <label>Progress Walker Sprite</label>
+                <label class="btn-upload">
+                  <input type="file" id="uploadWalker" accept="image/*,image/gif">
+                  🧝 Upload Walker
+                </label>
               </div>
             </div>
 

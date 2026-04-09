@@ -262,29 +262,26 @@ function initWindowControls() {
   }
 }
 
-// ── YouTube Music Player ──────────────────────────────────────
-function initMusicPlayer() {
-  const loadBtn = document.getElementById('loadYtBtn');
-  const urlInput = document.getElementById('ytUrl');
-  const frame = document.getElementById('ytFrame');
+// ── Spotify Music Player ──────────────────────────────────────
+function initSpotifyPlayer() {
+  const loadBtn = document.getElementById('loadSpotifyBtn');
+  const urlInput = document.getElementById('spotifyUrl');
+  const frame = document.getElementById('spotifyFrame');
 
   if (loadBtn) {
     loadBtn.addEventListener('click', function () {
       const url = urlInput ? urlInput.value.trim() : '';
-      const videoId = extractYouTubeVideoId(url);
-      if (videoId && frame) {
-        // Build the embed URL via the URL API so the result is always a
-        // well-formed https://www.youtube.com URL, regardless of input.
-        const embedUrl = new URL('/embed/' + videoId, 'https://www.youtube.com');
-        embedUrl.searchParams.set('autoplay', '1');
-        embedUrl.searchParams.set('enablejsapi', '1');
-        // Guard: only allow youtube.com as the final origin
-        if (embedUrl.origin === 'https://www.youtube.com') {
+      const embedPath = extractSpotifyEmbedPath(url);
+      if (embedPath && frame) {
+        const embedUrl = new URL('/embed/' + embedPath, 'https://open.spotify.com');
+        embedUrl.searchParams.set('utm_source', 'aureole');
+        // Guard: only allow open.spotify.com
+        if (embedUrl.origin === 'https://open.spotify.com') {
           frame.setAttribute('src', embedUrl.href);
         }
         if (window.showToast) showToast('Loading track... 🎵', 'info');
       } else {
-        if (window.showToast) showToast('Please enter a valid YouTube URL.', 'error');
+        if (window.showToast) showToast('Please enter a valid Spotify URL.', 'error');
       }
     });
   }
@@ -296,7 +293,7 @@ function initMusicPlayer() {
   }
 
   // Restore saved URL
-  Storage.get('ytUrl').then(function (savedUrl) {
+  Storage.get('spotifyUrl').then(function (savedUrl) {
     if (savedUrl && urlInput) {
       urlInput.value = savedUrl;
     }
@@ -304,36 +301,23 @@ function initMusicPlayer() {
 
   if (urlInput) {
     urlInput.addEventListener('input', function () {
-      Storage.set('ytUrl', this.value);
+      Storage.set('spotifyUrl', this.value);
     });
   }
 }
 
-// Returns just the 11-character video ID (strictly [a-zA-Z0-9_-]), or null.
-// Keeping the returned value free of any other user-supplied characters
-// ensures setAttribute('src', ...) below cannot be exploited.
-function extractYouTubeVideoId(url) {
+// Extracts a Spotify embed path like "playlist/ID" or "track/ID" from a Spotify URL.
+// Returns null if no valid path found.
+function extractSpotifyEmbedPath(url) {
   if (!url || typeof url !== 'string') return null;
-  let videoId = null;
-
-  // youtu.be/ID
-  const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})(?:[?&/#]|$)/);
-  if (shortMatch) videoId = shortMatch[1];
-
-  // youtube.com/watch?v=ID
-  if (!videoId) {
-    const watchMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})(?:[?&&#]|$)/);
-    if (watchMatch) videoId = watchMatch[1];
+  const match = url.match(/(?:open\.spotify\.com(?:\/intl-[a-z]+)?)\/(playlist|track|album|artist|episode|show)\/([a-zA-Z0-9]+)/);
+  if (match) {
+    const type = match[1];
+    const id = match[2];
+    if (/^[a-zA-Z0-9]+$/.test(id)) {
+      return type + '/' + id;
+    }
   }
-
-  // youtube.com/embed/ID
-  if (!videoId) {
-    const embedMatch = url.match(/\/embed\/([a-zA-Z0-9_-]{11})(?:[?&/#]|$)/);
-    if (embedMatch) videoId = embedMatch[1];
-  }
-
-  // Final strict validation — only return the ID if it is exactly 11 safe chars
-  if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) return videoId;
   return null;
 }
 
@@ -391,7 +375,7 @@ async function initApp() {
   Profile.init();
 
   // 6. Initialize music + quick notes
-  initMusicPlayer();
+  initSpotifyPlayer();
   initQuickNotes();
 
   // 7. Tab navigation

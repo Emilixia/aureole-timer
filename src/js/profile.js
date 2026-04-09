@@ -114,6 +114,7 @@ const Profile = (function () {
     if (window.Achievements) {
       await window.Achievements.renderAchievementsGrid('achievementsGrid');
       await window.Achievements.renderRibbonRack('ribbonRack');
+      await window.Achievements.renderMedalRack('medalRack');
     }
   }
 

@@ -109,6 +109,12 @@ const Timer = (function () {
       checkBreakReminder();
     }, 1000);
 
+    // Visual running states
+    const display = document.getElementById('timerDisplay');
+    if (display) display.classList.add('running');
+    const walker = document.getElementById('progressWalker');
+    if (walker) walker.classList.add('running');
+
     updateButtonStates();
     if (window.App) window.App.startEncouragement();
   }
@@ -123,6 +129,10 @@ const Timer = (function () {
     state.isRunning = false;
     clearInterval(state.intervalId);
     state.intervalId = null;
+    const display = document.getElementById('timerDisplay');
+    if (display) display.classList.remove('running');
+    const walker = document.getElementById('progressWalker');
+    if (walker) walker.classList.remove('running');
     updateButtonStates();
     if (window.App) window.App.stopEncouragement();
   }
@@ -146,6 +156,11 @@ const Timer = (function () {
     updateButtonStates();
     if (window.App) window.App.stopEncouragement();
     document.title = 'Aureole Timer';
+    // Clear running visual state
+    const displayStop = document.getElementById('timerDisplay');
+    if (displayStop) displayStop.classList.remove('running');
+    const walkerStop = document.getElementById('progressWalker');
+    if (walkerStop) walkerStop.classList.remove('running');
   }
 
   function resetTimer() {
@@ -160,6 +175,10 @@ const Timer = (function () {
     updateButtonStates();
     if (window.App) window.App.stopEncouragement();
     document.title = 'Aureole Timer';
+    const displayReset = document.getElementById('timerDisplay');
+    if (displayReset) displayReset.classList.remove('running');
+    const walkerReset = document.getElementById('progressWalker');
+    if (walkerReset) walkerReset.classList.remove('running');
   }
 
   async function saveSession(duration) {
@@ -487,6 +506,7 @@ const Timer = (function () {
     const stopBtn = document.getElementById('timerStop');
     const resetBtn = document.getElementById('timerReset');
     const applyBtn = document.getElementById('applyTimesBtn');
+    const setDurationBtn = document.getElementById('setDurationBtn');
     const typeSelect = document.getElementById('timerTypeSelect');
     const customLabelInput = document.getElementById('customTimerLabel');
     const uploadBg = document.getElementById('uploadBg');
@@ -498,6 +518,28 @@ const Timer = (function () {
     if (stopBtn) stopBtn.addEventListener('click', stopTimer);
     if (resetBtn) resetBtn.addEventListener('click', resetTimer);
     if (applyBtn) applyBtn.addEventListener('click', applyManualTimes);
+
+    if (setDurationBtn) {
+      setDurationBtn.addEventListener('click', function () {
+        const hoursEl = document.getElementById('durationHours');
+        const minsEl = document.getElementById('durationMinutes');
+        const hours = parseInt((hoursEl && hoursEl.value) || 0, 10) || 0;
+        const mins = parseInt((minsEl && minsEl.value) || 0, 10) || 0;
+        const totalSecs = hours * 3600 + mins * 60;
+        if (totalSecs <= 0) {
+          if (window.showToast) window.showToast('Please enter a duration greater than 0.', 'error');
+          return;
+        }
+        state.totalDuration = totalSecs;
+        const startLabel = document.getElementById('progressStart');
+        const endLabel = document.getElementById('progressEnd');
+        if (startLabel) startLabel.textContent = '--:--';
+        if (endLabel) endLabel.textContent = '--:--';
+        updateDisplay();
+        const label = (hours > 0 ? hours + 'h ' : '') + (mins > 0 ? mins + 'min' : '');
+        if (window.showToast) window.showToast('Duration set: ' + label.trim(), 'info');
+      });
+    }
 
     if (typeSelect) {
       typeSelect.addEventListener('change', function () {

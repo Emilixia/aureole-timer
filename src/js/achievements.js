@@ -2,50 +2,86 @@
 
 const ACHIEVEMENTS = [
   // Work time achievements (threshold in seconds)
-  { id: 'work_1h',    category: 'work',     name: 'First Hour',       desc: 'Log 1 hour of work',         icon: '⚔️',       color: '#8b4513', threshold: 3600 },
-  { id: 'work_5h',    category: 'work',     name: 'Dedicated Warrior', desc: 'Log 5 hours of work',        icon: '⚔️⚔️',    color: '#a0522d', threshold: 18000 },
-  { id: 'work_10h',   category: 'work',     name: 'Iron Will',         desc: 'Log 10 hours of work',       icon: '🛡️',       color: '#708090', threshold: 36000 },
-  { id: 'work_20h',   category: 'work',     name: 'Seasoned Veteran',  desc: 'Log 20 hours of work',       icon: '🗡️',       color: '#c0c0c0', threshold: 72000 },
-  { id: 'work_50h',   category: 'work',     name: 'Master Craftsman',  desc: 'Log 50 hours of work',       icon: '🔱',       color: '#d4a843', threshold: 180000 },
-  { id: 'work_100h',  category: 'work',     name: 'Arcane Knight',     desc: 'Log 100 hours of work',      icon: '👑',       color: '#7c5cbf', threshold: 360000 },
+  { id: 'work_1h',    category: 'work',     name: 'First Hour',         desc: 'Log 1 hour of work',              icon: '⚔️',       color: '#8b4513', threshold: 3600 },
+  { id: 'work_5h',    category: 'work',     name: 'Dedicated Warrior',  desc: 'Log 5 hours of work',             icon: '⚔️⚔️',    color: '#a0522d', threshold: 18000 },
+  { id: 'work_10h',   category: 'work',     name: 'Iron Will',          desc: 'Log 10 hours of work',            icon: '🛡️',       color: '#708090', threshold: 36000 },
+  { id: 'work_20h',   category: 'work',     name: 'Seasoned Veteran',   desc: 'Log 20 hours of work',            icon: '🗡️',       color: '#c0c0c0', threshold: 72000 },
+  { id: 'work_50h',   category: 'work',     name: 'Master Craftsman',   desc: 'Log 50 hours of work',            icon: '🔱',       color: '#d4a843', threshold: 180000 },
+  { id: 'work_100h',  category: 'work',     name: 'Arcane Knight',      desc: 'Log 100 hours of work',           icon: '👑',       color: '#7c5cbf', threshold: 360000 },
+  { id: 'work_200h',  category: 'work',     name: 'Battle-Hardened',    desc: 'Log 200 hours of work',           icon: '⚜️',       color: '#9b7dd4', threshold: 720000 },
+  { id: 'work_500h',  category: 'work',     name: 'Legendary Forge',    desc: 'Log 500 hours of work',           icon: '🌠',       color: '#f0c860', threshold: 1800000 },
 
   // Study achievements (threshold in seconds)
-  { id: 'study_1h',   category: 'study',    name: 'First Scroll',      desc: 'Study for 1 hour',           icon: '📖',       color: '#4682b4', threshold: 3600 },
-  { id: 'study_5h',   category: 'study',    name: 'Avid Reader',       desc: 'Study for 5 hours',          icon: '📚',       color: '#6495ed', threshold: 18000 },
-  { id: 'study_10h',  category: 'study',    name: 'Scholar',           desc: 'Study for 10 hours',         icon: '🎓',       color: '#4169e1', threshold: 36000 },
-  { id: 'study_20h',  category: 'study',    name: 'Arcane Scholar',    desc: 'Study for 20 hours',         icon: '🌟',       color: '#9370db', threshold: 72000 },
-  { id: 'study_50h',  category: 'study',    name: 'Sage',              desc: 'Study for 50 hours',         icon: '🔮',       color: '#8a2be2', threshold: 180000 },
-  { id: 'study_100h', category: 'study',    name: 'Grand Magus',       desc: 'Study for 100 hours',        icon: '✨',       color: '#d4a843', threshold: 360000 },
+  { id: 'study_1h',   category: 'study',    name: 'First Scroll',       desc: 'Study for 1 hour',                icon: '📖',       color: '#4682b4', threshold: 3600 },
+  { id: 'study_5h',   category: 'study',    name: 'Avid Reader',        desc: 'Study for 5 hours',               icon: '📚',       color: '#6495ed', threshold: 18000 },
+  { id: 'study_10h',  category: 'study',    name: 'Scholar',            desc: 'Study for 10 hours',              icon: '🎓',       color: '#4169e1', threshold: 36000 },
+  { id: 'study_20h',  category: 'study',    name: 'Arcane Scholar',     desc: 'Study for 20 hours',              icon: '🌟',       color: '#9370db', threshold: 72000 },
+  { id: 'study_50h',  category: 'study',    name: 'Sage',               desc: 'Study for 50 hours',              icon: '🔮',       color: '#8a2be2', threshold: 180000 },
+  { id: 'study_100h', category: 'study',    name: 'Grand Magus',        desc: 'Study for 100 hours',             icon: '✨',       color: '#d4a843', threshold: 360000 },
+  { id: 'study_200h', category: 'study',    name: 'Archmage',           desc: 'Study for 200 hours',             icon: '🌌',       color: '#c084fc', threshold: 720000 },
+  { id: 'study_500h', category: 'study',    name: 'Oracle of Aureole',  desc: 'Study for 500 hours',             icon: '🔭',       color: '#f0c860', threshold: 1800000 },
 
   // Streak achievements (threshold in days)
-  { id: 'streak_3',   category: 'streak',   name: 'Consistent',        desc: '3-day streak',               icon: '🔥',       color: '#ff6347', threshold: 3 },
-  { id: 'streak_7',   category: 'streak',   name: 'Week Warrior',      desc: '7-day streak',               icon: '🔥🔥',     color: '#ff4500', threshold: 7 },
-  { id: 'streak_14',  category: 'streak',   name: 'Fortnight',         desc: '14-day streak',              icon: '⚡',       color: '#ffd700', threshold: 14 },
-  { id: 'streak_30',  category: 'streak',   name: 'Monthly Hero',      desc: '30-day streak',              icon: '🌙',       color: '#c0c0ff', threshold: 30 },
-  { id: 'streak_100', category: 'streak',   name: 'Eternal Flame',     desc: '100-day streak',             icon: '💎',       color: '#7fffd4', threshold: 100 },
+  { id: 'streak_3',   category: 'streak',   name: 'Consistent',         desc: '3-day streak',                    icon: '🔥',       color: '#ff6347', threshold: 3 },
+  { id: 'streak_7',   category: 'streak',   name: 'Week Warrior',       desc: '7-day streak',                    icon: '🔥🔥',     color: '#ff4500', threshold: 7 },
+  { id: 'streak_14',  category: 'streak',   name: 'Fortnight',          desc: '14-day streak',                   icon: '⚡',       color: '#ffd700', threshold: 14 },
+  { id: 'streak_30',  category: 'streak',   name: 'Monthly Hero',       desc: '30-day streak',                   icon: '🌙',       color: '#c0c0ff', threshold: 30 },
+  { id: 'streak_60',  category: 'streak',   name: 'Two-Month Mage',     desc: '60-day streak',                   icon: '🌊',       color: '#7fffd4', threshold: 60 },
+  { id: 'streak_100', category: 'streak',   name: 'Eternal Flame',      desc: '100-day streak',                  icon: '💎',       color: '#7fffd4', threshold: 100 },
+  { id: 'streak_365', category: 'streak',   name: 'Year of Aureole',    desc: '365-day streak',                  icon: '🌈',       color: '#f0c860', threshold: 365 },
 
   // Session count achievements
-  { id: 'sessions_10',  category: 'sessions', name: 'Regular',         desc: 'Complete 10 sessions',       icon: '📅',       color: '#3cb371', threshold: 10 },
-  { id: 'sessions_50',  category: 'sessions', name: 'Diligent',        desc: 'Complete 50 sessions',       icon: '🌿',       color: '#228b22', threshold: 50 },
-  { id: 'sessions_100', category: 'sessions', name: 'Centurion',       desc: 'Complete 100 sessions',      icon: '🏆',       color: '#d4a843', threshold: 100 },
+  { id: 'sessions_5',   category: 'sessions', name: 'Getting Started',  desc: 'Complete 5 sessions',             icon: '🌱',       color: '#90ee90', threshold: 5 },
+  { id: 'sessions_10',  category: 'sessions', name: 'Regular',          desc: 'Complete 10 sessions',            icon: '📅',       color: '#3cb371', threshold: 10 },
+  { id: 'sessions_25',  category: 'sessions', name: 'Adept',            desc: 'Complete 25 sessions',            icon: '🏅',       color: '#2e8b57', threshold: 25 },
+  { id: 'sessions_50',  category: 'sessions', name: 'Diligent',         desc: 'Complete 50 sessions',            icon: '🌿',       color: '#228b22', threshold: 50 },
+  { id: 'sessions_100', category: 'sessions', name: 'Centurion',        desc: 'Complete 100 sessions',           icon: '🏆',       color: '#d4a843', threshold: 100 },
+  { id: 'sessions_250', category: 'sessions', name: 'Arcane Devotee',   desc: 'Complete 250 sessions',           icon: '💠',       color: '#9b7dd4', threshold: 250 },
+  { id: 'sessions_500', category: 'sessions', name: 'Grand Centurion',  desc: 'Complete 500 sessions',           icon: '🔱',       color: '#f0c860', threshold: 500 },
 
   // Journal achievements
-  { id: 'journal_1',  category: 'journal',  name: 'First Entry',       desc: 'Write your first journal entry', icon: '✍️',   color: '#db7093', threshold: 1 },
-  { id: 'journal_10', category: 'journal',  name: 'Storyteller',       desc: 'Write 10 journal entries',   icon: '📝',       color: '#c71585', threshold: 10 },
-  { id: 'journal_30', category: 'journal',  name: 'Chronicler',        desc: 'Write 30 journal entries',   icon: '📜',       color: '#800080', threshold: 30 },
+  { id: 'journal_1',  category: 'journal',  name: 'First Entry',        desc: 'Write your first journal entry',  icon: '✍️',       color: '#db7093', threshold: 1 },
+  { id: 'journal_5',  category: 'journal',  name: 'Apprentice Scribe',  desc: 'Write 5 journal entries',         icon: '📓',       color: '#e87fa1', threshold: 5 },
+  { id: 'journal_10', category: 'journal',  name: 'Storyteller',        desc: 'Write 10 journal entries',        icon: '📝',       color: '#c71585', threshold: 10 },
+  { id: 'journal_30', category: 'journal',  name: 'Chronicler',         desc: 'Write 30 journal entries',        icon: '📜',       color: '#800080', threshold: 30 },
+  { id: 'journal_100',category: 'journal',  name: 'Grand Scribe',       desc: 'Write 100 journal entries',       icon: '📔',       color: '#9b1faf', threshold: 100 },
 
   // Task achievements
-  { id: 'tasks_done_10', category: 'tasks', name: 'Spell Caster',      desc: 'Complete 10 spells/tasks',   icon: '✅',       color: '#20b2aa', threshold: 10 },
-  { id: 'tasks_done_50', category: 'tasks', name: 'Arcane Master',     desc: 'Complete 50 spells/tasks',   icon: '🌊',       color: '#008080', threshold: 50 },
+  { id: 'tasks_done_5',  category: 'tasks', name: 'Spell Apprentice',   desc: 'Complete 5 spells/tasks',         icon: '🔮',       color: '#48d1cc', threshold: 5 },
+  { id: 'tasks_done_10', category: 'tasks', name: 'Spell Caster',       desc: 'Complete 10 spells/tasks',        icon: '✅',       color: '#20b2aa', threshold: 10 },
+  { id: 'tasks_done_25', category: 'tasks', name: 'Spell Weaver',       desc: 'Complete 25 spells/tasks',        icon: '🌊',       color: '#0e9690', threshold: 25 },
+  { id: 'tasks_done_50', category: 'tasks', name: 'Arcane Master',      desc: 'Complete 50 spells/tasks',        icon: '🌊',       color: '#008080', threshold: 50 },
+  { id: 'tasks_done_100',category: 'tasks', name: 'Grand Archmage',     desc: 'Complete 100 spells/tasks',       icon: '🏰',       color: '#d4a843', threshold: 100 },
 
   // Special achievements
-  { id: 'first_pomodoro', category: 'special', name: 'Tomato Farmer',  desc: 'Complete your first Pomodoro', icon: '🍅',     color: '#ff6347', threshold: 1 },
-  { id: 'night_owl',      category: 'special', name: 'Night Owl',      desc: 'Work after midnight',        icon: '🦉',       color: '#191970', threshold: 1 },
-  { id: 'early_bird',     category: 'special', name: 'Dawn Mage',      desc: 'Work before 6am',            icon: '🌅',       color: '#ffa500', threshold: 1 },
-  { id: 'full_day',       category: 'special', name: 'Devoted',        desc: 'Log 8+ hours in a single day', icon: '🌟',     color: '#d4a843', threshold: 1 }
+  { id: 'first_pomodoro', category: 'special', name: 'Tomato Farmer',   desc: 'Complete your first Pomodoro',    icon: '🍅',       color: '#ff6347', threshold: 1 },
+  { id: 'pomodoro_10',    category: 'special', name: 'Pomodoro Master', desc: 'Complete 10 Pomodoros',           icon: '🍅🍅',     color: '#e05535', threshold: 10 },
+  { id: 'night_owl',      category: 'special', name: 'Night Owl',       desc: 'Work after midnight',             icon: '🦉',       color: '#191970', threshold: 1 },
+  { id: 'early_bird',     category: 'special', name: 'Dawn Mage',       desc: 'Work before 6am',                 icon: '🌅',       color: '#ffa500', threshold: 1 },
+  { id: 'full_day',       category: 'special', name: 'Devoted',         desc: 'Log 8+ hours in a single day',    icon: '🌟',       color: '#d4a843', threshold: 1 },
+  { id: 'weekend_warrior',category: 'special', name: 'Weekend Warrior', desc: 'Work on a weekend',               icon: '⚔️',       color: '#8a6fd4', threshold: 1 },
+  { id: 'habit_10_days',  category: 'special', name: 'Ritual Keeper',   desc: 'Keep a habit for 10 days',        icon: '🌱',       color: '#4a9a6f', threshold: 1 },
+  { id: 'reminder_set',   category: 'special', name: 'Planner',         desc: 'Set your first reminder',         icon: '🔔',       color: '#d4a843', threshold: 1 }
 ];
 
 window.ACHIEVEMENTS = ACHIEVEMENTS;
+
+// ── Medals (milestone awards with a distinct visual style) ─────
+const MEDALS = [
+  { id: 'medal_work_100h',    name: '100h Worker',       desc: 'Logged 100 hours of work',      icon: '🥉', color: '#cd7f32', glow: 'rgba(205,127,50,0.6)',  category: 'work',     threshold: 360000 },
+  { id: 'medal_work_500h',    name: '500h Ironclad',     desc: 'Logged 500 hours of work',      icon: '🥈', color: '#c0c0c0', glow: 'rgba(192,192,192,0.6)', category: 'work',     threshold: 1800000 },
+  { id: 'medal_study_100h',   name: '100h Scholar',      desc: 'Studied for 100 hours',         icon: '🥉', color: '#cd7f32', glow: 'rgba(205,127,50,0.6)',  category: 'study',    threshold: 360000 },
+  { id: 'medal_study_500h',   name: '500h Grand Sage',   desc: 'Studied for 500 hours',         icon: '🥈', color: '#c0c0c0', glow: 'rgba(192,192,192,0.6)', category: 'study',    threshold: 1800000 },
+  { id: 'medal_streak_30',    name: '30-Day Oath',       desc: '30-day streak maintained',      icon: '🥉', color: '#cd7f32', glow: 'rgba(205,127,50,0.6)',  category: 'streak',   threshold: 30 },
+  { id: 'medal_streak_100',   name: '100-Day Legend',    desc: '100-day streak maintained',     icon: '🥇', color: '#d4a843', glow: 'rgba(212,168,67,0.8)',  category: 'streak',   threshold: 100 },
+  { id: 'medal_streak_365',   name: 'Year of Glory',     desc: '365-day streak — legendary!',  icon: '🌠', color: '#a78bfa', glow: 'rgba(167,139,250,0.8)', category: 'streak',   threshold: 365 },
+  { id: 'medal_sessions_100', name: 'Century Session',   desc: 'Completed 100 sessions',        icon: '🥉', color: '#cd7f32', glow: 'rgba(205,127,50,0.6)',  category: 'sessions', threshold: 100 },
+  { id: 'medal_sessions_500', name: 'Session Titan',     desc: 'Completed 500 sessions',        icon: '🥇', color: '#d4a843', glow: 'rgba(212,168,67,0.8)',  category: 'sessions', threshold: 500 },
+  { id: 'medal_tasks_100',    name: 'Spell Master',      desc: 'Completed 100 spells/tasks',    icon: '🥇', color: '#d4a843', glow: 'rgba(212,168,67,0.8)',  category: 'tasks',    threshold: 100 },
+  { id: 'medal_journal_100',  name: 'Chronicle Master',  desc: 'Wrote 100 journal entries',     icon: '🥇', color: '#d4a843', glow: 'rgba(212,168,67,0.8)',  category: 'journal',  threshold: 100 }
+];
+
+window.MEDALS = MEDALS;
 
 const RIBBON_COLORS = {
   work:     ['#8b0000', '#cd5c5c'],
@@ -69,9 +105,19 @@ const Achievements = (function () {
     await Storage.set('achievements', data);
   }
 
+  async function getUnlockedMedals() {
+    return await Storage.get('medals', {});
+  }
+
+  async function setUnlockedMedals(data) {
+    await Storage.set('medals', data);
+  }
+
   async function checkAchievements(stats) {
     const unlocked = await getUnlocked();
+    const unlockedMedals = await getUnlockedMedals();
     const newlyUnlocked = [];
+    const newlyUnlockedMedals = [];
 
     for (const ach of ACHIEVEMENTS) {
       if (unlocked[ach.id]) continue;
@@ -107,6 +153,26 @@ const Achievements = (function () {
       }
     }
 
+    // Check medals
+    for (const medal of MEDALS) {
+      if (unlockedMedals[medal.id]) continue;
+
+      let met = false;
+      switch (medal.category) {
+        case 'work':     met = (stats.totalWork || 0) >= medal.threshold; break;
+        case 'study':    met = (stats.totalStudy || 0) >= medal.threshold; break;
+        case 'streak':   met = (stats.streak || 0) >= medal.threshold; break;
+        case 'sessions': met = (stats.totalSessions || 0) >= medal.threshold; break;
+        case 'tasks':    met = (stats.tasksDone || 0) >= medal.threshold; break;
+        case 'journal':  met = (stats.journalEntries || 0) >= medal.threshold; break;
+      }
+
+      if (met) {
+        unlockedMedals[medal.id] = { unlockedAt: Date.now() };
+        newlyUnlockedMedals.push(medal);
+      }
+    }
+
     if (newlyUnlocked.length > 0) {
       await setUnlocked(unlocked);
       for (const ach of newlyUnlocked) {
@@ -115,11 +181,25 @@ const Achievements = (function () {
       renderAchievementsGrid('achievementsGrid');
       renderRibbonRack('ribbonRack');
     }
+
+    if (newlyUnlockedMedals.length > 0) {
+      await setUnlockedMedals(unlockedMedals);
+      for (const medal of newlyUnlockedMedals) {
+        showMedalToast(medal);
+      }
+      renderMedalRack('medalRack');
+    }
   }
 
   function showAchievementToast(ach) {
     if (window.showToast) {
       window.showToast(`🏆 Achievement Unlocked: ${ach.icon} ${ach.name}`, 'achievement');
+    }
+  }
+
+  function showMedalToast(medal) {
+    if (window.showToast) {
+      window.showToast(`🏅 Medal Earned: ${medal.icon} ${medal.name}`, 'achievement');
     }
   }
 
@@ -172,10 +252,37 @@ const Achievements = (function () {
     }
   }
 
+  async function renderMedalRack(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const unlockedMedals = await getUnlockedMedals();
+    container.innerHTML = '';
+
+    const earned = MEDALS.filter(m => unlockedMedals[m.id]);
+    if (earned.length === 0) {
+      container.innerHTML = '<p class="text-muted" style="font-size:0.85rem;padding:8px;">No medals yet. Reach major milestones to earn medals!</p>';
+      return;
+    }
+
+    for (const medal of earned) {
+      const badge = document.createElement('div');
+      badge.className = 'medal-badge';
+      badge.title = `${medal.name} — ${medal.desc}`;
+      badge.style.setProperty('--medal-color', medal.color);
+      badge.style.setProperty('--medal-glow', medal.glow);
+      badge.innerHTML = `
+        <div class="medal-icon">${medal.icon}</div>
+        <div class="medal-name">${medal.name}</div>
+      `;
+      container.appendChild(badge);
+    }
+  }
+
   return {
     checkAchievements,
     renderAchievementsGrid,
     renderRibbonRack,
+    renderMedalRack,
     getUnlocked
   };
 })();
