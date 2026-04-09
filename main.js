@@ -55,7 +55,7 @@ function createWindow() {
           "frame-src https://www.youtube.com https://youtube.com https://open.spotify.com https://w.soundcloud.com https://soundcloud.com; " +
           "img-src * blob: data:; " +
           "media-src * blob: data:; " +
-          "connect-src 'self'; " +
+          "connect-src 'self' https://open.spotify.com https://*.spotify.com https://*.scdn.co; " +
           "font-src 'self' data: https://fonts.gstatic.com;"
         ]
       }

@@ -540,7 +540,15 @@ function initMusicPlayer() {
       return;
     }
     if (spotifyFrame) {
-      spotifyFrame.setAttribute('src', embedUrl);
+      // Use a URL object so setAttribute receives a URL-encoded, origin-validated string
+      try {
+        var safeUrl = new URL(embedUrl);
+        if (safeUrl.origin !== 'https://open.spotify.com') throw new Error('bad origin');
+        spotifyFrame.setAttribute('src', safeUrl.href);
+      } catch (_) {
+        if (window.showToast) showToast('Invalid Spotify embed URL.', 'error');
+        return;
+      }
       spotifyFrame.style.display = 'block';
     }
     Storage.set('musicUrl', raw);
