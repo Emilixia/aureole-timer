@@ -27,6 +27,15 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'src', 'index.html'));
 
+  // Strip "Electron/..." from the User-Agent so YouTube embeds work (fixes Error 153)
+  mainWindow.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {
+    const ua = details.requestHeaders['User-Agent'];
+    if (ua) {
+      details.requestHeaders['User-Agent'] = ua.replace(/\s*Electron\/[\d.]+/, '');
+    }
+    callback({ requestHeaders: details.requestHeaders });
+  });
+
   // Set Content-Security-Policy header
   mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
     callback({

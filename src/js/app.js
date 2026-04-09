@@ -367,7 +367,6 @@ function initQuickNotes() {
 // Which mode cards each subnav tab shows, and which to pre-select
 const JMS_SUBNAVS = {
   solo:           { modes: ['working', 'studying'],                 defaultMode: 'working' },
-  timed:          { modes: ['working', 'studying', 'pomodoro'],     defaultMode: 'working' },
   technique:      { modes: ['pomodoro', 'custom'],                  defaultMode: 'pomodoro' },
   'create-custom':{ modes: ['custom'],                              defaultMode: 'custom' }
 };
