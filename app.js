@@ -698,8 +698,8 @@ function renderNotesList(notes) {
     const date = note.createdAt ? new Date(note.createdAt).toLocaleDateString() : '';
     card.innerHTML = `
       <div class="note-card-title">${note.pinned ? '📌 ' : ''}${escapeHtml(note.title || 'Untitled')}</div>
-      <div class="note-meta">${escapeHtml(note.category || '')} · ${escapeHtml(date)}</div>
-      <div class="note-tags">${tagsHtml}</div>
+      <div class="note-card-meta">${escapeHtml(note.category || '')} · ${escapeHtml(date)}</div>
+      <div class="note-tags-display">${tagsHtml}</div>
     `;
     card.addEventListener('click', () => openNote(note.id));
     listEl.appendChild(card);
@@ -908,7 +908,7 @@ function renderChronicle(items) {
     div.className = `timeline-item timeline-${item.type || 'session'}`;
 
     const dot = document.createElement('div');
-    dot.className = `timeline-dot dot-${item.type || 'session'}`;
+    dot.className = `timeline-dot ${item.type || 'session'}`;
 
     const content = document.createElement('div');
     content.className = 'timeline-content';
@@ -1971,11 +1971,11 @@ function renderTaskList() {
 
   state.dailyPlanner.tasks.forEach((task, idx) => {
     const item = document.createElement('div');
-    item.className = 'task-item priority-' + (task.priority || 'normal') + (task.done ? ' done' : '');
+    item.className = 'task-item priority-' + (task.priority || 'medium') + (task.done ? ' done' : '');
     item.innerHTML = `
       <input type="checkbox" class="task-checkbox" ${task.done ? 'checked' : ''}>
       <span class="task-text">${escapeHtml(task.text)}</span>
-      <span class="task-priority">${escapeHtml(task.priority || 'normal')}</span>
+      <span class="task-priority-badge">${escapeHtml(task.priority || 'medium')}</span>
       <button class="btn-delete-task" data-idx="${idx}">✕</button>
     `;
     item.querySelector('.task-checkbox').addEventListener('change', e => {

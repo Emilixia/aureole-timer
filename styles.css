@@ -741,6 +741,15 @@ button {
   font-size: 0.85rem;
 }
 
+.task-priority-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
 .reminder-item,
 .routine-item {
   display: flex;
@@ -751,6 +760,69 @@ button {
   border-radius: 6px;
   margin-bottom: 0.4rem;
   font-size: 0.85rem;
+}
+
+.routine-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.routine-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.routine-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.routine-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.btn-start-routine,
+.btn-delete-routine,
+.btn-delete-task,
+.btn-toggle-reminder,
+.btn-delete-reminder {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(195,183,230,0.2);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.15s;
+}
+
+.btn-start-routine:hover { color: var(--accent-primary); border-color: var(--accent-primary); }
+.btn-delete-routine:hover, .btn-delete-task:hover, .btn-delete-reminder:hover { color: var(--danger); border-color: var(--danger); }
+
+.achievement-group {
+  width: 100%;
+}
+
+.achievement-category-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.7rem;
+  color: var(--accent-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid rgba(226,187,102,0.15);
+}
+
+.achievement-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .youtube-container {
