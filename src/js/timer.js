@@ -44,6 +44,11 @@ const Timer = (function () {
     return `${pad(m)}:${pad(s)}`;
   }
 
+  // ── Alternative progress bar state ──────────────────────────
+  let manaSparkleAnimId = null;
+  let manaSparkles = [];
+  const CIRCUMFERENCE = 2 * Math.PI * 80; // r=80 for doughnut SVG
+
   function updateDisplay() {
     const display = document.getElementById('timerDisplay');
     const timeLeftEl = document.getElementById('timeLeft');
@@ -52,11 +57,14 @@ const Timer = (function () {
 
     if (display) display.textContent = formatTime(state.elapsed);
 
+    const percent = state.totalDuration > 0
+      ? Math.min(100, (state.elapsed / state.totalDuration) * 100)
+      : 0;
+
     if (state.totalDuration > 0) {
       const remaining = Math.max(0, state.totalDuration - state.elapsed);
       if (timeLeftEl) timeLeftEl.textContent = 'Time Left: ' + formatTime(remaining);
 
-      const percent = Math.min(100, (state.elapsed / state.totalDuration) * 100);
       if (progressFill) progressFill.style.width = percent + '%';
       if (progressPercent) progressPercent.textContent = Math.round(percent) + '%';
       updateWalkerPosition(percent);
@@ -71,6 +79,8 @@ const Timer = (function () {
       updateWalkerPosition(0);
     }
 
+    updateAltProgressBars(percent);
+
     // Time blindness helper — update document title
     const settings = window.AppSettings || {};
     if (settings.timeBlindenessHelper && state.isRunning) {
@@ -81,7 +91,154 @@ const Timer = (function () {
     }
   }
 
-  function updateWalkerPosition(percent) {
+  function updateAltProgressBars(percent) {
+    updateDoughnut(percent);
+    updateHourglass(percent);
+    updateManaBar(percent);
+  }
+
+  function updateDoughnut(percent) {
+    const fill = document.getElementById('doughnutFill');
+    const pctText = document.getElementById('doughnutPct');
+    if (!fill) return;
+    const offset = CIRCUMFERENCE * (1 - percent / 100);
+    fill.style.strokeDashoffset = offset;
+    if (pctText) pctText.textContent = Math.round(percent) + '%';
+  }
+
+  function updateHourglass(percent) {
+    // Sand falls from top to bottom as time passes
+    // Top triangle empties (sand falls): clip from bottom up
+    // Bot triangle fills (sand accumulates): clip from top down
+    const sandTop = document.getElementById('hgSandTop');
+    const sandBot = document.getElementById('hgSandBot');
+    const particle = document.getElementById('hgParticle');
+    const pctText = document.getElementById('hgPct');
+
+    if (!sandTop || !sandBot) return;
+
+    // Hourglass SVG coords: top triangle vertices (10,10)(110,10)(60,100)
+    // As percent goes 0→100 the top sand level drops from y=10 toward y=100
+    const topFull = 10;
+    const topEmpty = 100; // converges to pinch point
+    const topSandLevel = topFull + (topEmpty - topFull) * (percent / 100);
+
+    // Remaining sand top: from current level to pinch
+    // Interpolate left/right edges at current level
+    const leftX = 10 + (60 - 10) * ((topSandLevel - 10) / 90);  // lerp from 10 to 60
+    const rightX = 110 - (110 - 60) * ((topSandLevel - 10) / 90); // lerp from 110 to 60
+    sandTop.setAttribute('points',
+      leftX + ',' + topSandLevel + ' ' +
+      rightX + ',' + topSandLevel + ' ' +
+      '60,100'
+    );
+
+    // Bottom sand: fills from pinch (60,100) upward
+    // Bottom triangle vertices: (10,190)(110,190)(60,100)
+    const botFull = 190;
+    const botEmpty = 100; // pinch
+    const botSandLevel = botFull - (botFull - botEmpty) * (percent / 100);
+    const bLeftX = 10 + (60 - 10) * ((190 - botSandLevel) / 90);
+    const bRightX = 110 - (110 - 60) * ((190 - botSandLevel) / 90);
+    sandBot.setAttribute('points',
+      '10,190 110,190 ' +
+      bRightX + ',' + botSandLevel + ' ' +
+      bLeftX + ',' + botSandLevel
+    );
+
+    // Falling particle: animate between topSandLevel and 100 only when running
+    if (particle) {
+      const isRunning = state.isRunning;
+      particle.style.display = isRunning && percent < 100 ? '' : 'none';
+    }
+
+    if (pctText) pctText.textContent = Math.round(percent) + '%';
+  }
+
+  function updateManaBar(percent) {
+    const fill = document.getElementById('manaFill');
+    const pctText = document.getElementById('manaPct');
+    if (fill) fill.style.width = percent + '%';
+    if (pctText) pctText.textContent = Math.round(percent) + '%';
+  }
+
+  // ── Mana sparkle particle system ────────────────────────────
+  function startManaSparkles() {
+    stopManaSparkles();
+    const canvas = document.getElementById('manaSparkleCanvas');
+    if (!canvas) return;
+
+    function resizeCanvas() {
+      const fill = document.getElementById('manaFill');
+      if (!fill) return;
+      canvas.width = fill.offsetWidth || 200;
+      canvas.height = fill.offsetHeight || 28;
+    }
+    resizeCanvas();
+
+    manaSparkles = [];
+    for (let i = 0; i < 18; i++) {
+      manaSparkles.push({
+        x: Math.random(),
+        y: Math.random(),
+        r: Math.random() * 2 + 1,
+        speed: Math.random() * 0.4 + 0.2,
+        alpha: Math.random() * 0.8 + 0.2,
+        alphaDelta: (Math.random() - 0.5) * 0.04
+      });
+    }
+
+    function loop() {
+      resizeCanvas();
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const p of manaSparkles) {
+        p.y -= p.speed / canvas.height;
+        p.alpha += p.alphaDelta;
+        if (p.alpha <= 0.1) p.alphaDelta = Math.abs(p.alphaDelta);
+        if (p.alpha >= 0.9) p.alphaDelta = -Math.abs(p.alphaDelta);
+        if (p.y < 0) { p.y = 1; p.x = Math.random(); }
+
+        ctx.beginPath();
+        ctx.arc(p.x * canvas.width, p.y * canvas.height, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(180, 230, 255, ' + p.alpha + ')';
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = 'rgba(100, 200, 255, 0.8)';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      manaSparkleAnimId = requestAnimationFrame(loop);
+    }
+    loop();
+  }
+
+  function stopManaSparkles() {
+    if (manaSparkleAnimId) {
+      cancelAnimationFrame(manaSparkleAnimId);
+      manaSparkleAnimId = null;
+    }
+    const canvas = document.getElementById('manaSparkleCanvas');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    manaSparkles = [];
+  }
+
+  function applyProgressStyle(style) {
+    const container = document.getElementById('progressContainer');
+    if (container) container.dataset.style = style || 'bar';
+    if (style === 'mana') {
+      startManaSparkles();
+    } else {
+      stopManaSparkles();
+    }
+    // Reset all alternative displays to current percent
+    const percent = state.totalDuration > 0
+      ? Math.min(100, (state.elapsed / state.totalDuration) * 100)
+      : 0;
+    updateAltProgressBars(percent);
+  }
     const walker = document.getElementById('progressWalker');
     if (walker) {
       walker.style.left = 'calc(' + percent + '% - 16px)';
@@ -115,6 +272,12 @@ const Timer = (function () {
     const walker = document.getElementById('progressWalker');
     if (walker) walker.classList.add('running');
 
+    // Start mana sparkles if that style is active
+    const settings = window.AppSettings || {};
+    if ((settings.progressBarStyle || 'bar') === 'mana') {
+      startManaSparkles();
+    }
+
     updateButtonStates();
     if (window.App) window.App.startEncouragement();
   }
@@ -133,6 +296,7 @@ const Timer = (function () {
     if (display) display.classList.remove('running');
     const walker = document.getElementById('progressWalker');
     if (walker) walker.classList.remove('running');
+    stopManaSparkles();
     updateButtonStates();
     if (window.App) window.App.stopEncouragement();
   }
@@ -156,6 +320,7 @@ const Timer = (function () {
     updateButtonStates();
     if (window.App) window.App.stopEncouragement();
     document.title = 'Aureole Timer';
+    stopManaSparkles();
     // Clear running visual state
     const displayStop = document.getElementById('timerDisplay');
     if (displayStop) displayStop.classList.remove('running');
@@ -175,6 +340,7 @@ const Timer = (function () {
     updateButtonStates();
     if (window.App) window.App.stopEncouragement();
     document.title = 'Aureole Timer';
+    stopManaSparkles();
     const displayReset = document.getElementById('timerDisplay');
     if (displayReset) displayReset.classList.remove('running');
     const walkerReset = document.getElementById('progressWalker');
@@ -620,6 +786,9 @@ const Timer = (function () {
     if (settings.defaultWorkDuration) {
       state.totalDuration = (settings.defaultWorkDuration || 60) * 60;
     }
+
+    // Apply saved progress bar style
+    applyProgressStyle(settings.progressBarStyle || 'bar');
   }
 
   function getState() { return state; }
@@ -631,6 +800,7 @@ const Timer = (function () {
     stop: stopTimer,
     reset: resetTimer,
     applyManualTimes: applyManualTimes,
+    applyProgressStyle: applyProgressStyle,
     getState: getState
   };
 })();

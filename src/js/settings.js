@@ -9,6 +9,7 @@ const DEFAULT_SETTINGS = {
   particleEffects: true,
   borderAnimations: true,
   sidebarWidth: 220,
+  progressBarStyle: 'bar',
   // Timer
   defaultWorkDuration: 60,
   defaultStudyDuration: 90,
@@ -78,6 +79,21 @@ const Settings = (function () {
         journeyFrame.classList.add('no-animation');
       }
     }
+
+    // Progress bar style
+    applyProgressBarStyle(current.progressBarStyle || 'bar');
+  }
+
+  function applyProgressBarStyle(style) {
+    const container = document.getElementById('progressContainer');
+    if (!container) return;
+    const allowed = ['bar', 'doughnut', 'hourglass', 'mana'];
+    const safeStyle = allowed.includes(style) ? style : 'bar';
+    container.dataset.style = safeStyle;
+    // Notify timer module so it can update its alternative display elements
+    if (window.Timer && window.Timer.applyProgressStyle) {
+      window.Timer.applyProgressStyle(safeStyle);
+    }
   }
 
   function hexToRgba(hex, alpha) {
@@ -107,6 +123,7 @@ const Settings = (function () {
       'particleEffects': current.particleEffects,
       'borderAnimations': current.borderAnimations,
       'sidebarWidth': current.sidebarWidth,
+      'progressBarStyle': current.progressBarStyle,
       'defaultWorkDuration': current.defaultWorkDuration,
       'defaultStudyDuration': current.defaultStudyDuration,
       'autoSaveSessions': current.autoSaveSessions,
@@ -147,7 +164,8 @@ const Settings = (function () {
     const fields = [
       'accentColor', 'secondaryColor', 'bgColor',
       'defaultWorkDuration', 'defaultStudyDuration', 'breakReminderInterval',
-      'hyperfocusTimer', 'dailyReminderTime', 'sidebarWidth', 'fontSize'
+      'hyperfocusTimer', 'dailyReminderTime', 'sidebarWidth', 'fontSize',
+      'progressBarStyle'
     ];
     const checkboxes = [
       'particleEffects', 'borderAnimations', 'autoSaveSessions', 'timerSounds',
@@ -211,6 +229,14 @@ const Settings = (function () {
         document.documentElement.style.setProperty('--sidebar-width', this.value + 'px');
         const val = document.getElementById('sidebarWidthVal');
         if (val) val.textContent = this.value + 'px';
+      });
+    }
+
+    const progressBarStyleEl = document.getElementById('progressBarStyle');
+    if (progressBarStyleEl) {
+      progressBarStyleEl.addEventListener('change', function () {
+        current.progressBarStyle = this.value;
+        applyProgressBarStyle(this.value);
       });
     }
   }

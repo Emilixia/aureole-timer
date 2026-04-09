@@ -2214,3 +2214,239 @@ body.focus-mode #tab-journey .journey-right {
   text-shadow: 0 0 20px var(--gold), 0 0 40px rgba(212,168,67,0.5);
 }
 
+
+/* ═══════════════════════════════════════════════════════════
+   CONFIGURABLE PROGRESS BAR STYLES
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Base: hide all alternative wraps by default ────────────── */
+#progressBarWrap,
+#progressDoughnutWrap,
+#progressHourglassWrap,
+#progressManaWrap {
+  display: none;
+}
+
+/* ── Classic bar (default) ───────────────────────────────────── */
+#progressContainer[data-style="bar"] #progressBarWrap { display: block; }
+
+/* ── Doughnut ────────────────────────────────────────────────── */
+#progressContainer[data-style="doughnut"] #progressDoughnutWrap { display: flex; justify-content: center; }
+
+.progress-doughnut-wrap {
+  padding: 10px 0 20px;
+}
+
+.doughnut-svg {
+  width: 200px;
+  height: 200px;
+  filter: drop-shadow(0 0 16px var(--accent-glow));
+  overflow: visible;
+  transition: filter 0.4s ease;
+}
+.doughnut-svg:hover {
+  filter: drop-shadow(0 0 28px var(--accent-glow));
+}
+
+.doughnut-track {
+  fill: none;
+  stroke: rgba(124,92,191,0.18);
+  stroke-width: 22;
+}
+
+.doughnut-fill {
+  fill: none;
+  stroke-width: 22;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 100px 100px;
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.4,0,0.2,1);
+  filter: drop-shadow(0 0 6px rgba(212,168,67,0.6));
+  animation: doughnutGlow 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes doughnutGlow {
+  from { filter: drop-shadow(0 0 4px rgba(124,92,191,0.5)); }
+  to   { filter: drop-shadow(0 0 12px rgba(212,168,67,0.8)); }
+}
+
+.doughnut-pct {
+  font-family: 'Courier New', monospace;
+  font-size: 28px;
+  font-weight: 700;
+  text-anchor: middle;
+  fill: var(--text-primary);
+  filter: drop-shadow(0 0 6px var(--accent-glow));
+}
+
+/* ── Hourglass ───────────────────────────────────────────────── */
+#progressContainer[data-style="hourglass"] #progressHourglassWrap { display: flex; justify-content: center; }
+
+.progress-hourglass-wrap {
+  padding: 10px 0 30px;
+}
+
+.hourglass-svg {
+  width: 140px;
+  height: 240px;
+  overflow: visible;
+  filter: drop-shadow(0 0 10px rgba(212,168,67,0.4));
+  transition: filter 0.3s ease;
+}
+.hourglass-svg:hover {
+  filter: drop-shadow(0 0 20px rgba(212,168,67,0.7));
+  transform: scale(1.04);
+}
+
+.hg-outline {
+  fill: rgba(124,92,191,0.08);
+  stroke: var(--gold);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-dasharray: none;
+}
+
+.hg-pinch {
+  stroke: var(--gold);
+  stroke-width: 1.5;
+  opacity: 0.4;
+}
+
+.hg-sand-top {
+  fill: url(#sandGrad);
+  opacity: 0.75;
+  transition: all 0.9s ease;
+}
+
+.hg-sand-bot {
+  fill: url(#sandGrad);
+  opacity: 0.9;
+  transition: all 0.9s ease;
+}
+
+.hg-particle {
+  fill: rgba(255,220,120,0.9);
+  animation: sandFall 1.1s ease-in infinite;
+}
+
+@keyframes sandFall {
+  from { transform: translateY(-8px); opacity: 1; }
+  to   { transform: translateY(12px); opacity: 0.2; }
+}
+
+.hg-pct {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  text-anchor: middle;
+  fill: var(--gold);
+  filter: drop-shadow(0 0 4px rgba(212,168,67,0.8));
+}
+
+/* ── Mana Bar ────────────────────────────────────────────────── */
+#progressContainer[data-style="mana"] #progressManaWrap { display: block; }
+
+.progress-mana-wrap {
+  padding: 6px 0 20px;
+}
+
+.mana-bar-container {
+  max-width: 100%;
+}
+
+.mana-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.mana-label-icon {
+  font-size: 1.1rem;
+  animation: manaGemPulse 2s ease-in-out infinite;
+}
+@keyframes manaGemPulse {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(100,200,255,0.6)); }
+  50%       { filter: drop-shadow(0 0 10px rgba(100,200,255,1)); }
+}
+.mana-label-text {
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #64c8ff, #a78bfa, #64c8ff);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: manaTextShimmer 3s linear infinite;
+}
+@keyframes manaTextShimmer {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+.mana-pct {
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: #64c8ff;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(100,200,255,0.8);
+}
+
+.mana-track {
+  position: relative;
+  height: 28px;
+  background: linear-gradient(135deg, #0a0a2a, #0d0d3a);
+  border: 1px solid rgba(100, 180, 255, 0.35);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 3px rgba(0,0,0,0.8),
+    0 0 16px rgba(100,200,255,0.2),
+    0 0 30px rgba(100,200,255,0.08);
+}
+
+.mana-fill {
+  height: 100%;
+  border-radius: 14px;
+  background: linear-gradient(90deg,
+    rgba(60,80,200,0.9) 0%,
+    rgba(80,140,255,0.95) 40%,
+    rgba(120,200,255,1)  70%,
+    rgba(180,230,255,0.95) 100%
+  );
+  background-size: 200% 100%;
+  animation: manaFlow 3s ease-in-out infinite;
+  position: relative;
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+  box-shadow:
+    0 0 12px rgba(100,200,255,0.5),
+    0 0 24px rgba(100,200,255,0.25),
+    inset 0 1px 4px rgba(255,255,255,0.3);
+}
+
+@keyframes manaFlow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.mana-sparkle-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  border-radius: 14px;
+}
+
+.mana-shine {
+  position: absolute;
+  top: 2px;
+  left: 8px;
+  right: 8px;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+  pointer-events: none;
+}
