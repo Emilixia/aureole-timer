@@ -12,7 +12,9 @@ const Storage = {
       if (window.aureole) {
         const raw = await window.aureole.storeRead(key);
         if (raw !== null && raw !== undefined) {
-          return JSON.parse(raw);
+          const parsed = JSON.parse(raw);
+          if (parsed === null) return defaultValue;
+          return parsed;
         }
         return defaultValue;
       }
@@ -54,7 +56,7 @@ const Storage = {
   async remove(key) {
     try {
       if (window.aureole) {
-        await window.aureole.storeWrite(key, JSON.stringify(null));
+        await window.aureole.storeRemove(key);
         return;
       }
     } catch (e) {}

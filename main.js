@@ -86,6 +86,21 @@ ipcMain.handle('store-write', async (event, key, data) => {
   }
 });
 
+// IPC: Delete a userData file
+ipcMain.handle('store-remove', async (event, key) => {
+  try {
+    const userDataPath = app.getPath('userData');
+    const filePath = path.join(userDataPath, `${key}.json`);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+    return true;
+  } catch (e) {
+    console.error('store-remove error:', e);
+    return false;
+  }
+});
+
 // IPC: Show OS notification
 ipcMain.handle('show-notification', async (event, title, body) => {
   try {
