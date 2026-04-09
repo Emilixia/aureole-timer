@@ -35,11 +35,12 @@ function createWindow() {
         'Content-Security-Policy': [
           "default-src 'self'; " +
           "script-src 'self' 'unsafe-inline'; " +
-          "style-src 'self' 'unsafe-inline'; " +
-          "frame-src https://www.youtube.com https://*.youtube.com; " +
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+          "frame-src https://open.spotify.com; " +
           "img-src * blob: data:; " +
           "media-src * blob: data:; " +
-          "font-src 'self' data:;"
+          "connect-src 'self'; " +
+          "font-src 'self' data: https://fonts.gstatic.com;"
         ]
       }
     });

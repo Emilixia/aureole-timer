@@ -307,6 +307,7 @@ function initSpotifyPlayer() {
 }
 
 // Extracts a Spotify embed path like "playlist/ID" or "track/ID" from a Spotify URL.
+// Supported types: playlist, track, album, artist, episode, show (podcast).
 // Returns null if no valid path found.
 function extractSpotifyEmbedPath(url) {
   if (!url || typeof url !== 'string') return null;
