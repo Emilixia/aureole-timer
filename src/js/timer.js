@@ -790,7 +790,7 @@ const Timer = (function () {
     }
 
     // Apply saved progress bar style
-    applyProgressStyle(settings.progressBarStyle || 'bar');
+    applyProgressStyle(settings.progressBarStyle || 'mana');
   }
 
   function getState() { return state; }

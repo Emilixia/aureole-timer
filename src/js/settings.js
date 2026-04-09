@@ -9,7 +9,7 @@ const DEFAULT_SETTINGS = {
   particleEffects: true,
   borderAnimations: true,
   sidebarWidth: 220,
-  progressBarStyle: 'bar',
+  progressBarStyle: 'mana',
   // Timer
   defaultWorkDuration: 60,
   defaultStudyDuration: 90,
@@ -81,14 +81,14 @@ const Settings = (function () {
     }
 
     // Progress bar style
-    applyProgressBarStyle(current.progressBarStyle || 'bar');
+    applyProgressBarStyle(current.progressBarStyle || 'mana');
   }
 
   function applyProgressBarStyle(style) {
     const container = document.getElementById('progressContainer');
     if (!container) return;
     const allowed = ['bar', 'doughnut', 'hourglass', 'mana'];
-    const safeStyle = allowed.includes(style) ? style : 'bar';
+    const safeStyle = allowed.includes(style) ? style : 'mana';
     container.dataset.style = safeStyle;
     // Notify timer module so it can update its alternative display elements
     if (window.Timer && window.Timer.applyProgressStyle) {
