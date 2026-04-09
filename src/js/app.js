@@ -613,11 +613,7 @@ async function initNavProfile() {
     if (profile.avatarDataUrl) {
       avatarEl.src = profile.avatarDataUrl;
     } else {
-      var initial = (profile.name || 'A')[0].toUpperCase();
-      var svgStr = '<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34">' +
-        '<circle cx="17" cy="17" r="17" fill="#1e2328"/>' +
-        '<text x="17" y="22" font-family="system-ui,sans-serif" font-size="15" font-weight="bold" fill="#c8aa6e" text-anchor="middle">' + initial + '</text></svg>';
-      avatarEl.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+      avatarEl.src = '../assets/frieren-default.gif';
     }
   }
 
@@ -734,14 +730,19 @@ async function initApp() {
     });
   }
 
-  // 12. Fade out splash screen
+  // 12. Fade out splash screen — wait 2 s so startup GIF can fully play, then fade 0.7 s
   const splash = document.getElementById('splashScreen');
   if (splash) {
-    splash.classList.add('splash-fade');
     setTimeout(function () {
-      splash.style.display = 'none';
-    }, 800);
+      splash.classList.add('splash-fade');
+      setTimeout(function () {
+        splash.style.display = 'none';
+      }, 700);
+    }, 2000);
   }
+
+  // 13. Debug panel
+  initDebugPanel();
 }
 
 // Expose public API
@@ -753,6 +754,192 @@ window.App = {
   startEncouragement: startEncouragement,
   stopEncouragement: stopEncouragement
 };
+
+// Expose public API
+window.App = {
+  showToast: showToast,
+  startParticles: startParticles,
+  stopParticles: stopParticles,
+  toggleFocusMode: toggleFocusMode,
+  startEncouragement: startEncouragement,
+  stopEncouragement: stopEncouragement
+};
+
+// ── Debug / Cheat Mode ────────────────────────────────────────
+// Unlock: click the Settings heading (⚙️ Settings) 5 times within 3 seconds
+(function () {
+  var clicks = 0;
+  var timer = null;
+  var unlocked = false;
+
+  function onHeadingClick() {
+    clicks++;
+    clearTimeout(timer);
+    timer = setTimeout(function () { clicks = 0; }, 3000);
+    if (clicks >= 5 && !unlocked) {
+      unlocked = true;
+      var tab = document.getElementById('debugTab');
+      if (tab) tab.style.display = '';
+      if (window.showToast) showToast('🐛 Debug Mode unlocked!', 'achievement');
+    }
+  }
+
+  // Bind after DOM ready
+  function bindDebugUnlock() {
+    var h = document.getElementById('settingsHeading');
+    if (h) h.addEventListener('click', onHeadingClick);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindDebugUnlock);
+  } else {
+    bindDebugUnlock();
+  }
+})();
+
+function initDebugPanel() {
+  // Helper to add a fake session
+  async function addFakeSession(minutes, type) {
+    var sessions = await Storage.get('chronicle', []);
+    var now = Date.now();
+    sessions.push({
+      id: now,
+      type: type,
+      label: type.charAt(0).toUpperCase() + type.slice(1),
+      duration: minutes * 60,
+      date: new Date(now).toISOString().split('T')[0],
+      startTime: new Date(now - minutes * 60000).toTimeString().slice(0, 5),
+      endTime: new Date(now).toTimeString().slice(0, 5)
+    });
+    await Storage.set('chronicle', sessions);
+    if (window.Profile) window.Profile.updateProfileStats();
+    if (window.Chronicle) window.Chronicle.renderTable();
+    showToast('Added ' + minutes + ' min ' + type + ' session ✅', 'success');
+  }
+
+  var addSessionBtn = document.getElementById('dbgAddSession');
+  if (addSessionBtn) {
+    addSessionBtn.addEventListener('click', function () {
+      var mins = parseInt(document.getElementById('dbgAddMinutes').value) || 60;
+      var type = document.getElementById('dbgSessionType').value;
+      addFakeSession(mins, type);
+    });
+  }
+
+  var bulkBtn = document.getElementById('dbgSetSessions');
+  if (bulkBtn) {
+    bulkBtn.addEventListener('click', async function () {
+      var count = parseInt(document.getElementById('dbgSessionCount').value) || 10;
+      for (var i = 0; i < count; i++) {
+        var sessions = await Storage.get('chronicle', []);
+        var ts = Date.now() - i * 3600000;
+        sessions.push({
+          id: ts,
+          type: 'working',
+          label: 'Working',
+          duration: 3600,
+          date: new Date(ts).toISOString().split('T')[0],
+          startTime: '00:00',
+          endTime: '01:00'
+        });
+        await Storage.set('chronicle', sessions);
+      }
+      if (window.Profile) window.Profile.updateProfileStats();
+      if (window.Chronicle) window.Chronicle.renderTable();
+      showToast('Added ' + count + ' sessions ✅', 'success');
+    });
+  }
+
+  var streakBtn = document.getElementById('dbgSetStreak');
+  if (streakBtn) {
+    streakBtn.addEventListener('click', async function () {
+      var days = parseInt(document.getElementById('dbgStreakDays').value) || 7;
+      var sessions = await Storage.get('chronicle', []);
+      var today = new Date();
+      for (var d = 0; d < days; d++) {
+        var date = new Date(today);
+        date.setDate(today.getDate() - d);
+        var dateStr = date.toISOString().split('T')[0];
+        // Only add if not already present for that day
+        if (!sessions.some(function (s) { return s.date === dateStr; })) {
+          sessions.push({
+            id: date.getTime(),
+            type: 'working',
+            label: 'Working',
+            duration: 3600,
+            date: dateStr,
+            startTime: '10:00',
+            endTime: '11:00'
+          });
+        }
+      }
+      await Storage.set('chronicle', sessions);
+      if (window.Profile) window.Profile.updateProfileStats();
+      showToast('Streak set to ' + days + ' days ✅', 'success');
+    });
+  }
+
+  var unlockAllBtn = document.getElementById('dbgUnlockAll');
+  if (unlockAllBtn) {
+    unlockAllBtn.addEventListener('click', async function () {
+      if (window.Achievements && window.Achievements.ACHIEVEMENTS) {
+        var data = {};
+        window.Achievements.ACHIEVEMENTS.forEach(function (a) {
+          data[a.id] = true;
+        });
+        await Storage.set('achievements', data);
+        if (window.Profile) window.Profile.updateProfileStats();
+        showToast('All achievements unlocked! 🏆', 'achievement');
+      }
+    });
+  }
+
+  var bellBtn = document.getElementById('dbgTriggerBell');
+  if (bellBtn) {
+    bellBtn.addEventListener('click', function () {
+      var bellOverlay = document.getElementById('bellOverlay');
+      var bellGif = document.getElementById('bellGif');
+      if (bellOverlay) {
+        if (bellGif) {
+          var src = bellGif.getAttribute('src');
+          bellGif.setAttribute('src', '');
+          bellGif.setAttribute('src', src);
+        }
+        bellOverlay.style.display = 'flex';
+        setTimeout(function () { bellOverlay.style.display = 'none'; }, 3000);
+      }
+      showToast('Bell triggered! 🔔', 'info');
+    });
+  }
+
+  var tSuccess = document.getElementById('dbgToastSuccess');
+  if (tSuccess) tSuccess.addEventListener('click', function () { showToast('Test success toast!', 'success'); });
+  var tError = document.getElementById('dbgToastError');
+  if (tError) tError.addEventListener('click', function () { showToast('Test error toast!', 'error'); });
+  var tAchieve = document.getElementById('dbgToastAchieve');
+  if (tAchieve) tAchieve.addEventListener('click', function () { showToast('Test achievement toast! 🏆', 'achievement'); });
+
+  var clearChronicleBtn = document.getElementById('dbgClearChronicle');
+  if (clearChronicleBtn) {
+    clearChronicleBtn.addEventListener('click', async function () {
+      if (!confirm('Clear all session data?')) return;
+      await Storage.set('chronicle', []);
+      if (window.Profile) window.Profile.updateProfileStats();
+      if (window.Chronicle) window.Chronicle.renderTable();
+      showToast('Chronicle cleared.', 'info');
+    });
+  }
+
+  var clearAchBtn = document.getElementById('dbgClearAchievements');
+  if (clearAchBtn) {
+    clearAchBtn.addEventListener('click', async function () {
+      if (!confirm('Clear all achievements?')) return;
+      await Storage.set('achievements', {});
+      if (window.Profile) window.Profile.updateProfileStats();
+      showToast('Achievements cleared.', 'info');
+    });
+  }
+}
 
 // Boot on DOM ready
 if (document.readyState === 'loading') {

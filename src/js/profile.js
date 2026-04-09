@@ -61,9 +61,7 @@ const Profile = (function () {
       if (profile.avatarDataUrl) {
         avatarEl.src = profile.avatarDataUrl;
       } else {
-        // Default avatar: initials in SVG
-        const initial = (profile.name || 'A')[0].toUpperCase();
-        avatarEl.src = generateInitialAvatar(initial);
+        avatarEl.src = '../assets/frieren-default.gif';
       }
     }
 

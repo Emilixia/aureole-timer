@@ -14,7 +14,7 @@
 
   <!-- Startup splash screen -->
   <div id="splashScreen">
-    <img id="splashLogo" src="https://github.com/user-attachments/assets/fff765b4-a84b-4829-abff-75c77ec4307c" alt="Chronomark Logo">
+    <img id="splashLogo" src="../assets/startup-logo.gif" alt="Chronomark Logo">
     <div id="splashText">Chronomark</div>
   </div>
 
@@ -188,6 +188,10 @@
             <!-- Timer Frame (game lobby center) -->
             <div class="journey-frame" id="journeyFrame">
               <div class="frame-bg" id="timerBgOverlay"></div>
+              <!-- Bell animation overlay (shown on timer completion) -->
+              <div id="bellOverlay" style="display:none;">
+                <img id="bellGif" src="../assets/frieren-bell.gif" alt="Timer complete!">
+              </div>
               <div class="frame-content">
                 <h2 class="frame-title">⚜ Frieren Chronomark ⚜</h2>
 
@@ -707,7 +711,7 @@
            ═══════════════════════════════════════════════════ -->
       <div id="tab-settings" class="tab-panel">
         <div class="tab-header">
-          <h2>⚙️ Settings</h2>
+          <h2 id="settingsHeading">⚙️ Settings</h2>
         </div>
         <div class="settings-layout">
           <!-- Settings categories nav -->
@@ -718,6 +722,8 @@
             <button class="settings-tab" data-settings="adhd">🧠 Focus</button>
             <button class="settings-tab" data-settings="data">💾 Data</button>
             <button class="settings-tab" data-settings="about">ℹ About</button>
+            <!-- Hidden debug tab — unlocked by clicking Settings heading 5 times -->
+            <button class="settings-tab" data-settings="debug" id="debugTab" style="display:none;">🐛 Debug</button>
           </div>
 
           <div class="settings-content">
@@ -916,6 +922,7 @@
               <h3>ℹ About Frieren Chronomark</h3>
               <div class="about-content">
                 <div class="about-logo"><img src="https://github.com/user-attachments/assets/fff765b4-a84b-4829-abff-75c77ec4307c" alt="Frieren Chronomark" style="width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 0 12px rgba(200,170,110,0.6));"></div>
+                <div class="about-gif-wrap"><img src="../assets/about-img1.gif" class="about-gif" alt=""></div>
                 <h2>Frieren Chronomark</h2>
                 <p>Version 1.0.0</p>
                 <p class="about-tagline">For Tards, by Tards</p>
@@ -937,6 +944,69 @@
             </div>
 
           </div><!-- /.settings-content -->
+
+            <!-- DEBUG PANEL (hidden until unlocked) -->
+            <div class="settings-panel" id="settings-debug">
+              <h3>🐛 Debug / Cheat Mode</h3>
+              <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:12px;">⚠️ These tools directly modify stored data. Use for testing only.</p>
+
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;">
+                <label>Add Session Minutes (XP)</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="number" id="dbgAddMinutes" value="60" min="1" max="10000" style="width:100px;">
+                  <select id="dbgSessionType" style="width:120px;">
+                    <option value="working">Working</option>
+                    <option value="studying">Studying</option>
+                  </select>
+                  <button id="dbgAddSession" class="btn-primary btn-sm">+ Add Session</button>
+                </div>
+              </div>
+
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;margin-top:12px;">
+                <label>Set Session Count (bulk-add sessions)</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="number" id="dbgSessionCount" value="10" min="1" max="1000" style="width:100px;">
+                  <button id="dbgSetSessions" class="btn-primary btn-sm">Bulk Add</button>
+                </div>
+              </div>
+
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;margin-top:12px;">
+                <label>Set Streak Days</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="number" id="dbgStreakDays" value="7" min="0" max="365" style="width:100px;">
+                  <button id="dbgSetStreak" class="btn-primary btn-sm">Set Streak</button>
+                </div>
+              </div>
+
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;margin-top:12px;">
+                <label>Unlock All Achievements</label>
+                <button id="dbgUnlockAll" class="btn-primary btn-sm">🏆 Unlock All</button>
+              </div>
+
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;margin-top:12px;">
+                <label>Trigger Timer Complete (test bell)</label>
+                <button id="dbgTriggerBell" class="btn-secondary btn-sm">🔔 Trigger Bell</button>
+              </div>
+
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;margin-top:12px;">
+                <label>Test Toast Notification</label>
+                <div style="display:flex;gap:8px;">
+                  <button id="dbgToastSuccess" class="btn-primary btn-sm">✅ Success</button>
+                  <button id="dbgToastError" class="btn-primary btn-sm">❌ Error</button>
+                  <button id="dbgToastAchieve" class="btn-primary btn-sm">🏆 Achievement</button>
+                </div>
+              </div>
+
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;margin-top:12px;">
+                <label>Clear Chronicle (sessions only)</label>
+                <button id="dbgClearChronicle" class="btn-danger btn-sm">🗑 Clear Sessions</button>
+              </div>
+
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;margin-top:12px;">
+                <label>Clear Achievements only</label>
+                <button id="dbgClearAchievements" class="btn-danger btn-sm">🗑 Clear Achievements</button>
+              </div>
+            </div><!-- /#settings-debug -->
         </div><!-- /.settings-layout -->
       </div><!-- /#tab-settings -->
 

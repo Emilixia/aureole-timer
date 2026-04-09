@@ -279,6 +279,7 @@ const Achievements = (function () {
   }
 
   return {
+    ACHIEVEMENTS,
     checkAchievements,
     renderAchievementsGrid,
     renderRibbonRack,

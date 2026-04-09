@@ -476,6 +476,22 @@ const Timer = (function () {
     document.title = 'Frieren Chronomark';
     if (window.App) window.App.stopEncouragement();
     if (window.showToast) window.showToast('✨ Session complete! Amazing work!', 'success');
+
+    // Show bell GIF animation overlay for 3 seconds
+    var bellOverlay = document.getElementById('bellOverlay');
+    var bellGif = document.getElementById('bellGif');
+    if (bellOverlay) {
+      // Force GIF restart by reloading src
+      if (bellGif) {
+        var src = bellGif.getAttribute('src');
+        bellGif.setAttribute('src', '');
+        bellGif.setAttribute('src', src);
+      }
+      bellOverlay.style.display = 'flex';
+      setTimeout(function () {
+        bellOverlay.style.display = 'none';
+      }, 3000);
+    }
   }
 
   function applyManualTimes() {
@@ -684,7 +700,7 @@ const Timer = (function () {
     const customWalker = await Storage.get('customWalker');
     const walkerImg = document.getElementById('walkerImg');
     if (walkerImg) {
-      walkerImg.src = customWalker || window.DEFAULT_WALKER_SVG;
+      walkerImg.src = customWalker || '../assets/Sprite.png';
     }
   }
 
