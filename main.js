@@ -36,7 +36,7 @@ function createWindow() {
           "default-src 'self'; " +
           "script-src 'self' 'unsafe-inline'; " +
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-          "frame-src https://open.spotify.com; " +
+          "frame-src https://www.youtube.com https://youtube.com https://open.spotify.com; " +
           "img-src * blob: data:; " +
           "media-src * blob: data:; " +
           "connect-src 'self'; " +

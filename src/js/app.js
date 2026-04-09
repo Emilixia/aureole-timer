@@ -278,7 +278,7 @@ function initWindowControls() {
 }
 
 // ── YouTube Music Player ──────────────────────────────────────
-function initSpotifyPlayer() {  // name kept to avoid changing initApp call
+function initMusicPlayer() {  // formerly initSpotifyPlayer
   const loadBtn = document.getElementById('loadYtBtn');
   const urlInput = document.getElementById('ytUrl');
   const frame = document.getElementById('ytFrame');
@@ -291,9 +291,14 @@ function initSpotifyPlayer() {  // name kept to avoid changing initApp call
     }
     const videoId = extractYouTubeId(raw);
     if (videoId && frame) {
-      // Direct video embed
-      const embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&rel=0';
-      frame.setAttribute('src', embedUrl);
+      // videoId is validated to match [a-zA-Z0-9_-]{11} by extractYouTubeId
+      const embedUrl = new URL('/embed/' + videoId, 'https://www.youtube.com');
+      embedUrl.searchParams.set('autoplay', '1');
+      embedUrl.searchParams.set('rel', '0');
+      // Guard: only allow youtube.com
+      if (embedUrl.origin === 'https://www.youtube.com') {
+        frame.setAttribute('src', embedUrl.href);
+      }
       if (window.showToast) showToast('Loading YouTube video... 🎵', 'info');
     } else {
       // Treat as search term — open YouTube search as embed
@@ -638,7 +643,7 @@ async function initApp() {
   Profile.init();
 
   // 6. Initialize music + quick notes
-  initSpotifyPlayer();
+  initMusicPlayer();
   initQuickNotes();
 
   // 7. Mode selection + nav profile widget
