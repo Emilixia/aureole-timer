@@ -755,16 +755,6 @@ window.App = {
   stopEncouragement: stopEncouragement
 };
 
-// Expose public API
-window.App = {
-  showToast: showToast,
-  startParticles: startParticles,
-  stopParticles: stopParticles,
-  toggleFocusMode: toggleFocusMode,
-  startEncouragement: startEncouragement,
-  stopEncouragement: stopEncouragement
-};
-
 // ── Debug / Cheat Mode ────────────────────────────────────────
 // Unlock: click the Settings heading (⚙️ Settings) 5 times within 3 seconds
 (function () {
