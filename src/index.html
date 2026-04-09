@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; frame-src https://www.youtube.com https://*.youtube.com; img-src * blob: data:; media-src * blob: data:; font-src 'self' data:;">
+  <title>Aureole Timer</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <!-- Particle canvas background -->
+  <canvas id="particleCanvas"></canvas>
+
+  <!-- Custom title bar -->
+  <div id="titleBar">
+    <div class="title-drag-area">✨ Aureole Timer</div>
+    <div class="title-controls">
+      <button id="btnMinimize" title="Minimize">—</button>
+      <button id="btnMaximize" title="Maximize">□</button>
+      <button id="btnClose" title="Close">✕</button>
+    </div>
+  </div>
+
+  <!-- Main layout -->
+  <div id="appLayout">
+
+    <!-- Left Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-gem">◆</div>
+        <span>Aureole</span>
+      </div>
+      <nav>
+        <button class="nav-tab active" data-tab="journey">🌟 Journey</button>
+        <button class="nav-tab" data-tab="journal">📖 Journal</button>
+        <button class="nav-tab" data-tab="grimoire">📚 Grimoire</button>
+        <button class="nav-tab" data-tab="chronicle">📜 Chronicle</button>
+        <button class="nav-tab" data-tab="profile">👤 Profile</button>
+        <button class="nav-tab" data-tab="settings">⚙️ Settings</button>
+      </nav>
+      <div class="sidebar-clock" id="sidebarClock"></div>
+    </aside>
+
+    <!-- Content panels -->
+    <main id="content">
+
+      <!-- ═══════════════════════════════════════════════════
+           JOURNEY TAB
+           ═══════════════════════════════════════════════════ -->
+      <div id="tab-journey" class="tab-panel active">
+
+        <!-- Top bar: date/time, type selector, focus/pomodoro -->
+        <div class="journey-topbar">
+          <div class="live-datetime" id="liveDatetime"></div>
+          <select id="timerTypeSelect">
+            <option value="working">⚔️ Working</option>
+            <option value="studying">📖 Studying</option>
+            <option value="custom">✨ Custom</option>
+          </select>
+          <input type="text" id="customTimerLabel" placeholder="Custom label..." style="display:none; width:140px;">
+          <button id="focusModeBtn" class="btn-secondary">🧠 Focus Mode</button>
+          <button id="pomodoroBtn" class="btn-secondary">🍅 Pomodoro</button>
+        </div>
+
+        <!-- Main content: timer frame + right panels -->
+        <div class="journey-main">
+
+          <!-- Timer Frame -->
+          <div class="journey-frame" id="journeyFrame">
+            <div class="frame-bg" id="timerBgOverlay"></div>
+            <div class="frame-content">
+              <h2 class="frame-title">⚜ Journey to Aureole ⚜</h2>
+
+              <!-- Manual time inputs -->
+              <div class="time-inputs">
+                <label>Start <input type="time" id="startTimeInput"></label>
+                <label>End <input type="time" id="endTimeInput"></label>
+                <button id="applyTimesBtn" class="btn-primary btn-sm">Apply</button>
+              </div>
+
+              <!-- Timer display -->
+              <div class="timer-display" id="timerDisplay">00:00:00</div>
+              <div class="time-left" id="timeLeft">Time Left: --:--:--</div>
+
+              <!-- Progress bar with walker -->
+              <div class="progress-container">
+                <div class="progress-track">
+                  <div class="progress-fill" id="progressFill" style="width:0%"></div>
+                  <div class="progress-walker" id="progressWalker" style="left: -16px;">
+                    <img id="walkerImg" src="" alt="🧝">
+                  </div>
+                </div>
+                <div class="progress-labels">
+                  <span id="progressStart">--:--</span>
+                  <span id="progressPercent">0%</span>
+                  <span id="progressEnd">--:--</span>
+                </div>
+              </div>
+
+              <!-- Timer controls -->
+              <div class="timer-controls">
+                <button id="timerStart" class="btn-primary btn-lg">▶ Start</button>
+                <button id="timerPause" class="btn-secondary btn-lg" disabled>⏸ Pause</button>
+                <button id="timerStop" class="btn-danger btn-lg" disabled>■ Stop</button>
+                <button id="timerReset" class="btn-secondary btn-lg" disabled>↺ Reset</button>
+              </div>
+
+              <!-- Upload custom background & walker -->
+              <div class="customization-row">
+                <label class="btn-upload">
+                  <input type="file" id="uploadBg" accept="image/*">
+                  🖼 Background
+                </label>
+                <label class="btn-upload">
+                  <input type="file" id="uploadWalker" accept="image/*,image/gif">
+                  🧝 Walker
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right panel -->
+          <div class="journey-right">
+
+            <!-- Music Player -->
+            <div class="panel music-panel">
+              <h3 class="panel-title">🎵 Arcane Melodies</h3>
+              <input type="text" id="ytUrl" placeholder="Paste YouTube URL...">
+              <button id="loadYtBtn" class="btn-primary btn-sm" style="margin-top:6px;width:100%;">▶ Load</button>
+              <div id="ytContainer">
+                <iframe id="ytFrame" src="" frameborder="0" allowfullscreen
+                  allow="autoplay; encrypted-media"></iframe>
+              </div>
+            </div>
+
+            <!-- Quick Notes -->
+            <div class="panel notes-panel">
+              <h3 class="panel-title">📝 Quick Notes</h3>
+              <textarea id="quickNotes" placeholder="Brain dump... thoughts, ideas, tasks..."></textarea>
+              <button id="saveNotes" class="btn-primary btn-sm">Save Notes</button>
+            </div>
+
+            <!-- Reminders -->
+            <div class="panel reminders-panel">
+              <h3 class="panel-title">🔔 Reminders</h3>
+              <div class="reminder-add">
+                <input type="text" id="reminderText" placeholder="Reminder text...">
+                <input type="time" id="reminderTime">
+                <button id="addReminder" class="btn-primary btn-sm">+ Add</button>
+              </div>
+              <div id="remindersList"></div>
+            </div>
+
+          </div><!-- /.journey-right -->
+        </div><!-- /.journey-main -->
+
+        <!-- Pomodoro floating panel -->
+        <div id="pomodoroPanel" class="floating-panel" style="display:none;">
+          <button class="floating-close" id="closePomodoroBtn">✕</button>
+          <h3>🍅 Pomodoro Timer</h3>
+          <div class="pomodoro-display" id="pomodoroDisplay">25:00</div>
+          <div class="pomodoro-status" id="pomodoroStatus">Work Session</div>
+          <div class="pomodoro-controls">
+            <button id="pomStart" class="btn-primary">▶ Start</button>
+            <button id="pomReset" class="btn-secondary">↺ Reset</button>
+          </div>
+          <div class="pomodoro-config">
+            <label>Work <input type="number" id="pomWork" value="25" min="1" max="90"> min</label>
+            <label>Break <input type="number" id="pomBreak" value="5" min="1" max="30"> min</label>
+            <label>Sessions: <span id="pomSessions">0</span>/4</label>
+          </div>
+        </div>
+
+      </div><!-- /#tab-journey -->
+
+
+      <!-- ═══════════════════════════════════════════════════
+           JOURNAL TAB
+           ═══════════════════════════════════════════════════ -->
+      <div id="tab-journal" class="tab-panel">
+        <div class="tab-header">
+          <h2>📖 Journal</h2>
+          <div class="tab-actions">
+            <input type="date" id="journalDate">
+            <button id="newJournalEntry" class="btn-primary">+ New Entry</button>
+          </div>
+        </div>
+        <div class="journal-layout">
+          <!-- Entry list sidebar -->
+          <div class="journal-sidebar">
+            <div class="search-box">
+              <input type="text" id="journalSearch" placeholder="Search entries..." style="width:100%;">
+            </div>
+            <div id="journalEntryList"></div>
+          </div>
+          <!-- Editor -->
+          <div class="journal-editor">
+            <input type="text" id="journalTitle" placeholder="Entry title..." class="entry-title-input">
+            <div class="journal-toolbar">
+              <button onclick="document.execCommand('bold')" title="Bold"><b>B</b></button>
+              <button onclick="document.execCommand('italic')" title="Italic"><i>I</i></button>
+              <button onclick="document.execCommand('underline')" title="Underline"><u>U</u></button>
+              <button onclick="document.execCommand('insertUnorderedList')" title="List">≡</button>
+              <button onclick="document.execCommand('insertOrderedList')" title="Numbered List">#</button>
+              <select id="journalMood">
+                <option value="">Mood...</option>
+                <option value="✨">✨ Inspired</option>
+                <option value="😊">😊 Good</option>
+                <option value="😐">😐 Neutral</option>
+                <option value="😔">😔 Low</option>
+                <option value="⚡">⚡ Focused</option>
+                <option value="😴">😴 Tired</option>
+              </select>
+              <select id="journalEnergyLevel">
+                <option value="">Energy...</option>
+                <option value="5">⚡⚡⚡ High</option>
+                <option value="3">⚡⚡ Medium</option>
+                <option value="1">⚡ Low</option>
+              </select>
+            </div>
+            <div id="journalEditor" contenteditable="true" class="rich-editor"
+                 placeholder="Write your thoughts, reflections, and adventures..."></div>
+            <div class="editor-footer">
+              <button id="saveJournalEntry" class="btn-primary">💾 Save Entry</button>
+              <button id="deleteJournalEntry" class="btn-danger">🗑 Delete</button>
+              <span id="journalWordCount">0 words</span>
+            </div>
+          </div>
+        </div>
+      </div><!-- /#tab-journal -->
+
+
+      <!-- ═══════════════════════════════════════════════════
+           GRIMOIRE TAB
+           ═══════════════════════════════════════════════════ -->
+      <div id="tab-grimoire" class="tab-panel">
+        <div class="tab-header">
+          <h2>📚 Grimoire</h2>
+          <button id="newSpell" class="btn-primary">+ New Spell (Task)</button>
+        </div>
+        <div class="grimoire-layout">
+          <!-- Kanban Boards -->
+          <div class="grimoire-boards">
+            <div class="grimoire-board" data-status="todo">
+              <h3>📋 To Cast</h3>
+              <div class="board-cards" id="board-todo"></div>
+              <button class="add-card-btn" data-status="todo">+ Add Spell</button>
+            </div>
+            <div class="grimoire-board" data-status="inprogress">
+              <h3>⚡ Casting</h3>
+              <div class="board-cards" id="board-inprogress"></div>
+              <button class="add-card-btn" data-status="inprogress">+ Add Spell</button>
+            </div>
+            <div class="grimoire-board" data-status="done">
+              <h3>✅ Mastered</h3>
+              <div class="board-cards" id="board-done"></div>
+              <button class="add-card-btn" data-status="done">+ Add Spell</button>
+            </div>
+          </div>
+          <!-- Habit Tracker -->
+          <div class="panel habit-panel">
+            <h3 class="panel-title">🌱 Daily Rituals (Habits)</h3>
+            <div class="habit-add">
+              <input type="text" id="habitName" placeholder="New ritual name...">
+              <select id="habitEmoji">
+                <option>🌊</option><option>📖</option><option>🏃</option>
+                <option>💧</option><option>🧘</option><option>✍️</option>
+                <option>🎯</option><option>⚔️</option><option>🌸</option>
+                <option>🔥</option>
+              </select>
+              <button id="addHabit" class="btn-primary btn-sm">+ Add</button>
+            </div>
+            <div id="habitList"></div>
+          </div>
+        </div>
+
+        <!-- Spell editor modal -->
+        <div id="spellModal" class="modal" style="display:none;">
+          <div class="modal-content">
+            <h3>✨ Edit Spell</h3>
+            <input type="text" id="spellTitle" placeholder="Spell name...">
+            <textarea id="spellDesc" placeholder="Description (optional)..."></textarea>
+            <select id="spellPriority">
+              <option value="low">🟢 Low Priority</option>
+              <option value="medium" selected>🟡 Medium Priority</option>
+              <option value="high">🔴 High Priority</option>
+            </select>
+            <select id="spellStatus">
+              <option value="todo">📋 To Cast</option>
+              <option value="inprogress">⚡ Casting</option>
+              <option value="done">✅ Mastered</option>
+            </select>
+            <div class="modal-actions">
+              <button id="deleteSpell" class="btn-danger" style="display:none;">🗑 Delete</button>
+              <button id="cancelSpell" class="btn-secondary">Cancel</button>
+              <button id="saveSpell" class="btn-primary">✨ Save Spell</button>
+            </div>
+          </div>
+        </div>
+      </div><!-- /#tab-grimoire -->
+
+
+      <!-- ═══════════════════════════════════════════════════
+           CHRONICLE TAB
+           ═══════════════════════════════════════════════════ -->
+      <div id="tab-chronicle" class="tab-panel">
+        <div class="tab-header">
+          <h2>📜 Chronicle</h2>
+          <div class="tab-actions">
+            <select id="chronicleFilter">
+              <option value="all">All Sessions</option>
+              <option value="working">⚔️ Working</option>
+              <option value="studying">📖 Studying</option>
+              <option value="custom">✨ Custom</option>
+            </select>
+            <button id="exportChronicle" class="btn-secondary">⬇ Export CSV</button>
+          </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="chronicle-stats">
+          <div class="stat-card">
+            <div class="stat-icon">⚔️</div>
+            <div class="stat-info">
+              <div class="stat-value" id="totalWorkTime">0h 0m</div>
+              <div class="stat-label">Total Work</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📖</div>
+            <div class="stat-info">
+              <div class="stat-value" id="totalStudyTime">0h 0m</div>
+              <div class="stat-label">Total Study</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-info">
+              <div class="stat-value" id="todayTime">0h 0m</div>
+              <div class="stat-label">Today</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-info">
+              <div class="stat-value" id="currentStreak">0</div>
+              <div class="stat-label">Day Streak</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly chart -->
+        <div class="panel" style="margin-bottom:18px;">
+          <h3 class="panel-title">📊 Weekly Overview</h3>
+          <canvas id="weeklyChart" height="120"></canvas>
+        </div>
+
+        <!-- Session log -->
+        <div class="panel">
+          <h3 class="panel-title">📋 Session Log</h3>
+          <div style="overflow-x:auto;">
+            <table class="chronicle-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Duration</th>
+                  <th>Label</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody id="chronicleTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /#tab-chronicle -->
+
+
+      <!-- ═══════════════════════════════════════════════════
+           PROFILE TAB
+           ═══════════════════════════════════════════════════ -->
+      <div id="tab-profile" class="tab-panel">
+        <div class="tab-header">
+          <h2>👤 Profile</h2>
+          <button id="editProfileBtn" class="btn-primary">✏️ Edit Profile</button>
+        </div>
+        <div class="profile-layout">
+          <!-- Left: Profile card -->
+          <div class="profile-card">
+            <div class="profile-avatar-container">
+              <img id="profileAvatar" src="" alt="Avatar" class="profile-avatar">
+              <label class="avatar-upload-btn" id="avatarUploadLabel" title="Upload avatar">
+                <input type="file" id="profileAvatarUpload" accept="image/*" style="display:none;">
+                📷
+              </label>
+            </div>
+
+            <!-- Display mode -->
+            <div class="profile-info" id="profileDisplayInfo">
+              <h2 id="profileName">Adventurer</h2>
+              <p id="profileTitle">Apprentice Mage</p>
+              <p id="profileBio"></p>
+            </div>
+
+            <!-- Edit mode -->
+            <div class="profile-edit-form" id="profileEditForm" style="display:none;">
+              <input type="text" id="editName" placeholder="Your name...">
+              <input type="text" id="editTitle" placeholder="Your title (leave blank for auto)...">
+              <textarea id="editBio" placeholder="Bio..."></textarea>
+              <div>
+                <button id="saveProfile" class="btn-primary">Save</button>
+                <button id="cancelProfile" class="btn-secondary">Cancel</button>
+              </div>
+            </div>
+
+            <!-- Stats summary -->
+            <div class="profile-stats">
+              <div class="profile-stat">
+                <span id="profileTotalWork">0h</span>
+                <small>Work</small>
+              </div>
+              <div class="profile-stat">
+                <span id="profileTotalStudy">0h</span>
+                <small>Study</small>
+              </div>
+              <div class="profile-stat">
+                <span id="profileSessions">0</span>
+                <small>Sessions</small>
+              </div>
+              <div class="profile-stat">
+                <span id="profileStreak">0</span>
+                <small>Streak</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Achievements -->
+          <div class="achievements-section">
+            <!-- Ribbon rack -->
+            <div class="ribbon-rack-section">
+              <h3 class="section-title">🎖 Achievement Rack</h3>
+              <div id="ribbonRack" class="ribbon-rack"></div>
+            </div>
+            <!-- All achievements -->
+            <div class="achievements-grid-section">
+              <h3 class="section-title">🏆 Achievements</h3>
+              <div id="achievementsGrid" class="achievements-grid"></div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /#tab-profile -->
+
+
+      <!-- ═══════════════════════════════════════════════════
+           SETTINGS TAB
+           ═══════════════════════════════════════════════════ -->
+      <div id="tab-settings" class="tab-panel">
+        <div class="tab-header">
+          <h2>⚙️ Settings</h2>
+        </div>
+        <div class="settings-layout">
+          <!-- Settings categories nav -->
+          <div class="settings-nav">
+            <button class="settings-tab active" data-settings="appearance">🎨 Appearance</button>
+            <button class="settings-tab" data-settings="timer">⏱ Timer</button>
+            <button class="settings-tab" data-settings="notifications">🔔 Notifications</button>
+            <button class="settings-tab" data-settings="adhd">🧠 Focus</button>
+            <button class="settings-tab" data-settings="data">💾 Data</button>
+            <button class="settings-tab" data-settings="about">ℹ About</button>
+          </div>
+
+          <div class="settings-content">
+
+            <!-- Appearance -->
+            <div class="settings-panel active" id="settings-appearance">
+              <h3>🎨 Appearance</h3>
+              <div class="setting-group">
+                <label>Theme Accent Color</label>
+                <input type="color" id="accentColor" value="#7c5cbf">
+              </div>
+              <div class="setting-group">
+                <label>Secondary Color</label>
+                <input type="color" id="secondaryColor" value="#3d8b7a">
+              </div>
+              <div class="setting-group">
+                <label>Background Color</label>
+                <input type="color" id="bgColor" value="#050510">
+              </div>
+              <div class="setting-group">
+                <label>Font Size</label>
+                <input type="range" id="fontSize" min="12" max="20" value="14">
+                <span id="fontSizeVal">14px</span>
+              </div>
+              <div class="setting-group">
+                <label>Particle Effects</label>
+                <input type="checkbox" id="particleEffects" checked>
+              </div>
+              <div class="setting-group">
+                <label>Border Animations</label>
+                <input type="checkbox" id="borderAnimations" checked>
+              </div>
+              <div class="setting-group">
+                <label>Sidebar Width</label>
+                <input type="range" id="sidebarWidth" min="180" max="280" value="220">
+                <span id="sidebarWidthVal">220px</span>
+              </div>
+              <div style="margin-top:16px;">
+                <button id="resetAppearance" class="btn-secondary">↺ Reset Defaults</button>
+              </div>
+            </div>
+
+            <!-- Timer settings -->
+            <div class="settings-panel" id="settings-timer">
+              <h3>⏱ Timer Settings</h3>
+              <div class="setting-group">
+                <label>Default Work Duration (minutes)</label>
+                <input type="number" id="defaultWorkDuration" value="60" min="1" max="480">
+              </div>
+              <div class="setting-group">
+                <label>Default Study Duration (minutes)</label>
+                <input type="number" id="defaultStudyDuration" value="90" min="1" max="480">
+              </div>
+              <div class="setting-group">
+                <label>Auto-save timer sessions</label>
+                <input type="checkbox" id="autoSaveSessions" checked>
+              </div>
+              <div class="setting-group">
+                <label>Timer sound effects</label>
+                <input type="checkbox" id="timerSounds" checked>
+              </div>
+              <div class="setting-group">
+                <label>Break reminder every (minutes)</label>
+                <input type="number" id="breakReminderInterval" value="30" min="5" max="120">
+              </div>
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;">
+                <label>Custom Timer Labels</label>
+                <div id="customTimerLabelsList"></div>
+                <div class="add-custom-label">
+                  <input type="text" id="newCustomLabel" placeholder="New label...">
+                  <button id="addCustomLabel" class="btn-primary btn-sm">+</button>
+                </div>
+              </div>
+              <div style="margin-top:16px;">
+                <button id="saveTimerSettings" class="btn-primary">Save Timer Settings</button>
+              </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="settings-panel" id="settings-notifications">
+              <h3>🔔 Notifications</h3>
+              <div class="setting-group">
+                <label>Enable desktop notifications</label>
+                <input type="checkbox" id="desktopNotifications" checked>
+              </div>
+              <div class="setting-group">
+                <label>Timer completion notification</label>
+                <input type="checkbox" id="timerCompleteNotif" checked>
+              </div>
+              <div class="setting-group">
+                <label>Break reminders</label>
+                <input type="checkbox" id="breakReminders" checked>
+              </div>
+              <div class="setting-group">
+                <label>Daily streak reminder</label>
+                <input type="checkbox" id="dailyReminder" checked>
+              </div>
+              <div class="setting-group">
+                <label>Daily reminder time</label>
+                <input type="time" id="dailyReminderTime" value="09:00">
+              </div>
+              <div style="margin-top:16px;display:flex;gap:10px;">
+                <button id="testNotification" class="btn-secondary">🔔 Test Notification</button>
+                <button id="saveNotifSettings" class="btn-primary">Save</button>
+              </div>
+            </div>
+
+            <!-- ADHD/Focus settings -->
+            <div class="settings-panel" id="settings-adhd">
+              <h3>🧠 ADHD &amp; Focus Settings</h3>
+              <div class="setting-group">
+                <label>Enable Pomodoro by default</label>
+                <input type="checkbox" id="autoPomodoro">
+              </div>
+              <div class="setting-group">
+                <label>Focus mode hides sidebar</label>
+                <input type="checkbox" id="focusHidesSidebar" checked>
+              </div>
+              <div class="setting-group">
+                <label>Hyperfocus timer (auto-break after minutes)</label>
+                <input type="number" id="hyperfocusTimer" value="120" min="30" max="480">
+              </div>
+              <div class="setting-group">
+                <label>Visual progress pulse animation</label>
+                <input type="checkbox" id="progressPulse" checked>
+              </div>
+              <div class="setting-group">
+                <label>Time blindness helper (show % in title bar)</label>
+                <input type="checkbox" id="timeBlindenessHelper" checked>
+              </div>
+              <div class="setting-group">
+                <label>Encouragement messages during sessions</label>
+                <input type="checkbox" id="encouragementMessages" checked>
+              </div>
+              <div style="margin-top:16px;">
+                <button id="saveAdhdSettings" class="btn-primary">Save</button>
+              </div>
+            </div>
+
+            <!-- Data management -->
+            <div class="settings-panel" id="settings-data">
+              <h3>💾 Data Management</h3>
+              <div class="setting-group">
+                <label>Export all data as JSON</label>
+                <button id="exportAllData" class="btn-secondary">⬇ Export JSON</button>
+              </div>
+              <div class="setting-group">
+                <label>Import data from JSON</label>
+                <label class="btn-upload">
+                  <input type="file" id="importData" accept=".json">
+                  ⬆ Import JSON
+                </label>
+              </div>
+              <div class="setting-group danger-zone">
+                <label>⚠️ Danger Zone</label>
+                <button id="clearAllData" class="btn-danger">🗑 Clear All Data</button>
+              </div>
+            </div>
+
+            <!-- About -->
+            <div class="settings-panel" id="settings-about">
+              <h3>ℹ About Aureole Timer</h3>
+              <div class="about-content">
+                <div class="about-logo">✨</div>
+                <h2>Aureole Timer</h2>
+                <p>Version 1.0.0</p>
+                <p>A magical productivity companion for neurodivergent adventurers.</p>
+                <p>Frieren-themed • ADHD-friendly • Dark Mode</p>
+                <div class="about-features">
+                  <p>🎯 Customizable focus timer with visual progress</p>
+                  <p>📖 Journal with mood &amp; energy tracking</p>
+                  <p>📚 Grimoire task board (Kanban-style)</p>
+                  <p>📜 Detailed session chronicle with CSV export</p>
+                  <p>🏆 Achievement system with ribbon rack</p>
+                  <p>🍅 Pomodoro technique support</p>
+                  <p>🎵 YouTube music integration</p>
+                  <p>🧠 ADHD-friendly focus mode</p>
+                  <p>🌱 Daily habit/ritual tracker</p>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /.settings-content -->
+        </div><!-- /.settings-layout -->
+      </div><!-- /#tab-settings -->
+
+    </main>
+  </div><!-- /#appLayout -->
+
+  <!-- Toast notification container -->
+  <div id="toastContainer"></div>
+
+  <!-- Focus mode overlay -->
+  <div id="focusOverlay" style="display:none;"></div>
+
+  <!-- JS files — load in order (no ES6 modules) -->
+  <script src="js/storage.js"></script>
+  <script src="js/achievements.js"></script>
+  <script src="js/reminders.js"></script>
+  <script src="js/timer.js"></script>
+  <script src="js/journal.js"></script>
+  <script src="js/grimoire.js"></script>
+  <script src="js/chronicle.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

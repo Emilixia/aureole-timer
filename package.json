@@ -1,0 +1,42 @@
+{
+  "name": "aureole-timer",
+  "version": "1.0.0",
+  "description": "A magical Frieren-themed productivity timer companion app",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^39.8.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.aureole.timer",
+    "productName": "Aureole Timer",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
