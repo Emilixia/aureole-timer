@@ -1,4 +1,4 @@
-// Aureole Timer — Journal Module
+// Frieren Chronomark — Journal Module
 
 const Journal = (function () {
   let currentEntryId = null;

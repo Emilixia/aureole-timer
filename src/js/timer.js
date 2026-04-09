@@ -1,4 +1,4 @@
-// Aureole Timer — Journey Timer Logic
+// Frieren Chronomark — Journey Timer Logic
 
 const Timer = (function () {
   const state = {
@@ -87,7 +87,7 @@ const Timer = (function () {
       const pct = state.totalDuration > 0
         ? Math.round((state.elapsed / state.totalDuration) * 100) + '% — '
         : '';
-      document.title = '[' + formatTime(state.elapsed) + '] ' + pct + 'Aureole Timer';
+      document.title = '[' + formatTime(state.elapsed) + '] ' + pct + 'Frieren Chronomark';
     }
   }
 
@@ -321,7 +321,7 @@ const Timer = (function () {
     updateDisplay();
     updateButtonStates();
     if (window.App) window.App.stopEncouragement();
-    document.title = 'Aureole Timer';
+    document.title = 'Frieren Chronomark';
     stopManaSparkles();
     // Clear running visual state
     const displayStop = document.getElementById('timerDisplay');
@@ -341,7 +341,7 @@ const Timer = (function () {
     updateDisplay();
     updateButtonStates();
     if (window.App) window.App.stopEncouragement();
-    document.title = 'Aureole Timer';
+    document.title = 'Frieren Chronomark';
     stopManaSparkles();
     const displayReset = document.getElementById('timerDisplay');
     if (displayReset) displayReset.classList.remove('running');
@@ -454,7 +454,7 @@ const Timer = (function () {
 
     updateDisplay();
     updateButtonStates();
-    document.title = 'Aureole Timer';
+    document.title = 'Frieren Chronomark';
     if (window.App) window.App.stopEncouragement();
     if (window.showToast) window.showToast('✨ Session complete! Amazing work!', 'success');
   }

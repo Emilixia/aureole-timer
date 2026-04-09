@@ -1,4 +1,4 @@
-// Aureole Timer — Settings Module
+// Frieren Chronomark — Settings Module
 
 const DEFAULT_SETTINGS = {
   // Appearance
@@ -283,7 +283,7 @@ const Settings = (function () {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'aureole-timer-data-' + new Date().toISOString().split('T')[0] + '.json';
+    a.download = 'frieren-chronomark-data-' + new Date().toISOString().split('T')[0] + '.json';
     a.click();
     URL.revokeObjectURL(url);
     if (window.showToast) window.showToast('Data exported! 💾', 'success');
@@ -384,7 +384,7 @@ const Settings = (function () {
     if (testNotifBtn) {
       testNotifBtn.addEventListener('click', function () {
         if (window.aureole) {
-          window.aureole.showNotification('🔔 Test Notification', 'Aureole Timer notifications are working!');
+          window.aureole.showNotification('🔔 Test Notification', 'Frieren Chronomark notifications are working!');
         }
         if (window.showToast) window.showToast('Test notification sent! 🔔', 'success');
       });

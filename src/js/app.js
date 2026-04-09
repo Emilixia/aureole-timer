@@ -1,4 +1,4 @@
-// Aureole Timer — Main Application Orchestrator
+// Frieren Chronomark — Main Application Orchestrator
 
 const ENCOURAGEMENTS = [
   '✨ You\'re doing amazing, keep going!',
@@ -7,7 +7,7 @@ const ENCOURAGEMENTS = [
   '🧙 Frieren studied for centuries. You can do this!',
   '💜 Progress, not perfection!',
   '🔮 Your dedication is building something great!',
-  '⚜ The journey to Aureole continues...',
+  '⚜ The journey of Frieren continues...',
   '🌸 Small steps lead to great distances.',
   '✨ You are the mage of your own story!',
   '🌊 Steady as the tide, powerful as the storm.',
@@ -213,8 +213,8 @@ function toggleFocusMode() {
 
   const settings = window.AppSettings || {};
   if (settings.focusHidesSidebar) {
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.style.display = focusModeActive ? 'none' : '';
+    const topNav = document.getElementById('topNav');
+    if (topNav) topNav.style.display = focusModeActive ? 'none' : '';
   }
 }
 
@@ -265,8 +265,17 @@ function initWindowControls() {
 // ── Spotify Music Player ──────────────────────────────────────
 function initSpotifyPlayer() {
   const loadBtn = document.getElementById('loadSpotifyBtn');
+  const loginBtn = document.getElementById('spotifyLoginBtn');
   const urlInput = document.getElementById('spotifyUrl');
   const frame = document.getElementById('spotifyFrame');
+
+  if (loginBtn) {
+    loginBtn.addEventListener('click', function () {
+      if (window.aureole && window.aureole.openSpotifyWindow) {
+        window.aureole.openSpotifyWindow();
+      }
+    });
+  }
 
   if (loadBtn) {
     loadBtn.addEventListener('click', function () {

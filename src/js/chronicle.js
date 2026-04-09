@@ -1,4 +1,4 @@
-// Aureole Timer — Chronicle (Session History & Stats)
+// Frieren Chronomark — Chronicle (Session History & Stats)
 
 const Chronicle = (function () {
 
@@ -251,7 +251,7 @@ const Chronicle = (function () {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'aureole-chronicle-' + new Date().toISOString().split('T')[0] + '.csv';
+    a.download = 'frieren-chronomark-chronicle-' + new Date().toISOString().split('T')[0] + '.csv';
     a.click();
     URL.revokeObjectURL(url);
     if (window.showToast) window.showToast('Chronicle exported! 📊', 'success');

@@ -1,4 +1,4 @@
-// Aureole Timer — Achievement Engine
+// Frieren Chronomark — Achievement Engine
 
 const ACHIEVEMENTS = [
   // Work time achievements (threshold in seconds)
@@ -19,7 +19,7 @@ const ACHIEVEMENTS = [
   { id: 'study_50h',  category: 'study',    name: 'Sage',               desc: 'Study for 50 hours',              icon: '🔮',       color: '#8a2be2', threshold: 180000 },
   { id: 'study_100h', category: 'study',    name: 'Grand Magus',        desc: 'Study for 100 hours',             icon: '✨',       color: '#d4a843', threshold: 360000 },
   { id: 'study_200h', category: 'study',    name: 'Archmage',           desc: 'Study for 200 hours',             icon: '🌌',       color: '#c084fc', threshold: 720000 },
-  { id: 'study_500h', category: 'study',    name: 'Oracle of Aureole',  desc: 'Study for 500 hours',             icon: '🔭',       color: '#f0c860', threshold: 1800000 },
+  { id: 'study_500h', category: 'study',    name: 'Oracle of Chronomark',  desc: 'Study for 500 hours',             icon: '🔭',       color: '#f0c860', threshold: 1800000 },
 
   // Streak achievements (threshold in days)
   { id: 'streak_3',   category: 'streak',   name: 'Consistent',         desc: '3-day streak',                    icon: '🔥',       color: '#ff6347', threshold: 3 },
@@ -28,7 +28,7 @@ const ACHIEVEMENTS = [
   { id: 'streak_30',  category: 'streak',   name: 'Monthly Hero',       desc: '30-day streak',                   icon: '🌙',       color: '#c0c0ff', threshold: 30 },
   { id: 'streak_60',  category: 'streak',   name: 'Two-Month Mage',     desc: '60-day streak',                   icon: '🌊',       color: '#7fffd4', threshold: 60 },
   { id: 'streak_100', category: 'streak',   name: 'Eternal Flame',      desc: '100-day streak',                  icon: '💎',       color: '#7fffd4', threshold: 100 },
-  { id: 'streak_365', category: 'streak',   name: 'Year of Aureole',    desc: '365-day streak',                  icon: '🌈',       color: '#f0c860', threshold: 365 },
+  { id: 'streak_365', category: 'streak',   name: 'Year of Chronomark',    desc: '365-day streak',                  icon: '🌈',       color: '#f0c860', threshold: 365 },
 
   // Session count achievements
   { id: 'sessions_5',   category: 'sessions', name: 'Getting Started',  desc: 'Complete 5 sessions',             icon: '🌱',       color: '#90ee90', threshold: 5 },

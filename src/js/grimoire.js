@@ -1,4 +1,4 @@
-// Aureole Timer — Grimoire (Kanban Tasks + Habits)
+// Frieren Chronomark — Grimoire (Kanban Tasks + Habits)
 
 const Grimoire = (function () {
   let editingSpellId = null;

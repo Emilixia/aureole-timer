@@ -1,5 +1,5 @@
 {
-  "name": "aureole-timer",
+  "name": "frieren-chronomark",
   "version": "1.0.0",
   "description": "A magical Frieren-themed productivity timer companion app",
   "main": "main.js",
@@ -12,8 +12,8 @@
     "electron-builder": "^25.1.8"
   },
   "build": {
-    "appId": "com.aureole.timer",
-    "productName": "Aureole Timer",
+    "appId": "com.frieren.chronomark",
+    "productName": "Frieren Chronomark",
     "directories": {
       "output": "dist"
     },

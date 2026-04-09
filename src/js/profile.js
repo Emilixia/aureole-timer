@@ -1,4 +1,4 @@
-// Aureole Timer — Profile Module
+// Frieren Chronomark — Profile Module
 
 const Profile = (function () {
 

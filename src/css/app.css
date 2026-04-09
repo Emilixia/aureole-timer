@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   AUREOLE TIMER — Frieren Dark Theme CSS
+   FRIEREN CHRONOMARK — Dark Theme CSS
    ═══════════════════════════════════════════════════════════ */
 
 /* ── CSS Variables ──────────────────────────────────────────── */
@@ -27,6 +27,7 @@
   --glow-gold: 0 0 15px rgba(212, 168, 67, 0.4);
   --sidebar-width: 220px;
   --titlebar-height: 32px;
+  --topnav-height: 48px;
   --font-size: 14px;
   --transition: all 0.25s ease;
   --radius: 8px;
@@ -120,11 +121,141 @@ html, body {
 .title-controls button:hover { background: rgba(124, 92, 191, 0.2); color: var(--text-primary); }
 #btnClose:hover { background: #c0485f !important; color: #fff !important; }
 
+/* ── Top Navigation Bar ──────────────────────────────────────── */
+#topNav {
+  position: fixed;
+  top: var(--titlebar-height);
+  left: 0;
+  right: 0;
+  height: var(--topnav-height);
+  background: linear-gradient(180deg, #090921 0%, #0a0a22 100%);
+  border-bottom: 2px solid;
+  border-image: linear-gradient(to right, transparent, var(--accent), var(--gold), var(--accent), transparent) 1;
+  display: flex;
+  align-items: stretch;
+  z-index: 999;
+  -webkit-app-region: drag;
+}
+
+.topnav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+
+.topnav-logo .logo-gem {
+  font-size: 1.1rem;
+  color: var(--gold);
+  text-shadow: 0 0 10px var(--gold), 0 0 20px rgba(212,168,67,0.4);
+  animation: gemFloat 3s ease-in-out infinite;
+}
+
+.topnav-logo .logo-text {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  font-family: 'Cinzel', 'Georgia', serif;
+  background: linear-gradient(135deg, var(--accent-hover), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.topnav-tabs {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  -webkit-app-region: no-drag;
+}
+
+.topnav-tabs .nav-tab {
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border);
+  border-radius: 0;
+  color: var(--text-secondary);
+  padding: 0 22px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: var(--transition);
+  position: relative;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transform: none;
+}
+
+/* Override the sidebar left-bar indicator for topnav */
+.topnav-tabs .nav-tab::before { display: none !important; }
+
+/* Bottom-bar active indicator */
+.topnav-tabs .nav-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(to right, var(--accent), var(--gold));
+  border-radius: 2px 2px 0 0;
+  transform: scaleX(0);
+  transition: transform 0.25s ease;
+}
+
+.topnav-tabs .nav-tab:hover {
+  background: rgba(124, 92, 191, 0.15);
+  color: var(--text-primary);
+  transform: none;
+}
+.topnav-tabs .nav-tab:hover::after { transform: scaleX(1); }
+
+.topnav-tabs .nav-tab.active {
+  background: linear-gradient(180deg, rgba(124,92,191,0.2), rgba(124,92,191,0.05));
+  color: var(--accent-hover);
+  font-weight: 600;
+  box-shadow: none;
+}
+.topnav-tabs .nav-tab.active::after {
+  transform: scaleX(1);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.topnav-clock {
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  font-size: 0.85rem;
+  color: var(--accent-hover);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 8px var(--accent-glow);
+  border-left: 1px solid var(--border);
+  white-space: nowrap;
+  -webkit-app-region: drag;
+}
+
+/* Focus mode hides the top nav */
+body.focus-mode #topNav {
+  display: none;
+}
+body.focus-mode #appLayout {
+  padding-top: var(--titlebar-height);
+}
+
 /* ── App Layout ──────────────────────────────────────────────── */
 #appLayout {
   display: flex;
   height: 100vh;
-  padding-top: var(--titlebar-height);
+  padding-top: calc(var(--titlebar-height) + var(--topnav-height));
   position: relative;
   z-index: 1;
 }
@@ -267,7 +398,7 @@ html, body {
 .tab-panel {
   display: none;
   padding: 20px 24px;
-  min-height: calc(100vh - var(--titlebar-height));
+  min-height: calc(100vh - var(--titlebar-height) - var(--topnav-height));
   animation: fadeInPanel 0.3s ease;
 }
 .tab-panel.active { display: block; }

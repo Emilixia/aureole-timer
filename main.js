@@ -101,6 +101,22 @@ ipcMain.handle('store-remove', async (event, key) => {
   }
 });
 
+// IPC: Open Spotify login window (shares default session so cookies persist to iframe)
+ipcMain.handle('open-spotify-window', async (event) => {
+  const win = new BrowserWindow({
+    width: 960,
+    height: 700,
+    parent: mainWindow,
+    title: 'Spotify',
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  });
+  win.loadURL('https://open.spotify.com');
+  return true;
+});
+
 // IPC: Show OS notification
 ipcMain.handle('show-notification', async (event, title, body) => {
   try {

@@ -1,4 +1,4 @@
-// Aureole Timer — Reminders & Notifications
+// Frieren Chronomark — Reminders & Notifications
 
 const Reminders = (function () {
   let checkInterval = null;
@@ -90,7 +90,7 @@ const Reminders = (function () {
 
       reminder.lastTriggered = today;
       if (window.aureole) {
-        window.aureole.showNotification('⏰ Aureole Reminder', reminder.text);
+        window.aureole.showNotification('⏰ Frieren Chronomark', reminder.text);
       }
       if (window.showToast) window.showToast(`⏰ ${reminder.text}`, 'info');
     }
@@ -104,7 +104,7 @@ const Reminders = (function () {
         if (lastDailyReminder !== today) {
           await Storage.set('lastDailyReminder', today);
           if (window.aureole) {
-            window.aureole.showNotification('✨ Aureole Timer', 'Time to start your magical journey today!');
+            window.aureole.showNotification('✨ Frieren Chronomark', 'Time to start your magical journey today!');
           }
         }
       }

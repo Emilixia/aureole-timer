@@ -7,7 +7,7 @@
     content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; frame-src https://open.spotify.com; img-src * blob: data:; media-src * blob: data:; connect-src 'self'; font-src 'self' data: https://fonts.gstatic.com;">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <title>Aureole Timer</title>
+  <title>Frieren Chronomark</title>
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
@@ -17,7 +17,7 @@
 
   <!-- Custom title bar -->
   <div id="titleBar">
-    <div class="title-drag-area">✨ Aureole Timer</div>
+    <div class="title-drag-area">✨ Frieren Chronomark</div>
     <div class="title-controls">
       <button id="btnMinimize" title="Minimize">—</button>
       <button id="btnMaximize" title="Maximize">□</button>
@@ -25,25 +25,25 @@
     </div>
   </div>
 
+  <!-- Top Navigation Bar -->
+  <nav id="topNav">
+    <div class="topnav-logo">
+      <span class="logo-gem">◆</span>
+      <span class="logo-text">Frieren Chronomark</span>
+    </div>
+    <div class="topnav-tabs">
+      <button class="nav-tab active" data-tab="journey">🌟 Journey</button>
+      <button class="nav-tab" data-tab="journal">📖 Journal</button>
+      <button class="nav-tab" data-tab="grimoire">📚 Grimoire</button>
+      <button class="nav-tab" data-tab="chronicle">📜 Chronicle</button>
+      <button class="nav-tab" data-tab="profile">👤 Profile</button>
+      <button class="nav-tab" data-tab="settings">⚙️ Settings</button>
+    </div>
+    <div class="topnav-clock" id="sidebarClock"></div>
+  </nav>
+
   <!-- Main layout -->
   <div id="appLayout">
-
-    <!-- Left Sidebar -->
-    <aside id="sidebar">
-      <div class="sidebar-logo">
-        <div class="logo-gem">◆</div>
-        <span>Aureole</span>
-      </div>
-      <nav>
-        <button class="nav-tab active" data-tab="journey">🌟 Journey</button>
-        <button class="nav-tab" data-tab="journal">📖 Journal</button>
-        <button class="nav-tab" data-tab="grimoire">📚 Grimoire</button>
-        <button class="nav-tab" data-tab="chronicle">📜 Chronicle</button>
-        <button class="nav-tab" data-tab="profile">👤 Profile</button>
-        <button class="nav-tab" data-tab="settings">⚙️ Settings</button>
-      </nav>
-      <div class="sidebar-clock" id="sidebarClock"></div>
-    </aside>
 
     <!-- Content panels -->
     <main id="content">
@@ -73,7 +73,7 @@
           <div class="journey-frame" id="journeyFrame">
             <div class="frame-bg" id="timerBgOverlay"></div>
             <div class="frame-content">
-              <h2 class="frame-title">⚜ Journey to Aureole ⚜</h2>
+              <h2 class="frame-title">⚜ Frieren Chronomark ⚜</h2>
 
               <!-- Manual time inputs -->
               <div class="time-inputs">
@@ -207,6 +207,7 @@
             <!-- Music Player -->
             <div class="panel music-panel">
               <h3 class="panel-title">🎵 Arcane Melodies</h3>
+              <button id="spotifyLoginBtn" class="btn-secondary btn-sm" style="width:100%;margin-bottom:8px;">🔑 Log in to Spotify</button>
               <input type="text" id="spotifyUrl" placeholder="Paste Spotify playlist / track / album URL...">
               <button id="loadSpotifyBtn" class="btn-primary btn-sm" style="margin-top:6px;width:100%;">▶ Load</button>
               <div id="spotifyContainer">
@@ -587,11 +588,6 @@
                 <label>Border Animations</label>
                 <input type="checkbox" id="borderAnimations" checked>
               </div>
-              <div class="setting-group">
-                <label>Sidebar Width</label>
-                <input type="range" id="sidebarWidth" min="180" max="280" value="220">
-                <span id="sidebarWidthVal">220px</span>
-              </div>
               <div style="margin-top:16px;">
                 <button id="resetAppearance" class="btn-secondary">↺ Reset Defaults</button>
               </div>
@@ -693,7 +689,7 @@
                 <input type="checkbox" id="autoPomodoro">
               </div>
               <div class="setting-group">
-                <label>Focus mode hides sidebar</label>
+                <label>Focus mode hides navigation bar</label>
                 <input type="checkbox" id="focusHidesSidebar" checked>
               </div>
               <div class="setting-group">
@@ -739,10 +735,10 @@
 
             <!-- About -->
             <div class="settings-panel" id="settings-about">
-              <h3>ℹ About Aureole Timer</h3>
+              <h3>ℹ About Frieren Chronomark</h3>
               <div class="about-content">
                 <div class="about-logo">✨</div>
-                <h2>Aureole Timer</h2>
+                <h2>Frieren Chronomark</h2>
                 <p>Version 1.0.0</p>
                 <p>A magical productivity companion for neurodivergent adventurers.</p>
                 <p>Frieren-themed • ADHD-friendly • Dark Mode</p>
