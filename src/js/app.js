@@ -319,10 +319,20 @@ function initMusicPlayer() {
       }
       if (window.showToast) showToast('Loading SoundCloud track... 🎵', 'info');
     } else {
-      // Treat as direct audio URL (mp3, ogg, wav, etc.)
+      // Treat as direct audio URL (mp3, ogg, wav, etc.) — validate scheme first
       if (frameEl) { frameEl.setAttribute('src', 'about:blank'); frameEl.style.display = 'none'; }
       if (audioEl) {
-        audioEl.src = raw;
+        try {
+          const parsed = new URL(raw);
+          if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+            if (window.showToast) showToast('Only http/https URLs are supported.', 'error');
+            return;
+          }
+          audioEl.src = parsed.href;
+        } catch (e) {
+          if (window.showToast) showToast('Invalid URL. Please enter a valid audio link.', 'error');
+          return;
+        }
         audioEl.style.display = 'block';
         audioEl.load();
         audioEl.play().catch(function () {
