@@ -780,19 +780,19 @@ body.focus-mode #tab-journey { height: calc(100vh - var(--titlebar-height)); }
   letter-spacing: 1.2px;
 }
 
-/* Music Panel — Spotify */
-.music-panel #spotifyUrl {
+/* Music Panel — YouTube */
+.music-panel #ytUrl {
   width: 100%;
   margin-bottom: 8px;
 }
-#spotifyContainer {
+#ytContainer {
   margin-top: 10px;
   border-radius: var(--radius);
   overflow: hidden;
   background: #000;
   min-height: 80px;
 }
-#spotifyFrame {
+#ytFrame {
   width: 100%;
   height: 152px;
   border: none;
@@ -800,8 +800,8 @@ body.focus-mode #tab-journey { height: calc(100vh - var(--titlebar-height)); }
   border-radius: var(--radius);
   transition: height 0.3s ease;
 }
-#spotifyFrame[src]:not([src=""]):not([src="about:blank"]) {
-  height: 380px;
+#ytFrame[src]:not([src=""]):not([src="about:blank"]) {
+  height: 220px;
 }
 
 /* Notes Panel */
@@ -1555,6 +1555,246 @@ body.focus-mode #tab-journey { height: calc(100vh - var(--titlebar-height)); }
   color: var(--text-secondary);
   margin-bottom: 14px;
   letter-spacing: 0.5px;
+}
+
+/* Profile tab fills viewport without default padding */
+#tab-profile.tab-panel {
+  padding: 0;
+  display: none;
+  overflow: hidden;
+  height: calc(100vh - var(--titlebar-height) - var(--topnav-height));
+}
+#tab-profile.tab-panel.active {
+  display: flex;
+  flex-direction: column;
+}
+#tab-profile .prf-layout {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── LoL-style Profile Layout ────────────────────────────── */
+.prf-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Left sidebar */
+.prf-sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 14px 16px;
+  background: rgba(3,8,20,0.9);
+  border-right: 1px solid rgba(120,90,40,0.35);
+  overflow-y: auto;
+  gap: 12px;
+  position: relative;
+}
+
+/* Level badge (like "300" badge in LoL) */
+.prf-level-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 40% 35%, #3a2a00, #1a1200);
+  border: 2px solid var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px rgba(212,168,67,0.55), inset 0 0 8px rgba(212,168,67,0.2);
+  flex-shrink: 0;
+}
+.prf-level-num {
+  font-family: 'Cinzel', serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gold-light);
+  text-shadow: 0 0 8px rgba(212,168,67,0.8);
+}
+
+/* Avatar frame */
+.prf-avatar-frame {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+.prf-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid transparent;
+  background:
+    linear-gradient(rgba(5,10,18,1), rgba(5,10,18,1)) padding-box,
+    linear-gradient(135deg, var(--gold-dark), var(--gold)) border-box;
+  display: block;
+}
+/* Decorative outer ring */
+.prf-avatar-frame::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid rgba(200,170,110,0.3);
+  pointer-events: none;
+}
+.prf-avatar-upload {
+  position: absolute;
+  bottom: 4px; right: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid rgba(120,90,40,0.6);
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: background 0.2s;
+}
+.prf-avatar-upload:hover { background: rgba(120,90,40,0.45); }
+
+/* Name, title, bio */
+.prf-identity { text-align: center; }
+.prf-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+  font-family: 'Cinzel', serif;
+}
+.prf-title {
+  font-size: 0.82rem;
+  color: var(--gold);
+  font-style: italic;
+  margin-bottom: 4px;
+}
+.prf-bio {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  max-width: 200px;
+}
+
+/* Edit form */
+.prf-edit-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.prf-edit-form input,
+.prf-edit-form textarea {
+  width: 100%;
+  font-size: 0.82rem;
+}
+.prf-edit-form textarea { height: 70px; resize: vertical; }
+.prf-edit-actions { display: flex; gap: 8px; }
+
+/* XP bar */
+.prf-xp-section { width: 100%; }
+.prf-xp-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+  letter-spacing: 0.5px;
+}
+.prf-xp-track {
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(120,90,40,0.3);
+}
+.prf-xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+  border-radius: 3px;
+  transition: width 0.6s ease;
+  box-shadow: 0 0 6px rgba(10,200,185,0.55);
+}
+
+.prf-edit-btn {
+  width: 100%;
+  margin-top: 4px;
+}
+
+/* Right main content */
+.prf-main {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Background art gradient */
+.prf-bg-art {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 180px;
+  background:
+    radial-gradient(ellipse at 70% 0%, rgba(120,90,40,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 30% 0%, rgba(10,50,100,0.2) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(10,25,50,0.65) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Stats row: like LoL SOLO/DUO | HONOR | MASTERY SCORE ... */
+.prf-stats-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  border-bottom: 1px solid rgba(120,90,40,0.3);
+  flex-shrink: 0;
+}
+.prf-stat-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 22px 8px 18px;
+  border-right: 1px solid rgba(120,90,40,0.18);
+  gap: 6px;
+}
+.prf-stat-block:last-child { border-right: none; }
+.prf-stat-cat {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-family: 'Cinzel', serif;
+}
+.prf-stat-icon-lg { font-size: 1.8rem; line-height: 1; }
+.prf-stat-val {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gold-light);
+  font-family: 'Cinzel', serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sections below stats */
+.prf-section {
+  position: relative;
+  z-index: 1;
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(120,90,40,0.18);
+}
+.prf-section:last-child { border-bottom: none; }
+.prf-section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  font-family: 'Cinzel', serif;
 }
 
 /* ── Ribbon Rack ─────────────────────────────────────────── */
@@ -2949,20 +3189,20 @@ body.focus-mode #tab-journey .journey-right {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   padding: 14px 10px 18px;
   height: 100%;
 }
 
 /* Decorative hexagonal frame around the icon */
 .jms-card-frame {
-  width: 72px;
-  height: 72px;
+  width: 96px;
+  height: 96px;
   border: 2px solid rgba(120,90,40,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
   background: rgba(5,10,20,0.7);
   clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
   transition: border-color 0.25s, box-shadow 0.25s;
@@ -2971,7 +3211,7 @@ body.focus-mode #tab-journey .journey-right {
   border-color: var(--gold);
   box-shadow: 0 0 18px rgba(200,170,110,0.45);
 }
-.jms-card-icon { font-size: 2rem; line-height: 1; }
+.jms-card-icon { font-size: 2.6rem; line-height: 1; }
 
 .jms-card-category {
   color: var(--text-muted);
@@ -3001,7 +3241,8 @@ body.focus-mode #tab-journey .journey-right {
   background-clip: text;
 }
 
-/* Thin vertical separator (like the line before TFT in LoL) */
+/* Cards hidden by subnav filter */
+.jms-card[data-mode].jms-hidden { display: none; }
 .jms-card-separator {
   width: 1px;
   background: rgba(120,90,40,0.5);

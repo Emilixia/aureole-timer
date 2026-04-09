@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; frame-src https://open.spotify.com; img-src * blob: data:; media-src * blob: data:; connect-src 'self'; font-src 'self' data: https://fonts.gstatic.com;">
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; frame-src https://www.youtube.com https://youtube.com https://open.spotify.com; img-src * blob: data:; media-src * blob: data:; connect-src 'self'; font-src 'self' data: https://fonts.gstatic.com;">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <title>Frieren Chronomark</title>
@@ -88,11 +88,11 @@
 
           <!-- Sub-nav: like PVP | CO-OP VS. AI | TRAINING | CREATE CUSTOM -->
           <div class="jms-subnav">
-            <button class="jms-subbtn active">SOLO FOCUSED</button>
-            <button class="jms-subbtn">TIMED SESSION</button>
-            <button class="jms-subbtn">TECHNIQUE</button>
+            <button class="jms-subbtn active" data-subnav="solo">SOLO FOCUSED</button>
+            <button class="jms-subbtn" data-subnav="timed">TIMED SESSION</button>
+            <button class="jms-subbtn" data-subnav="technique">TECHNIQUE</button>
             <div class="jms-subnav-sep"></div>
-            <button class="jms-subbtn">CREATE CUSTOM</button>
+            <button class="jms-subbtn" data-subnav="create-custom">CREATE CUSTOM</button>
           </div>
 
           <!-- Mode cards row: like Summoner's Rift, ARAM, Arena, TFT -->
@@ -309,11 +309,10 @@
             <!-- Music Player -->
             <div class="panel music-panel">
               <h3 class="panel-title">🎵 Arcane Melodies</h3>
-              <button id="spotifyLoginBtn" class="btn-secondary btn-sm" style="width:100%;margin-bottom:8px;">🔑 Log in to Spotify</button>
-              <input type="text" id="spotifyUrl" placeholder="Paste Spotify URL...">
-              <button id="loadSpotifyBtn" class="btn-primary btn-sm" style="margin-top:6px;width:100%;">▶ Load</button>
-              <div id="spotifyContainer">
-                <iframe id="spotifyFrame" src="about:blank" frameborder="0" allowfullscreen
+              <input type="text" id="ytUrl" placeholder="YouTube URL or search term...">
+              <button id="loadYtBtn" class="btn-primary btn-sm" style="margin-top:6px;width:100%;">▶ Load</button>
+              <div id="ytContainer">
+                <iframe id="ytFrame" src="about:blank" frameborder="0" allowfullscreen
                   allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                   loading="lazy"></iframe>
               </div>
@@ -579,79 +578,116 @@
            PROFILE TAB
            ═══════════════════════════════════════════════════ -->
       <div id="tab-profile" class="tab-panel">
-        <div class="tab-header">
-          <h2>👤 Profile</h2>
-          <button id="editProfileBtn" class="btn-primary">✏️ Edit Profile</button>
-        </div>
-        <div class="profile-layout">
-          <!-- Left: Profile card -->
-          <div class="profile-card">
-            <div class="profile-avatar-container">
-              <img id="profileAvatar" src="" alt="Avatar" class="profile-avatar">
-              <label class="avatar-upload-btn" id="avatarUploadLabel" title="Upload avatar">
+        <!-- LoL-style profile layout: sidebar identity + main stats/achievements -->
+        <div class="prf-layout">
+
+          <!-- ═══ LEFT SIDEBAR ═══ -->
+          <div class="prf-sidebar">
+
+            <!-- Level badge (like LoL "300" badge in top-left of profile) -->
+            <div class="prf-level-badge">
+              <span class="prf-level-num" id="prfLevelNum">1</span>
+            </div>
+
+            <!-- Avatar with decorative frame -->
+            <div class="prf-avatar-frame">
+              <img id="profileAvatar" src="" alt="Avatar" class="prf-avatar">
+              <label class="prf-avatar-upload" title="Upload photo">
                 <input type="file" id="profileAvatarUpload" accept="image/*" style="display:none;">
                 📷
               </label>
             </div>
 
-            <!-- Display mode -->
-            <div class="profile-info" id="profileDisplayInfo">
-              <h2 id="profileName">Adventurer</h2>
-              <p id="profileTitle">Apprentice Mage</p>
-              <p id="profileBio"></p>
+            <!-- Name + title (display mode) -->
+            <div id="profileDisplayInfo" class="prf-identity">
+              <h2 class="prf-name" id="profileName">Adventurer</h2>
+              <p class="prf-title" id="profileTitle">Apprentice Mage</p>
+              <p class="prf-bio" id="profileBio"></p>
             </div>
 
-            <!-- Edit mode -->
-            <div class="profile-edit-form" id="profileEditForm" style="display:none;">
+            <!-- Edit form (hidden) -->
+            <div id="profileEditForm" class="prf-edit-form" style="display:none;">
               <input type="text" id="editName" placeholder="Your name...">
-              <input type="text" id="editTitle" placeholder="Your title (leave blank for auto)...">
+              <input type="text" id="editTitle" placeholder="Title (blank = auto)...">
               <textarea id="editBio" placeholder="Bio..."></textarea>
-              <div>
-                <button id="saveProfile" class="btn-primary">Save</button>
-                <button id="cancelProfile" class="btn-secondary">Cancel</button>
+              <div class="prf-edit-actions">
+                <button id="saveProfile" class="btn-primary btn-sm">Save</button>
+                <button id="cancelProfile" class="btn-secondary btn-sm">Cancel</button>
               </div>
             </div>
 
-            <!-- Stats summary -->
-            <div class="profile-stats">
-              <div class="profile-stat">
-                <span id="profileTotalWork">0h</span>
-                <small>Work</small>
+            <!-- XP progress bar -->
+            <div class="prf-xp-section">
+              <div class="prf-xp-label">
+                <span>LEVEL <span id="prfXpLevel">1</span></span>
+                <span><span id="prfXpCurrent">0</span> / <span id="prfXpNext">60</span> XP</span>
               </div>
-              <div class="profile-stat">
-                <span id="profileTotalStudy">0h</span>
-                <small>Study</small>
-              </div>
-              <div class="profile-stat">
-                <span id="profileSessions">0</span>
-                <small>Sessions</small>
-              </div>
-              <div class="profile-stat">
-                <span id="profileStreak">0</span>
-                <small>Streak</small>
+              <div class="prf-xp-track">
+                <div class="prf-xp-fill" id="prfXpFill" style="width:0%"></div>
               </div>
             </div>
-          </div>
 
-          <!-- Right: Achievements -->
-          <div class="achievements-section">
-            <!-- Ribbon rack -->
-            <div class="ribbon-rack-section">
-              <h3 class="section-title">🎖 Ribbon Rack</h3>
+            <!-- Edit button -->
+            <button id="editProfileBtn" class="btn-ghost btn-sm prf-edit-btn">✏️ Edit Profile</button>
+
+          </div><!-- /.prf-sidebar -->
+
+          <!-- ═══ MAIN CONTENT ═══ -->
+          <div class="prf-main">
+
+            <!-- Background art overlay -->
+            <div class="prf-bg-art"></div>
+
+            <!-- Stats row: like LoL SOLO/DUO | HONOR | MASTERY SCORE | TROPHY | BANNER -->
+            <div class="prf-stats-row">
+              <div class="prf-stat-block">
+                <div class="prf-stat-cat">WORK</div>
+                <div class="prf-stat-icon-lg">⚔️</div>
+                <div class="prf-stat-val" id="profileTotalWork">0h</div>
+              </div>
+              <div class="prf-stat-block">
+                <div class="prf-stat-cat">STUDY</div>
+                <div class="prf-stat-icon-lg">📖</div>
+                <div class="prf-stat-val" id="profileTotalStudy">0h</div>
+              </div>
+              <div class="prf-stat-block">
+                <div class="prf-stat-cat">MASTERY SCORE</div>
+                <div class="prf-stat-icon-lg">✨</div>
+                <div class="prf-stat-val" id="profileMasteryScore">0</div>
+              </div>
+              <div class="prf-stat-block">
+                <div class="prf-stat-cat">STREAK</div>
+                <div class="prf-stat-icon-lg">🔥</div>
+                <div class="prf-stat-val" id="profileStreak">0</div>
+              </div>
+              <div class="prf-stat-block">
+                <div class="prf-stat-cat">SESSIONS</div>
+                <div class="prf-stat-icon-lg">🏅</div>
+                <div class="prf-stat-val" id="profileSessions">0</div>
+              </div>
+            </div><!-- /.prf-stats-row -->
+
+            <!-- Ribbons -->
+            <div class="prf-section">
+              <h3 class="prf-section-title">🎖 RIBBON RACK</h3>
               <div id="ribbonRack" class="ribbon-rack"></div>
             </div>
-            <!-- Medal rack -->
-            <div class="medal-rack-section">
-              <h3 class="section-title">🏅 Medal Rack</h3>
+
+            <!-- Medals -->
+            <div class="prf-section">
+              <h3 class="prf-section-title">🏅 MEDALS</h3>
               <div id="medalRack" class="medal-rack"></div>
             </div>
-            <!-- All achievements -->
-            <div class="achievements-grid-section">
-              <h3 class="section-title">🏆 Achievements</h3>
+
+            <!-- Achievements -->
+            <div class="prf-section">
+              <h3 class="prf-section-title">🏆 ACHIEVEMENTS</h3>
               <div id="achievementsGrid" class="achievements-grid"></div>
             </div>
-          </div>
-        </div>
+
+          </div><!-- /.prf-main -->
+
+        </div><!-- /.prf-layout -->
       </div><!-- /#tab-profile -->
 
 

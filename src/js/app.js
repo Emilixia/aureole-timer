@@ -277,73 +277,57 @@ function initWindowControls() {
   }
 }
 
-// ── Spotify Music Player ──────────────────────────────────────
-function initSpotifyPlayer() {
-  const loadBtn = document.getElementById('loadSpotifyBtn');
-  const loginBtn = document.getElementById('spotifyLoginBtn');
-  const urlInput = document.getElementById('spotifyUrl');
-  const frame = document.getElementById('spotifyFrame');
+// ── YouTube Music Player ──────────────────────────────────────
+function initSpotifyPlayer() {  // name kept to avoid changing initApp call
+  const loadBtn = document.getElementById('loadYtBtn');
+  const urlInput = document.getElementById('ytUrl');
+  const frame = document.getElementById('ytFrame');
 
-  if (loginBtn) {
-    loginBtn.addEventListener('click', function () {
-      if (window.aureole && window.aureole.openSpotifyWindow) {
-        window.aureole.openSpotifyWindow();
+  function loadYoutube() {
+    const raw = urlInput ? urlInput.value.trim() : '';
+    if (!raw) {
+      if (window.showToast) showToast('Please enter a YouTube URL or search term.', 'error');
+      return;
+    }
+    const videoId = extractYouTubeId(raw);
+    if (videoId && frame) {
+      // Direct video embed
+      const embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&rel=0';
+      frame.setAttribute('src', embedUrl);
+      if (window.showToast) showToast('Loading YouTube video... 🎵', 'info');
+    } else {
+      // Treat as search term — open YouTube search as embed
+      if (frame) {
+        const searchUrl = 'https://www.youtube.com/embed?listType=search&list=' + encodeURIComponent(raw) + '&autoplay=1';
+        frame.setAttribute('src', searchUrl);
+        if (window.showToast) showToast('Searching YouTube... 🎵', 'info');
       }
-    });
+    }
+    if (urlInput) Storage.set('ytUrl', raw);
   }
 
-  if (loadBtn) {
-    loadBtn.addEventListener('click', function () {
-      const url = urlInput ? urlInput.value.trim() : '';
-      const embedPath = extractSpotifyEmbedPath(url);
-      if (embedPath && frame) {
-        const embedUrl = new URL('/embed/' + embedPath, 'https://open.spotify.com');
-        embedUrl.searchParams.set('utm_source', 'aureole');
-        // Guard: only allow open.spotify.com
-        if (embedUrl.origin === 'https://open.spotify.com') {
-          frame.setAttribute('src', embedUrl.href);
-        }
-        if (window.showToast) showToast('Loading track... 🎵', 'info');
-      } else {
-        if (window.showToast) showToast('Please enter a valid Spotify URL.', 'error');
-      }
-    });
-  }
-
+  if (loadBtn) loadBtn.addEventListener('click', loadYoutube);
   if (urlInput) {
     urlInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') loadBtn && loadBtn.click();
+      if (e.key === 'Enter') loadYoutube();
+    });
+    urlInput.addEventListener('input', function () {
+      Storage.set('ytUrl', this.value);
     });
   }
 
   // Restore saved URL
-  Storage.get('spotifyUrl').then(function (savedUrl) {
-    if (savedUrl && urlInput) {
-      urlInput.value = savedUrl;
-    }
+  Storage.get('ytUrl').then(function (savedUrl) {
+    if (savedUrl && urlInput) urlInput.value = savedUrl;
   });
-
-  if (urlInput) {
-    urlInput.addEventListener('input', function () {
-      Storage.set('spotifyUrl', this.value);
-    });
-  }
 }
 
-// Extracts a Spotify embed path like "playlist/ID" or "track/ID" from a Spotify URL.
-// Supported types: playlist, track, album, artist, episode, show (podcast).
-// Returns null if no valid path found.
-function extractSpotifyEmbedPath(url) {
+// Extract YouTube video ID from various URL formats, returns null if not found
+function extractYouTubeId(url) {
   if (!url || typeof url !== 'string') return null;
-  const match = url.match(/(?:open\.spotify\.com(?:\/intl-[a-z]+)?)\/(playlist|track|album|artist|episode|show)\/([a-zA-Z0-9]+)/);
-  if (match) {
-    const type = match[1];
-    const id = match[2];
-    if (/^[a-zA-Z0-9]+$/.test(id)) {
-      return type + '/' + id;
-    }
-  }
-  return null;
+  // youtu.be/ID  or  youtube.com/watch?v=ID  or  youtube.com/embed/ID  or  youtube.com/shorts/ID
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|v\/))([a-zA-Z0-9_-]{11})/);
+  return match ? match[1] : null;
 }
 
 // ── Quick Notes ───────────────────────────────────────────────
@@ -374,6 +358,49 @@ function initQuickNotes() {
 
 // ── Application Init ──────────────────────────────────────────
 // ── Journey Mode Selection ────────────────────────────────────
+
+// Which mode cards each subnav tab shows, and which to pre-select
+const JMS_SUBNAVS = {
+  solo:           { modes: ['working', 'studying'],                 defaultMode: 'working' },
+  timed:          { modes: ['working', 'studying', 'pomodoro'],     defaultMode: 'working' },
+  technique:      { modes: ['pomodoro', 'custom'],                  defaultMode: 'pomodoro' },
+  'create-custom':{ modes: ['custom'],                              defaultMode: 'custom' }
+};
+
+let jmsCurrentSubnav = 'solo';
+
+function jmsApplySubnav(subnav) {
+  jmsCurrentSubnav = subnav;
+  const config = JMS_SUBNAVS[subnav];
+  if (!config) return;
+
+  // Update subnav button active state
+  document.querySelectorAll('.jms-subbtn[data-subnav]').forEach(function (b) {
+    b.classList.toggle('active', b.dataset.subnav === subnav);
+  });
+
+  // Show/hide mode cards
+  document.querySelectorAll('.jms-card[data-mode]').forEach(function (c) {
+    if (config.modes.includes(c.dataset.mode)) {
+      c.classList.remove('jms-hidden');
+    } else {
+      c.classList.add('jms-hidden');
+      c.classList.remove('selected');
+    }
+  });
+
+  // Hide the separator if pomodoro is hidden
+  const sep = document.querySelector('.jms-card-separator');
+  if (sep) {
+    // Show separator only when both 'normal' modes AND pomodoro are visible
+    const hasPom = config.modes.includes('pomodoro');
+    const hasNormal = config.modes.some(m => m !== 'pomodoro');
+    sep.style.display = hasPom && hasNormal ? '' : 'none';
+  }
+
+  // Select default mode for this subnav
+  jmsSelectMode(config.defaultMode);
+}
 
 const JMS_MODES = {
   working: {
@@ -511,6 +538,11 @@ function initModeSelection() {
     card.addEventListener('click', function () { jmsSelectMode(this.dataset.mode); });
   });
 
+  // Wire subnav tab buttons
+  document.querySelectorAll('.jms-subbtn[data-subnav]').forEach(function (btn) {
+    btn.addEventListener('click', function () { jmsApplySubnav(this.dataset.subnav); });
+  });
+
   var confirmBtn = document.getElementById('jmsConfirmBtn');
   if (confirmBtn) confirmBtn.addEventListener('click', jmsConfirm);
 
@@ -526,8 +558,8 @@ function initModeSelection() {
     });
   }
 
-  // Render initial selected state
-  jmsSelectMode('working');
+  // Render initial selected state with solo subnav
+  jmsApplySubnav('solo');
 }
 
 // ── Nav Profile Mini-Widget ───────────────────────────────────
@@ -536,8 +568,11 @@ async function initNavProfile() {
   var profile = await Storage.get('profile', { name: 'Adventurer', avatarDataUrl: '' });
   var sessions = await Storage.get('chronicle', []);
   var totalSecs = sessions.reduce(function (sum, s) { return sum + (s.duration || 0); }, 0);
-  var totalHours = totalSecs / 3600;
-  var level = Math.min(30, Math.max(1, Math.floor(totalHours) + 1));
+  var totalMins = Math.floor(totalSecs / 60);
+  // XP level: same formula as profile.js — level n needs n*60 minutes
+  var level = 1;
+  var xpUsed = 0;
+  while (totalMins >= xpUsed + level * 60) { xpUsed += level * 60; level++; }
 
   var nameEl = document.getElementById('navPfName');
   var levelEl = document.getElementById('navPfLevel');
@@ -558,7 +593,8 @@ async function initNavProfile() {
   }
 
   var widget = document.getElementById('navProfileWidget');
-  if (widget) {
+  if (widget && !widget._clickBound) {
+    widget._clickBound = true;
     widget.addEventListener('click', function () {
       document.querySelectorAll('.nav-tab').forEach(function (b) { b.classList.remove('active'); });
       document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
@@ -571,6 +607,9 @@ async function initNavProfile() {
     });
   }
 }
+
+// Expose so profile.js can call after save
+window.refreshNavProfile = initNavProfile;
 
 async function initApp() {
   // 1. Load settings first (sets AppSettings global)

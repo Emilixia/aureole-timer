@@ -15,6 +15,20 @@ const Profile = (function () {
     return (seconds / 3600).toFixed(1) + 'h';
   }
 
+  // XP system: level n requires n*60 minutes (cumulative)
+  function getXpInfo(totalMinutes) {
+    let level = 1;
+    let xpUsed = 0;
+    while (totalMinutes >= xpUsed + level * 60) {
+      xpUsed += level * 60;
+      level++;
+    }
+    const xpInLevel = totalMinutes - xpUsed;
+    const xpForNext = level * 60;
+    const pct = Math.min(100, Math.floor((xpInLevel / xpForNext) * 100));
+    return { level, xpInLevel, xpForNext, pct };
+  }
+
   async function loadProfile() {
     return await Storage.get('profile', {
       name: 'Adventurer',
@@ -87,18 +101,36 @@ const Profile = (function () {
       .reduce(function (sum, s) { return sum + s.duration; }, 0);
 
     const totalHours = (totalWork + totalStudy) / 3600;
+    const totalMins = Math.floor((totalWork + totalStudy) / 60);
     const streak = window.Chronicle ? window.Chronicle.calculateStreak(sessions) : 0;
+    const xpInfo = getXpInfo(totalMins);
+    const masteryScore = Math.floor(totalHours * 10);
 
     // Update profile stats display
     const workEl = document.getElementById('profileTotalWork');
     const studyEl = document.getElementById('profileTotalStudy');
     const sessionsEl = document.getElementById('profileSessions');
     const streakEl = document.getElementById('profileStreak');
+    const masteryEl = document.getElementById('profileMasteryScore');
 
     if (workEl) workEl.textContent = formatHours(totalWork);
     if (studyEl) studyEl.textContent = formatHours(totalStudy);
     if (sessionsEl) sessionsEl.textContent = sessions.length;
     if (streakEl) streakEl.textContent = streak;
+    if (masteryEl) masteryEl.textContent = masteryScore;
+
+    // XP bar
+    const xpFillEl = document.getElementById('prfXpFill');
+    const xpLevelEl = document.getElementById('prfXpLevel');
+    const xpCurrentEl = document.getElementById('prfXpCurrent');
+    const xpNextEl = document.getElementById('prfXpNext');
+    const levelBadgeEl = document.getElementById('prfLevelNum');
+
+    if (xpFillEl) xpFillEl.style.width = xpInfo.pct + '%';
+    if (xpLevelEl) xpLevelEl.textContent = xpInfo.level;
+    if (xpCurrentEl) xpCurrentEl.textContent = xpInfo.xpInLevel;
+    if (xpNextEl) xpNextEl.textContent = xpInfo.xpForNext;
+    if (levelBadgeEl) levelBadgeEl.textContent = xpInfo.level;
 
     // Auto-update title based on total hours
     const newTitle = getTitleForHours(totalHours);
@@ -130,6 +162,7 @@ const Profile = (function () {
       profile.avatarDataUrl = dataUrl;
       await saveProfileData(profile);
       if (window.showToast) window.showToast('Avatar updated! 📷', 'success');
+      if (window.refreshNavProfile) window.refreshNavProfile();
     };
     reader.readAsDataURL(file);
   }
@@ -170,6 +203,7 @@ const Profile = (function () {
     hideEditForm();
     await renderProfile();
     if (window.showToast) window.showToast('Profile saved! ✨', 'success');
+    if (window.refreshNavProfile) window.refreshNavProfile();
   }
 
   function init() {

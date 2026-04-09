@@ -12,7 +12,8 @@ const Timer = (function () {
     sessionLabel: 'Working',
     intervalId: null,
     sessionStartTimestamp: null,
-    lastBreakReminder: 0
+    lastBreakReminder: 0,
+    tenMinWarnFired: false
   };
 
   // Pomodoro state
@@ -260,12 +261,14 @@ const Timer = (function () {
       state.elapsed = 0;
       state.sessionStartTimestamp = Date.now();
       state.lastBreakReminder = 0;
+      state.tenMinWarnFired = false;
     }
 
     state.intervalId = setInterval(function () {
       state.elapsed++;
       updateDisplay();
       checkBreakReminder();
+      checkTenMinuteWarning();
     }, 1000);
 
     // Visual running states
@@ -317,6 +320,7 @@ const Timer = (function () {
     state.isPaused = false;
     state.elapsed = 0;
     state.sessionStartTimestamp = null;
+    state.tenMinWarnFired = false;
 
     updateDisplay();
     updateButtonStates();
@@ -337,6 +341,7 @@ const Timer = (function () {
     state.isPaused = false;
     state.elapsed = 0;
     state.sessionStartTimestamp = null;
+    state.tenMinWarnFired = false;
 
     updateDisplay();
     updateButtonStates();
@@ -436,6 +441,20 @@ const Timer = (function () {
       if (window.showToast) window.showToast('🌿 Time for a short break! You\'ve earned it.', 'info');
       if (window.aureole && settings.desktopNotifications) {
         window.aureole.showNotification('Break Time! 🌿', 'You\'ve been working hard. Time for a short break!');
+      }
+    }
+  }
+
+  function checkTenMinuteWarning() {
+    if (!state.isRunning || state.tenMinWarnFired) return;
+    if (state.totalDuration <= 0) return;
+    const remaining = state.totalDuration - state.elapsed;
+    if (remaining <= 600 && remaining > 0) {
+      state.tenMinWarnFired = true;
+      if (window.showToast) window.showToast('⏰ 10 minutes remaining in your session!', 'info');
+      const settings = window.AppSettings || {};
+      if (window.aureole && settings.desktopNotifications) {
+        window.aureole.showNotification('10 Minutes Left ⏰', 'You\'re about to finish your session. Keep going!');
       }
     }
   }
