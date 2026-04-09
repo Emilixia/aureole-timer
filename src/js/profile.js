@@ -2,6 +2,39 @@
 
 const Profile = (function () {
 
+  // ── Military rank table (18 grades, Private → General) ────────────────────
+  // Each entry: { grade, name, minLevel, insignia: HTML string }
+  const RANKS = [
+    { grade: 'E-1',  name: 'Private',            minLevel:  1, insignia: '' },
+    { grade: 'E-2',  name: 'Private First Class', minLevel:  3, insignia: '<i class="ins-chevron">∧</i>' },
+    { grade: 'E-3',  name: 'Lance Corporal',      minLevel:  5, insignia: '<i class="ins-chevron">∧</i><i class="ins-chevron">∧</i>' },
+    { grade: 'E-4',  name: 'Corporal',            minLevel:  8, insignia: '<span class="ins-row"><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i></span>' },
+    { grade: 'E-5',  name: 'Sergeant',            minLevel: 12, insignia: '<span class="ins-row"><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i></span>' },
+    { grade: 'E-6',  name: 'Staff Sergeant',      minLevel: 17, insignia: '<span class="ins-row"><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i></span><span class="ins-rocker">⌣</span>' },
+    { grade: 'E-7',  name: 'Sergeant First Class',minLevel: 23, insignia: '<span class="ins-row"><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i></span><span class="ins-rocker">⌣⌣</span>' },
+    { grade: 'E-8',  name: 'Master Sergeant',     minLevel: 30, insignia: '<span class="ins-row"><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i></span><span class="ins-rocker">⌣⌣⌣</span>' },
+    { grade: 'E-9',  name: 'Sergeant Major',      minLevel: 38, insignia: '<span class="ins-row"><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i></span><span class="ins-rocker ins-star">⌣★⌣</span>' },
+    { grade: 'W-1',  name: 'Warrant Officer',     minLevel: 47, insignia: '<span class="ins-bar ins-bar-split"></span>' },
+    { grade: 'O-1',  name: '2nd Lieutenant',      minLevel: 57, insignia: '<span class="ins-bar ins-bar-gold"></span>' },
+    { grade: 'O-2',  name: '1st Lieutenant',      minLevel: 68, insignia: '<span class="ins-bar ins-bar-silver"></span>' },
+    { grade: 'O-3',  name: 'Captain',             minLevel: 80, insignia: '<span class="ins-bar ins-bar-gold"></span><span class="ins-bar ins-bar-gold" style="margin-left:3px"></span>' },
+    { grade: 'O-4',  name: 'Major',               minLevel: 93, insignia: '<span class="ins-leaf ins-leaf-gold">❧</span>' },
+    { grade: 'O-5',  name: 'Lt. Colonel',         minLevel:107, insignia: '<span class="ins-leaf ins-leaf-silver">❧</span>' },
+    { grade: 'O-6',  name: 'Colonel',             minLevel:122, insignia: '<span class="ins-eagle">🦅</span>' },
+    { grade: 'O-7',  name: 'Brigadier General',   minLevel:138, insignia: '<span class="ins-star-row">★</span>' },
+    { grade: 'O-8',  name: 'Major General',       minLevel:155, insignia: '<span class="ins-star-row">★★</span>' },
+    { grade: 'O-9',  name: 'Lt. General',         minLevel:173, insignia: '<span class="ins-star-row">★★★</span>' },
+    { grade: 'O-10', name: 'General',             minLevel:192, insignia: '<span class="ins-star-row">★★★★</span>' },
+  ];
+
+  function getRankForLevel(level) {
+    let rank = RANKS[0];
+    for (let i = 0; i < RANKS.length; i++) {
+      if (level >= RANKS[i].minLevel) rank = RANKS[i];
+    }
+    return rank;
+  }
+
   function getTitleForHours(hours) {
     if (hours >= 500) return 'Legendary Mage';
     if (hours >= 100) return 'Arcane Master';
@@ -129,6 +162,19 @@ const Profile = (function () {
     if (xpCurrentEl) xpCurrentEl.textContent = xpInfo.xpInLevel;
     if (xpNextEl) xpNextEl.textContent = xpInfo.xpForNext;
     if (levelBadgeEl) levelBadgeEl.textContent = xpInfo.level;
+
+    // Military rank
+    const rank = getRankForLevel(xpInfo.level);
+    const rankInsigniaEl = document.getElementById('prfRankInsignia');
+    const rankGradeEl    = document.getElementById('prfRankGrade');
+    const rankNameEl     = document.getElementById('prfRankName');
+    const profileRankName = document.getElementById('profileRankName');
+    const profileRankIcon = document.getElementById('profileRankIcon');
+    if (rankInsigniaEl) rankInsigniaEl.innerHTML = rank.insignia || '<span class="ins-none">–</span>';
+    if (rankGradeEl)    rankGradeEl.textContent  = rank.grade;
+    if (rankNameEl)     rankNameEl.textContent    = rank.name;
+    if (profileRankName) profileRankName.textContent = rank.name;
+    if (profileRankIcon) profileRankIcon.innerHTML = rank.insignia || '🪖';
 
     // Auto-update title based on total hours
     const newTitle = getTitleForHours(totalHours);

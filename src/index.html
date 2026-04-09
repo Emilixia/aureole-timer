@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <title>Frieren Chronomark</title>
+  <!-- Favicon — replace Sprite.png in assets/ to change the app icon -->
+  <link rel="icon" type="image/png" href="../assets/Sprite.png" id="appFavicon">
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
@@ -56,6 +58,12 @@
 
     <!-- Flexible spacer (drag area) -->
     <div class="topnav-spacer"></div>
+
+    <!-- Running-timer display (hidden when timer is stopped) -->
+    <div class="topnav-timer-pill" id="navTimerPill" style="display:none;" title="Go to Timer">
+      <span class="topnav-timer-icon">⏱</span>
+      <span class="topnav-timer-val" id="navTimerVal">00:00:00</span>
+    </div>
 
     <!-- Date + Clock + World Clock -->
     <div class="topnav-clock-area">
@@ -652,6 +660,15 @@
               </div>
             </div>
 
+            <!-- Military rank badge -->
+            <div class="prf-rank-block" id="prfRankBlock">
+              <div class="prf-rank-insignia" id="prfRankInsignia"></div>
+              <div class="prf-rank-info">
+                <div class="prf-rank-grade" id="prfRankGrade">E-1</div>
+                <div class="prf-rank-name"  id="prfRankName">Private</div>
+              </div>
+            </div>
+
             <!-- Medals showcase row (top 3 earned medals displayed as badges) -->
             <div class="prf-medals-row" id="prfMedalsRow"></div>
 
@@ -699,6 +716,11 @@
                 <div class="prf-stat-cat">SESSIONS</div>
                 <div class="prf-stat-icon-lg">🏅</div>
                 <div class="prf-stat-val" id="profileSessions">0</div>
+              </div>
+              <div class="prf-stat-block">
+                <div class="prf-stat-cat">RANK</div>
+                <div class="prf-stat-icon-lg" id="profileRankIcon">🪖</div>
+                <div class="prf-stat-val prf-stat-rank" id="profileRankName">Private</div>
               </div>
             </div><!-- /.prf-stats-row -->
 
@@ -756,17 +778,33 @@
           </div>
           <!-- PDF canvas container -->
           <div id="readerPdfContainer" class="reader-pdf-container" style="display:none;">
+            <!-- Navigation + zoom row -->
             <div class="reader-toolbar">
-              <button id="readerPrevPage" class="btn-ghost btn-sm">◀ Prev</button>
-              <span class="reader-page-info">Page <span id="readerPageNum">1</span> / <span id="readerPageTotal">1</span></span>
-              <button id="readerNextPage" class="btn-ghost btn-sm">Next ▶</button>
-              <button id="readerZoomOut" class="btn-ghost btn-sm" title="Zoom out">－</button>
+              <button id="readerPrevPage" class="btn-ghost btn-sm">◀</button>
+              <span class="reader-page-info">
+                <input id="readerPageInput" class="reader-page-input" type="number" min="1" value="1" title="Go to page"> / <span id="readerPageTotal">1</span>
+              </span>
+              <button id="readerNextPage" class="btn-ghost btn-sm">▶</button>
+              <div class="reader-toolbar-sep"></div>
+              <button id="readerZoomOut" class="btn-ghost btn-sm" title="Zoom out (Ctrl+scroll)">－</button>
               <span id="readerZoomLabel" class="reader-zoom-label">100%</span>
-              <button id="readerZoomIn" class="btn-ghost btn-sm" title="Zoom in">＋</button>
-              <button id="readerCloseDoc" class="btn-ghost btn-sm" title="Close document" style="margin-left:auto;">✕ Close</button>
+              <button id="readerZoomIn"  class="btn-ghost btn-sm" title="Zoom in  (Ctrl+scroll)">＋</button>
+              <button id="readerCloseDoc" class="btn-ghost btn-sm" style="margin-left:auto;" title="Close document">✕</button>
             </div>
+            <!-- Annotation tools row -->
+            <div class="reader-toolbar reader-annot-toolbar">
+              <button id="readerTool_draw"      class="btn-ghost btn-sm reader-tool-btn" title="Draw / Pen">✏️ Draw</button>
+              <button id="readerTool_highlight" class="btn-ghost btn-sm reader-tool-btn" title="Highlight">🖊 Highlight</button>
+              <button id="readerTool_text"      class="btn-ghost btn-sm reader-tool-btn" title="Add text note">T Text</button>
+              <button id="readerTool_erase"     class="btn-ghost btn-sm reader-tool-btn" title="Erase near click">◻ Erase</button>
+              <button id="readerClearAnnot"     class="btn-ghost btn-sm reader-tool-btn" title="Clear all annotations on this page" style="margin-left:auto; color:var(--danger);">🗑 Clear page</button>
+            </div>
+            <!-- Canvas stack: PDF underneath, annotation overlay on top -->
             <div id="readerPdfScroll" class="reader-pdf-scroll">
-              <canvas id="readerPdfCanvas"></canvas>
+              <div class="reader-canvas-stack">
+                <canvas id="readerPdfCanvas"></canvas>
+                <canvas id="readerAnnotCanvas" class="reader-annot-canvas"></canvas>
+              </div>
             </div>
           </div>
           <!-- DOCX HTML container -->
@@ -1154,7 +1192,12 @@
 
   <!-- JS files — load in order (no ES6 modules) -->
   <!-- PDF.js: in-app PDF rendering (local vendor copy) -->
-  <script src="vendor/pdf.min.js"></script>
+  <!-- PDF.js 4.2.67 (patched): loaded as ES module, exposed as window.pdfjsLib -->
+  <script type="module">
+    import * as pdfjs from './vendor/pdf.min.mjs';
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL('./vendor/pdf.worker.min.mjs', location.href).href;
+    window.pdfjsLib = pdfjs;
+  </script>
   <!-- mammoth.js: DOCX → HTML conversion (local vendor copy) -->
   <script src="vendor/mammoth.browser.min.js"></script>
   <script src="js/storage.js"></script>

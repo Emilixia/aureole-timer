@@ -58,6 +58,14 @@ const Timer = (function () {
 
     if (display) display.textContent = formatTime(state.elapsed);
 
+    // Navbar running-timer pill
+    const navPill = document.getElementById('navTimerPill');
+    const navVal  = document.getElementById('navTimerVal');
+    if (navPill) {
+      navPill.style.display = state.isRunning ? 'flex' : 'none';
+      if (navVal) navVal.textContent = formatTime(state.elapsed);
+    }
+
     const percent = state.totalDuration > 0
       ? Math.min(100, (state.elapsed / state.totalDuration) * 100)
       : 0;
