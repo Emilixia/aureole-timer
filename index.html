@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✨ Aureole Timer Companion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body id="app-body">
+
+  <div id="particles-container" class="particles-container"></div>
+
+  <div class="app-container">
+
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">✨</div>
+        <div class="sidebar-title">Aureole</div>
+      </div>
+
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="journey">
+          <span class="tab-icon">🗺️</span>
+          <span class="tab-label">Journey</span>
+        </button>
+        <button class="nav-tab" data-tab="journal">
+          <span class="tab-icon">📖</span>
+          <span class="tab-label">Journal</span>
+        </button>
+        <button class="nav-tab" data-tab="grimoire">
+          <span class="tab-icon">📚</span>
+          <span class="tab-label">Grimoire</span>
+        </button>
+        <button class="nav-tab" data-tab="chronicle">
+          <span class="tab-icon">📜</span>
+          <span class="tab-label">Chronicle</span>
+        </button>
+        <button class="nav-tab" data-tab="profile">
+          <span class="tab-icon">👤</span>
+          <span class="tab-label">Profile</span>
+        </button>
+        <button class="nav-tab" data-tab="settings">
+          <span class="tab-icon">⚙️</span>
+          <span class="tab-label">Settings</span>
+        </button>
+      </div>
+
+      <div class="body-doubling">
+        <div class="body-doubling-dot"></div>
+        <p>You are not alone on this journey ✨</p>
+      </div>
+    </nav>
+
+    <main class="main-content">
+
+      <!-- Journey Tab -->
+      <section class="tab-panel active" id="tab-journey">
+        <div class="journey-header">
+          <div class="datetime-display">
+            <span id="current-date" class="current-date"></span>
+            <span id="current-time" class="current-time"></span>
+          </div>
+          <div id="motivational-quote" class="motivational-quote"></div>
+        </div>
+
+        <div class="timer-container ornate-border">
+          <!-- Energy Check-in -->
+          <div class="energy-checkin" id="energy-checkin">
+            <div class="section-label">⚡ Energy Level</div>
+            <div class="energy-buttons">
+              <button class="energy-btn" data-level="1">😴<span>1</span></button>
+              <button class="energy-btn" data-level="2">😐<span>2</span></button>
+              <button class="energy-btn" data-level="3">😊<span>3</span></button>
+              <button class="energy-btn" data-level="4">😄<span>4</span></button>
+              <button class="energy-btn" data-level="5">⚡<span>5</span></button>
+            </div>
+            <div id="energy-suggestion" class="energy-suggestion"></div>
+          </div>
+
+          <!-- Timer Setup -->
+          <div class="timer-setup">
+            <div class="setup-row">
+              <div class="setup-group">
+                <label class="setup-label">Start Time</label>
+                <input type="time" id="start-time-input" class="time-input">
+              </div>
+              <div class="setup-group">
+                <label class="setup-label">End Time</label>
+                <input type="time" id="end-time-input" class="time-input">
+              </div>
+              <div class="setup-group">
+                <label class="setup-label">Category</label>
+                <select id="category-select" class="category-select"></select>
+              </div>
+            </div>
+            <div class="setup-row pomodoro-row">
+              <label class="pomodoro-label">
+                <input type="checkbox" id="pomodoro-toggle" class="pomodoro-checkbox">
+                <span>🍅 Pomodoro Mode</span>
+              </label>
+              <div id="pomodoro-info" class="pomodoro-info hidden">
+                <span id="pomodoro-phase-display">Work Phase</span> •
+                <span id="pomodoro-count-display">0 cycles</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Time Display -->
+          <div class="time-display-area">
+            <div id="time-left-display" class="time-left-large">00:00:00</div>
+            <div id="time-in-words" class="time-in-words">Set a timer to begin your quest</div>
+            <div id="time-percentage" class="time-percentage">0%</div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="progress-container">
+            <div class="progress-track">
+              <div class="progress-fill" id="progress-fill">
+                <div class="progress-shimmer"></div>
+              </div>
+            </div>
+            <div id="walking-character" class="walking-character">
+              <div class="character-emoji">🧙</div>
+            </div>
+          </div>
+
+          <!-- Timer Controls -->
+          <div class="timer-controls" id="timer-controls">
+            <button id="start-btn" class="btn btn-primary">▶ Begin Quest</button>
+            <button id="pause-btn" class="btn btn-secondary hidden">⏸ Pause</button>
+            <button id="reset-btn" class="btn btn-secondary hidden">↺ Reset</button>
+          </div>
+
+          <!-- Session Notes -->
+          <div class="session-notes-area">
+            <label class="section-label">📝 Session Notes</label>
+            <textarea id="session-notes" class="session-notes" placeholder="What are you working on today?"></textarea>
+          </div>
+        </div>
+
+        <!-- Reminders -->
+        <div class="reminders-section ornate-border">
+          <div class="section-header">
+            <span class="section-label">🔔 Reminders</span>
+            <button id="add-reminder-btn" class="btn btn-small btn-secondary">+ Add</button>
+          </div>
+          <div id="reminders-list" class="reminders-list"></div>
+        </div>
+
+        <!-- Daily Planner -->
+        <div class="planner-section ornate-border">
+          <div class="section-header">
+            <span class="section-label">📋 Daily Planner</span>
+          </div>
+          <div class="planner-input-row">
+            <input type="text" id="task-input" class="task-input" placeholder="Add a task...">
+            <select id="priority-select" class="priority-select">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+            <button id="add-task-btn" class="btn btn-primary btn-small">Add</button>
+          </div>
+          <div id="task-list" class="task-list"></div>
+        </div>
+
+        <!-- Routines -->
+        <div class="routines-section ornate-border">
+          <div class="section-header">
+            <span class="section-label">🔄 Routines</span>
+            <button id="add-routine-btn" class="btn btn-small btn-secondary">+ Add Routine</button>
+          </div>
+          <div id="routines-list" class="routines-list"></div>
+        </div>
+
+        <!-- YouTube Panel -->
+        <div class="youtube-section ornate-border">
+          <div class="section-header">
+            <span class="section-label">🎵 Focus Music</span>
+            <button id="youtube-toggle-btn" class="btn btn-small btn-secondary">▶ Show Player</button>
+          </div>
+          <div id="youtube-container" class="youtube-container hidden">
+            <div class="youtube-placeholder">
+              <p>Set a YouTube URL in Settings to enable music</p>
+            </div>
+            <iframe id="youtube-iframe" class="youtube-iframe hidden" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+          </div>
+        </div>
+      </section>
+
+      <!-- Journal Tab -->
+      <section class="tab-panel" id="tab-journal">
+        <div class="panel-header">
+          <h2 class="panel-title">📖 The Traveler's Journal</h2>
+          <input type="date" id="journal-date" class="journal-date-input">
+        </div>
+        <div class="journal-layout">
+          <div class="journal-editor parchment-panel ornate-border">
+            <!-- Mood Tracker -->
+            <div class="mood-tracker">
+              <div class="section-label">Today's Mood</div>
+              <div class="mood-buttons">
+                <button class="mood-btn" data-mood="😄">😄</button>
+                <button class="mood-btn" data-mood="😊">😊</button>
+                <button class="mood-btn" data-mood="😐">😐</button>
+                <button class="mood-btn" data-mood="😔">😔</button>
+                <button class="mood-btn" data-mood="😠">😠</button>
+                <button class="mood-btn" data-mood="😴">😴</button>
+                <button class="mood-btn" data-mood="😰">😰</button>
+                <button class="mood-btn" data-mood="🤩">🤩</button>
+              </div>
+              <span id="selected-mood" class="selected-mood"></span>
+            </div>
+            <!-- Toolbar -->
+            <div class="journal-toolbar">
+              <button class="toolbar-btn" data-command="bold" title="Bold"><b>B</b></button>
+              <button class="toolbar-btn" data-command="italic" title="Italic"><i>I</i></button>
+              <button class="toolbar-btn" data-command="insertUnorderedList" title="List">• List</button>
+              <button class="toolbar-btn" data-command="insertOrderedList" title="Numbered">1. List</button>
+              <button class="toolbar-btn" data-command="formatBlock" data-value="h3" title="Heading">H</button>
+            </div>
+            <!-- Content -->
+            <div id="journal-content" class="journal-content" contenteditable="true" placeholder="Write your thoughts, adventures, and reflections here..."></div>
+            <!-- Gratitude -->
+            <div class="gratitude-section">
+              <div class="section-label">🌟 Gratitude</div>
+              <textarea id="gratitude-input" class="gratitude-input" placeholder="What are you grateful for today?"></textarea>
+            </div>
+            <div class="journal-actions">
+              <button id="save-journal-btn" class="btn btn-primary">💾 Save Entry</button>
+              <span id="journal-save-status" class="save-status"></span>
+            </div>
+          </div>
+          <div class="journal-sidebar ornate-border">
+            <div class="section-label">📚 Past Entries</div>
+            <input type="text" id="journal-search" class="search-input" placeholder="Search entries...">
+            <div id="journal-entries-list" class="journal-entries-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Grimoire Tab -->
+      <section class="tab-panel" id="tab-grimoire">
+        <div class="panel-header">
+          <h2 class="panel-title">📚 The Grimoire</h2>
+          <button id="new-note-btn" class="btn btn-primary">✦ New Note</button>
+        </div>
+        <div class="grimoire-layout">
+          <div class="grimoire-sidebar ornate-border">
+            <input type="text" id="grimoire-search" class="search-input" placeholder="Search spells...">
+            <div id="category-filters" class="category-filters">
+              <button class="filter-btn active" data-category="all">All</button>
+            </div>
+            <div id="grimoire-notes-list" class="grimoire-notes-list"></div>
+          </div>
+          <div class="grimoire-editor ornate-border" id="grimoire-editor">
+            <div class="grimoire-placeholder">
+              <div class="placeholder-icon">📚</div>
+              <p>Select a note from the sidebar or create a new one</p>
+            </div>
+            <!-- Note Editor Panel (shown when editing) -->
+            <div id="note-editor-panel" class="note-editor-panel hidden">
+              <div class="note-editor-header">
+                <input type="text" id="note-title-input" class="note-title-input" placeholder="Note title...">
+                <div class="note-editor-actions">
+                  <button id="pin-note-btn" class="btn btn-small btn-secondary" title="Pin">📌</button>
+                  <button id="save-note-btn" class="btn btn-small btn-primary">💾 Save</button>
+                  <button id="delete-note-btn" class="btn btn-small btn-danger">🗑️</button>
+                  <button id="close-note-btn" class="btn btn-small btn-secondary">✕</button>
+                </div>
+              </div>
+              <div class="note-meta-row">
+                <select id="note-category" class="note-category-select"></select>
+                <input type="text" id="note-tags" class="note-tags-input" placeholder="Tags (comma separated)">
+              </div>
+              <textarea id="note-content" class="note-content-textarea" placeholder="Write your spell, idea, or knowledge here..."></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Chronicle Tab -->
+      <section class="tab-panel" id="tab-chronicle">
+        <div class="panel-header">
+          <h2 class="panel-title">📜 The Chronicle</h2>
+          <div class="chronicle-controls">
+            <input type="date" id="chronicle-start" class="date-input">
+            <span>to</span>
+            <input type="date" id="chronicle-end" class="date-input">
+            <select id="chronicle-filter" class="filter-select">
+              <option value="all">All Events</option>
+              <option value="session">Sessions</option>
+              <option value="journal">Journal</option>
+              <option value="grimoire">Grimoire</option>
+              <option value="achievement">Achievements</option>
+            </select>
+            <button id="chronicle-export-btn" class="btn btn-secondary btn-small">📤 Export</button>
+          </div>
+        </div>
+        <div id="chronicle-timeline" class="chronicle-timeline">
+          <div class="empty-state">
+            <div class="empty-icon">📜</div>
+            <p>Your chronicle is empty. Begin your journey to fill these pages.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Profile Tab -->
+      <section class="tab-panel" id="tab-profile">
+        <div class="panel-header">
+          <h2 class="panel-title">👤 Adventurer Profile</h2>
+        </div>
+        <div class="profile-layout">
+          <div class="profile-card ornate-border">
+            <div class="profile-image-container" id="profile-image-container">
+              <div class="profile-image-placeholder">🧙</div>
+              <img id="profile-image" class="profile-image hidden" src="" alt="Profile">
+            </div>
+            <input type="file" id="profile-image-upload" accept="image/*" class="hidden">
+            <button class="btn btn-small btn-secondary" id="change-profile-image-btn">Change Image</button>
+            <input type="text" id="profile-name-input" class="profile-name-input" value="Traveler" placeholder="Your name">
+            <button id="save-profile-btn" class="btn btn-primary btn-small">Save Profile</button>
+            <div id="profile-rank" class="profile-rank">Apprentice</div>
+            <div id="profile-total-hours" class="profile-total-hours">0 hours on the path</div>
+          </div>
+          <div class="stats-panel ornate-border">
+            <div class="section-label">✨ Statistics</div>
+            <div class="stats-grid">
+              <div class="stat-card"><div id="stat-total-hours" class="stat-value">0</div><div class="stat-label">Total Hours</div></div>
+              <div class="stat-card"><div id="stat-streak" class="stat-value">0</div><div class="stat-label">Day Streak</div></div>
+              <div class="stat-card"><div id="stat-sessions" class="stat-value">0</div><div class="stat-label">Sessions</div></div>
+              <div class="stat-card"><div id="stat-journal" class="stat-value">0</div><div class="stat-label">Journal Entries</div></div>
+              <div class="stat-card"><div id="stat-grimoire" class="stat-value">0</div><div class="stat-label">Grimoire Notes</div></div>
+              <div class="stat-card"><div id="stat-focus" class="stat-value">0</div><div class="stat-label">Focus Score</div></div>
+            </div>
+            <div class="section-label">📊 This Week</div>
+            <div id="weekly-chart" class="weekly-chart"></div>
+          </div>
+          <div class="achievements-panel ornate-border">
+            <div class="section-label">🏅 Achievements</div>
+            <div id="achievement-rack" class="achievement-rack"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings Tab -->
+      <section class="tab-panel" id="tab-settings">
+        <div class="panel-header">
+          <h2 class="panel-title">⚙️ Settings</h2>
+        </div>
+        <div class="settings-sections">
+
+          <!-- Appearance -->
+          <div class="settings-group ornate-border">
+            <div class="section-label">🎨 Appearance</div>
+            <div class="setting-item">
+              <label>Background Image</label>
+              <input type="file" id="bg-upload" accept="image/*" class="file-input">
+            </div>
+            <div class="setting-item">
+              <label>Custom Character</label>
+              <input type="file" id="character-upload" accept="image/*,.gif" class="file-input">
+            </div>
+            <div class="setting-item">
+              <label>Accent Color</label>
+              <input type="color" id="accent-color" class="color-picker" value="#c3b7e6">
+            </div>
+            <div class="setting-item">
+              <label>Font Size (<span id="font-size-display">16</span>px)</label>
+              <input type="range" id="font-size-range" class="range-input" min="12" max="22" value="16">
+            </div>
+            <div class="setting-item">
+              <label>Animation Intensity (<span id="animation-intensity-display">100</span>%)</label>
+              <input type="range" id="animation-intensity" class="range-input" min="0" max="100" value="100">
+            </div>
+            <div class="setting-item">
+              <label>Border Style</label>
+              <select id="border-style" class="setting-select">
+                <option value="ornate">Ornate</option>
+                <option value="simple">Simple</option>
+                <option value="minimal">Minimal</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Timer Settings -->
+          <div class="settings-group ornate-border">
+            <div class="section-label">⏱️ Timer</div>
+            <div class="setting-item">
+              <label>Default Duration (min)</label>
+              <input type="number" id="default-duration" class="setting-input" value="25" min="1" max="480">
+            </div>
+            <div class="setting-item">
+              <label>Pomodoro Work (min)</label>
+              <input type="number" id="pomodoro-work" class="setting-input" value="25" min="1" max="120">
+            </div>
+            <div class="setting-item">
+              <label>Pomodoro Break (min)</label>
+              <input type="number" id="pomodoro-break" class="setting-input" value="5" min="1" max="60">
+            </div>
+            <div class="setting-item">
+              <label>Break Reminder (min)</label>
+              <input type="number" id="break-interval" class="setting-input" value="60" min="15" max="240">
+            </div>
+            <div class="setting-item">
+              <label>Hyperfocus Guard (min)</label>
+              <input type="number" id="hyperfocus-guard" class="setting-input" value="120" min="30" max="480">
+            </div>
+            <div class="setting-item">
+              <label>Sound Enabled</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="sound-enabled" checked>
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <label>Notifications</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="notifications-enabled" checked>
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Categories -->
+          <div class="settings-group ornate-border">
+            <div class="section-label">🏷️ Categories</div>
+            <div id="categories-list" class="categories-list"></div>
+            <div class="add-category-row">
+              <input type="text" id="new-category-name" class="setting-input" placeholder="Category name">
+              <input type="text" id="new-category-icon" class="setting-input icon-input" placeholder="🎯">
+              <button id="add-category-btn" class="btn btn-primary btn-small">Add</button>
+            </div>
+          </div>
+
+          <!-- Music -->
+          <div class="settings-group ornate-border">
+            <div class="section-label">🎵 Music</div>
+            <div class="setting-item">
+              <label>YouTube URL</label>
+              <input type="text" id="youtube-url" class="setting-input" placeholder="https://youtube.com/watch?v=...">
+            </div>
+            <div class="setting-item">
+              <button id="apply-youtube-btn" class="btn btn-secondary btn-small">Apply URL</button>
+            </div>
+            <div class="setting-item">
+              <label>Player Size</label>
+              <select id="player-size" class="setting-select">
+                <option value="small">Small</option>
+                <option value="medium" selected>Medium</option>
+                <option value="large">Large</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Accessibility -->
+          <div class="settings-group ornate-border">
+            <div class="section-label">♿ Accessibility</div>
+            <div class="setting-item">
+              <label>Reduce Animations</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="reduce-animations">
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <label>High Contrast</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="high-contrast">
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <label>Auto Break Enforcement</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="auto-break">
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <label>Task Chunking Mode</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="task-chunking">
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <label>Low Demand Mode</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="low-demand">
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Data -->
+          <div class="settings-group ornate-border">
+            <div class="section-label">💾 Data</div>
+            <div class="setting-item">
+              <button id="export-data-btn" class="btn btn-secondary">📤 Export Data</button>
+            </div>
+            <div class="setting-item">
+              <label>Import Data</label>
+              <input type="file" id="import-data-input" accept=".json" class="file-input">
+            </div>
+            <div class="setting-item">
+              <button id="reset-data-btn" class="btn btn-danger">⚠️ Reset All Data</button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Floating Buttons -->
+    <div class="floating-buttons">
+      <button id="breathing-fab" class="fab fab-breathing" title="Breathing Exercise (B)">🫁</button>
+      <button id="quick-capture-fab" class="fab fab-capture" title="Quick Capture (Q)">⚡</button>
+    </div>
+
+    <!-- Breathing Modal -->
+    <div id="breathing-modal" class="modal-overlay hidden">
+      <div class="modal-content breathing-modal-content">
+        <div class="modal-header">
+          <h3>🫁 Breathing Exercise</h3>
+          <button class="modal-close" id="close-breathing-modal">✕</button>
+        </div>
+        <div class="breathing-circle-container">
+          <div id="breathing-circle" class="breathing-circle">
+            <span class="breathing-text">Ready</span>
+            <span class="breathing-count"></span>
+          </div>
+        </div>
+        <div id="breathing-phase" class="breathing-phase">Press Start to begin box breathing</div>
+        <div class="modal-actions">
+          <button id="start-breathing-btn" class="btn btn-primary">▶ Start</button>
+          <button id="stop-breathing-btn" class="btn btn-secondary hidden">⏹ Stop</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Capture Modal -->
+    <div id="quick-capture-modal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>⚡ Quick Capture</h3>
+          <button class="modal-close" id="close-capture-modal">✕</button>
+        </div>
+        <textarea id="quick-capture-text" class="quick-capture-textarea" placeholder="Capture your thought..."></textarea>
+        <div class="modal-row">
+          <label>Save to:</label>
+          <select id="capture-category" class="setting-select"></select>
+        </div>
+        <div class="modal-actions">
+          <button id="save-capture-btn" class="btn btn-primary">💾 Save to Grimoire</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Achievement Modal -->
+    <div id="achievement-modal" class="modal-overlay hidden">
+      <div class="modal-content achievement-modal-content">
+        <div class="achievement-burst" id="achievement-burst"></div>
+        <div id="achievement-icon-large" class="achievement-icon-large"></div>
+        <h2 class="achievement-unlock-title">Achievement Unlocked!</h2>
+        <div id="achievement-modal-name" class="achievement-modal-name"></div>
+        <div id="achievement-modal-desc" class="achievement-modal-desc"></div>
+        <button id="close-achievement-modal" class="btn btn-primary">✨ Claim Reward</button>
+      </div>
+    </div>
+
+    <!-- Reminder Modal -->
+    <div id="reminder-modal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>🔔 Add Reminder</h3>
+          <button class="modal-close" id="close-reminder-modal">✕</button>
+        </div>
+        <div class="setting-item">
+          <label>Time</label>
+          <input type="time" id="reminder-time-input" class="time-input">
+        </div>
+        <div class="setting-item">
+          <label>Message</label>
+          <input type="text" id="reminder-message-input" class="setting-input" placeholder="Reminder message...">
+        </div>
+        <div class="modal-actions">
+          <button id="save-reminder-btn" class="btn btn-primary">💾 Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Routine Modal -->
+    <div id="routine-modal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>🔄 Add Routine</h3>
+          <button class="modal-close" id="close-routine-modal">✕</button>
+        </div>
+        <div class="setting-item">
+          <label>Name</label>
+          <input type="text" id="routine-name-input" class="setting-input" placeholder="Morning stretch...">
+        </div>
+        <div class="setting-item">
+          <label>Category</label>
+          <input type="text" id="routine-category-input" class="setting-input" placeholder="Wellness">
+        </div>
+        <div class="setting-item">
+          <label>Duration (min)</label>
+          <input type="number" id="routine-duration-input" class="setting-input" value="10" min="1">
+        </div>
+        <div class="modal-actions">
+          <button id="save-routine-btn" class="btn btn-primary">💾 Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="confirm-title">Confirm</h3>
+        </div>
+        <p id="confirm-message"></p>
+        <div class="modal-actions">
+          <button id="confirm-yes-btn" class="btn btn-danger">Yes, proceed</button>
+          <button id="confirm-no-btn" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weekly Review Modal -->
+    <div id="weekly-review-modal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>📊 Weekly Review</h3>
+          <button class="modal-close" id="close-weekly-modal">✕</button>
+        </div>
+        <div id="weekly-review-stats" class="weekly-review-stats"></div>
+        <div class="setting-item">
+          <label>Reflections</label>
+          <textarea id="weekly-review-text" class="session-notes" placeholder="How was your week? What worked? What can improve?"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button id="save-weekly-review-btn" class="btn btn-primary">💾 Save Review</button>
+          <button id="dismiss-weekly-review-btn" class="btn btn-secondary">Dismiss</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reinforcement Toast -->
+    <div id="reinforcement-toast" class="reinforcement-toast hidden"></div>
+
+    <!-- Hyperfocus Warning -->
+    <div id="hyperfocus-warning" class="hyperfocus-warning hidden">
+      <div class="hyperfocus-message">
+        ⚠️ You've been focused for a long time! Remember to take a break.
+      </div>
+      <button id="dismiss-hyperfocus-btn" class="btn btn-small btn-secondary">I'll take a break soon</button>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
