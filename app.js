@@ -531,7 +531,7 @@ function renderJournalList(filteredEntries) {
     const card = document.createElement('div');
     card.className = 'journal-entry-card';
     const rawText = stripHtml(content || '');
-    const excerptText = rawText.substring(0, 80) + (rawText.length > 80 ? '...' : '') || '(no content)';
+    const excerptText = (rawText.substring(0, 80) + (rawText.length > 80 ? '...' : '')) || '(no content)';
 
     const dateDiv = document.createElement('div');
     dateDiv.className = 'entry-date';
@@ -687,7 +687,7 @@ function renderNotesList(notes) {
     const tagsHtml = (note.tags || []).map(t => `<span class="note-tag">${t}</span>`).join('');
     const date = note.createdAt ? new Date(note.createdAt).toLocaleDateString() : '';
     card.innerHTML = `
-      <div class="note-title">${note.pinned ? '📌 ' : ''}${note.title || 'Untitled'}</div>
+      <div class="note-card-title">${note.pinned ? '📌 ' : ''}${note.title || 'Untitled'}</div>
       <div class="note-meta">${note.category || ''} · ${date}</div>
       <div class="note-tags">${tagsHtml}</div>
     `;
@@ -1041,7 +1041,7 @@ function updateProfileUI() {
   const sessionsStat = document.getElementById('stat-sessions');
   const journalStat = document.getElementById('stat-journal');
   const grimoireStat = document.getElementById('stat-grimoire');
-  const focusStat = document.getElementById('stat-focus-score');
+  const focusStat = document.getElementById('stat-focus');
 
   if (totalHoursStat) totalHoursStat.textContent = totalHours.toFixed(1);
   if (streakStat) streakStat.textContent = state.profile.streakData.currentStreak + ' days';
