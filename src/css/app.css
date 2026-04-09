@@ -800,7 +800,7 @@ body.focus-mode #tab-journey { height: calc(100vh - var(--titlebar-height)); }
   border-radius: var(--radius);
   transition: height 0.3s ease;
 }
-#spotifyFrame[src]:not([src=""]) {
+#spotifyFrame[src]:not([src=""]):not([src="about:blank"]) {
   height: 380px;
 }
 
@@ -2684,13 +2684,477 @@ body.focus-mode #tab-journey .journey-right {
   border-radius: 14px;
 }
 
-.mana-shine {
+/* Fix: spotify frame should only expand when a real URL is loaded (not about:blank) */
+#spotifyFrame[src]:not([src=""]):not([src="about:blank"]) {
+  height: 380px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOP NAV — LoL-style PLAY button + profile widget
+   ═══════════════════════════════════════════════════════════ */
+
+/* Journey PLAY button — chevron/arrow shape like LoL PLAY */
+.nav-journey-play {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 36px 0 22px;
+  background: linear-gradient(180deg, #0d1e30 0%, #091525 100%);
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  height: 100%;
+  -webkit-app-region: no-drag;
+  /* Right-pointing chevron via clip-path */
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 50%, calc(100% - 20px) 100%, 0 100%);
+  filter: drop-shadow(1px 0 0 rgba(10,200,185,0.35)) drop-shadow(-1px 0 0 rgba(120,90,40,0.3));
+  transition: filter 0.2s ease, background 0.2s ease;
+  margin-right: 10px;
+}
+.nav-journey-play:hover,
+.nav-journey-play.active {
+  background: linear-gradient(180deg, #163040 0%, #0f2030 100%);
+  filter: drop-shadow(1px 0 0 rgba(10,200,185,0.85)) drop-shadow(-1px 0 0 rgba(120,90,40,0.5));
+}
+.njp-icon {
+  color: var(--teal);
+  font-size: 1.0rem;
+  text-shadow: 0 0 8px var(--teal-glow);
+}
+.njp-text {
+  font-family: 'Cinzel', 'Georgia', serif;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+.njp-arrow {
+  color: var(--teal);
+  font-size: 0.68rem;
+  opacity: 0.8;
+}
+
+/* Flexible spacer in topnav */
+.topnav-spacer {
+  flex: 1;
+  -webkit-app-region: drag;
+}
+
+/* Profile mini-widget — top-right, like LoL profile */
+.topnav-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+  border-left: 1px solid var(--border-gold);
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  height: 100%;
+}
+.topnav-profile:hover { background: rgba(200,170,110,0.08); }
+
+.nav-pf-avatar-wrap {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+}
+.nav-pf-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--gold-dark);
+  object-fit: cover;
+  display: block;
+}
+.nav-pf-level {
   position: absolute;
-  top: 2px;
-  left: 8px;
-  right: 8px;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--gold-dark);
+  color: var(--gold-light);
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0 4px;
+  border-radius: 2px;
+  min-width: 18px;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  border: 1px solid var(--gold);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.nav-pf-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.nav-pf-name {
+  color: var(--gold-light);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.nav-pf-status {
+  color: #56c45a;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.nav-pf-dot {
+  width: 6px;
   height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+  background: #56c45a;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 5px #56c45a;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   JOURNEY MODE SELECTION SCREEN — LoL game-mode picker
+   ═══════════════════════════════════════════════════════════ */
+
+.journey-mode-select {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(10,50,100,0.25) 0%, transparent 55%),
+    linear-gradient(180deg, #031222 0%, #020c1a 50%, #010810 100%);
+  position: relative;
+  animation: fadeInPanel 0.3s ease;
+}
+/* Atmospheric teal glow at bottom */
+.journey-mode-select::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 28%;
+  background: radial-gradient(ellipse at 50% 100%, rgba(10,200,185,0.04) 0%, transparent 70%);
   pointer-events: none;
+}
+
+/* Sub-nav (like PVP | CO-OP VS. AI | TRAINING) */
+.jms-subnav {
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  height: 42px;
+  border-bottom: 1px solid rgba(120,90,40,0.3);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.jms-subbtn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 0 18px;
+  height: 100%;
+  cursor: pointer;
+  transition: color 0.2s;
+  position: relative;
+  font-family: 'Cinzel', 'Georgia', serif;
+  -webkit-app-region: no-drag;
+}
+.jms-subbtn::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0; right: 0;
+  height: 2px;
+  background: var(--teal);
+  transform: scaleX(0);
+  transition: transform 0.2s;
+}
+.jms-subbtn:hover { color: var(--gold-light); }
+.jms-subbtn.active { color: var(--gold-light); }
+.jms-subbtn.active::after { transform: scaleX(1); }
+.jms-subnav-sep {
+  width: 1px;
+  height: 18px;
+  background: rgba(120,90,40,0.5);
+  margin: 0 8px;
+  flex-shrink: 0;
+}
+
+/* Mode cards row */
+.jms-cards-row {
+  display: flex;
+  align-items: stretch;
+  flex: 0 0 44%;
+  border-bottom: 1px solid rgba(120,90,40,0.25);
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+.jms-card {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  border-right: 1px solid rgba(120,90,40,0.2);
+  transition: all 0.25s ease;
+  -webkit-app-region: no-drag;
+}
+.jms-card:last-of-type { border-right: none; }
+
+/* Card art backgrounds (coloured gradients per mode) */
+.jms-card-bg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  transition: opacity 0.25s;
+}
+.jms-bg-work   { background: radial-gradient(ellipse at 50% 30%, #1a3a6a, #0a1e3a); }
+.jms-bg-study  { background: radial-gradient(ellipse at 50% 30%, #0a3a2a, #051e18); }
+.jms-bg-custom { background: radial-gradient(ellipse at 50% 30%, #2a1a5a, #10082a); }
+.jms-bg-pom    { background: radial-gradient(ellipse at 50% 30%, #4a1510, #2a0a08); }
+.jms-card.selected .jms-card-bg { opacity: 0.38; }
+.jms-card:hover .jms-card-bg    { opacity: 0.28; }
+
+/* Dark overlay */
+.jms-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(5,12,28,0.4) 0%, rgba(3,8,20,0.72) 100%);
+  transition: opacity 0.25s;
+  z-index: 1;
+}
+.jms-card.selected::before {
+  background: linear-gradient(180deg, rgba(10,200,185,0.08) 0%, rgba(3,8,20,0.52) 100%);
+}
+
+/* Gold top accent when selected */
+.jms-card.selected::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, var(--gold) 50%, transparent 100%);
+  box-shadow: 0 0 12px rgba(200,170,110,0.6);
+  z-index: 2;
+}
+
+.jms-card-inner {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 14px 10px 18px;
+  height: 100%;
+}
+
+/* Decorative hexagonal frame around the icon */
+.jms-card-frame {
+  width: 72px;
+  height: 72px;
+  border: 2px solid rgba(120,90,40,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  background: rgba(5,10,20,0.7);
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+.jms-card.selected .jms-card-frame {
+  border-color: var(--gold);
+  box-shadow: 0 0 18px rgba(200,170,110,0.45);
+}
+.jms-card-icon { font-size: 2rem; line-height: 1; }
+
+.jms-card-category {
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  transition: color 0.25s;
+}
+.jms-card.selected .jms-card-category { color: var(--text-secondary); }
+
+.jms-card-name {
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  text-align: center;
+  font-family: 'Cinzel', 'Georgia', serif;
+  line-height: 1.3;
+  transition: color 0.25s;
+}
+.jms-card.selected .jms-card-name {
+  background: linear-gradient(135deg, var(--gold-light), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Thin vertical separator (like the line before TFT in LoL) */
+.jms-card-separator {
+  width: 1px;
+  background: rgba(120,90,40,0.5);
+  margin: 16px 0;
+  flex-shrink: 0;
+}
+
+/* Description + sub-modes area */
+.jms-body {
+  flex: 1;
+  padding: 18px 32px 0;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+}
+.jms-desc-panel { display: flex; flex-direction: column; gap: 0; }
+.jms-desc-text {
+  color: var(--text-secondary);
+  font-size: 0.83rem;
+  line-height: 1.65;
+  max-width: 380px;
+  margin-bottom: 12px;
+}
+.jms-desc-rule {
+  width: 240px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--gold-dark), transparent);
+  margin-bottom: 12px;
+}
+.jms-submodes {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.jms-submode {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 3px 0;
+  transition: all 0.15s;
+  -webkit-app-region: no-drag;
+}
+.jms-submode:hover .jms-submode-label { color: var(--gold-light); }
+.jms-submode-diamond {
+  color: var(--gold-dark);
+  font-size: 0.6rem;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.jms-submode.selected .jms-submode-diamond { color: var(--teal); }
+.jms-submode-label {
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  min-width: 150px;
+  transition: color 0.15s;
+}
+.jms-submode.selected .jms-submode-label { color: var(--gold-light); }
+.jms-submode-detail {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+/* Footer confirm bar */
+.jms-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 32px;
+  border-top: 1px solid rgba(120,90,40,0.3);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+/* LoL-style CONFIRM button (chevron shape, ✕ | CONFIRM ▶) */
+.jms-confirm-btn {
+  display: flex;
+  align-items: stretch;
+  height: 42px;
+  background: none;
+  border: 1px solid rgba(10,200,185,0.45);
+  color: var(--text-primary);
+  cursor: pointer;
+  overflow: hidden;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 0 100%);
+  filter: drop-shadow(0 0 6px rgba(10,200,185,0.2));
+  transition: filter 0.2s, border-color 0.2s;
+  -webkit-app-region: no-drag;
+}
+.jms-confirm-btn:hover {
+  filter: drop-shadow(0 0 14px rgba(10,200,185,0.65));
+  border-color: rgba(10,200,185,0.85);
+}
+.jms-confirm-x {
+  background: rgba(0,0,0,0.45);
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  border-right: 1px solid rgba(10,200,185,0.3);
+  flex-shrink: 0;
+}
+.jms-confirm-text {
+  background: rgba(10,200,185,0.07);
+  padding: 0 22px 0 18px;
+  display: flex;
+  align-items: center;
+  color: var(--gold-light);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  font-family: 'Cinzel', 'Georgia', serif;
+}
+.jms-confirm-arrow {
+  background: rgba(10,200,185,0.07);
+  padding: 0 20px 0 4px;
+  display: flex;
+  align-items: center;
+  color: var(--teal);
+  font-size: 0.7rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   JOURNEY TIMER VIEW WRAPPER + BACK BAR
+   ═══════════════════════════════════════════════════════════ */
+.journey-timer-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.journey-back-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 7px 24px;
+  background: rgba(3,8,20,0.65);
+  border-bottom: 1px solid rgba(120,90,40,0.3);
+  flex-shrink: 0;
+}
+.journey-active-mode {
+  color: var(--gold);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }

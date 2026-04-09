@@ -27,19 +27,46 @@
 
   <!-- Top Navigation Bar -->
   <nav id="topNav">
+    <!-- Logo (left anchor) -->
     <div class="topnav-logo">
       <img class="logo-img" src="https://github.com/user-attachments/assets/fff765b4-a84b-4829-abff-75c77ec4307c" alt="Frieren Chronomark logo">
-      <span class="logo-text">Frieren Chronomark</span>
     </div>
+
+    <!-- Journey PLAY button — styled like the LoL PLAY button -->
+    <button class="nav-journey-play nav-tab active" data-tab="journey">
+      <span class="njp-icon">⚔</span>
+      <span class="njp-text">JOURNEY</span>
+      <span class="njp-arrow">▶</span>
+    </button>
+
+    <!-- Secondary tabs — like LEAGUE, TFT -->
     <div class="topnav-tabs">
-      <button class="nav-tab active" data-tab="journey">🌟 Journey</button>
-      <button class="nav-tab" data-tab="journal">📖 Journal</button>
-      <button class="nav-tab" data-tab="grimoire">📚 Grimoire</button>
-      <button class="nav-tab" data-tab="chronicle">📜 Chronicle</button>
-      <button class="nav-tab" data-tab="profile">👤 Profile</button>
-      <button class="nav-tab" data-tab="settings">⚙️ Settings</button>
+      <button class="nav-tab" data-tab="journal">JOURNAL</button>
+      <button class="nav-tab" data-tab="grimoire">GRIMOIRE</button>
+      <button class="nav-tab" data-tab="chronicle">CHRONICLE</button>
+      <button class="nav-tab" data-tab="settings">SETTINGS</button>
     </div>
+
+    <!-- Flexible spacer (drag area) -->
+    <div class="topnav-spacer"></div>
+
+    <!-- Clock -->
     <div class="topnav-clock" id="sidebarClock"></div>
+
+    <!-- Profile mini-widget — like the LoL profile in top-right -->
+    <div class="topnav-profile" id="navProfileWidget" title="View Profile">
+      <div class="nav-pf-avatar-wrap">
+        <img class="nav-pf-avatar" id="navPfAvatar" src="" alt="Profile">
+        <span class="nav-pf-level" id="navPfLevel">1</span>
+      </div>
+      <div class="nav-pf-info">
+        <span class="nav-pf-name" id="navPfName">Adventurer</span>
+        <span class="nav-pf-status"><span class="nav-pf-dot"></span>Online</span>
+      </div>
+    </div>
+
+    <!-- Hidden profile tab button (keeps tab-switching logic working) -->
+    <button class="nav-tab" data-tab="profile" style="display:none;"></button>
   </nav>
 
   <!-- Main layout -->
@@ -52,6 +79,89 @@
            JOURNEY TAB
            ═══════════════════════════════════════════════════ -->
       <div id="tab-journey" class="tab-panel active">
+
+        <!-- ══════════════════════════════════════════════════
+             JOURNEY: MODE SELECTION SCREEN (shown first)
+             Like the LoL game-mode picker
+             ══════════════════════════════════════════════════ -->
+        <div id="journeyModeSelect" class="journey-mode-select">
+
+          <!-- Sub-nav: like PVP | CO-OP VS. AI | TRAINING | CREATE CUSTOM -->
+          <div class="jms-subnav">
+            <button class="jms-subbtn active">SOLO FOCUSED</button>
+            <button class="jms-subbtn">TIMED SESSION</button>
+            <button class="jms-subbtn">TECHNIQUE</button>
+            <div class="jms-subnav-sep"></div>
+            <button class="jms-subbtn">CREATE CUSTOM</button>
+          </div>
+
+          <!-- Mode cards row: like Summoner's Rift, ARAM, Arena, TFT -->
+          <div class="jms-cards-row">
+            <div class="jms-card selected" data-mode="working">
+              <div class="jms-card-bg jms-bg-work"></div>
+              <div class="jms-card-inner">
+                <div class="jms-card-frame"><span class="jms-card-icon">⚔️</span></div>
+                <div class="jms-card-category">DEEP FOCUS</div>
+                <div class="jms-card-name">WORK<br>SESSION</div>
+              </div>
+            </div>
+            <div class="jms-card" data-mode="studying">
+              <div class="jms-card-bg jms-bg-study"></div>
+              <div class="jms-card-inner">
+                <div class="jms-card-frame"><span class="jms-card-icon">📖</span></div>
+                <div class="jms-card-category">LEARNING</div>
+                <div class="jms-card-name">STUDY<br>SESSION</div>
+              </div>
+            </div>
+            <div class="jms-card" data-mode="custom">
+              <div class="jms-card-bg jms-bg-custom"></div>
+              <div class="jms-card-inner">
+                <div class="jms-card-frame"><span class="jms-card-icon">✨</span></div>
+                <div class="jms-card-category">FLEXIBLE</div>
+                <div class="jms-card-name">CUSTOM<br>SESSION</div>
+              </div>
+            </div>
+            <div class="jms-card-separator"></div>
+            <div class="jms-card" data-mode="pomodoro">
+              <div class="jms-card-bg jms-bg-pom"></div>
+              <div class="jms-card-inner">
+                <div class="jms-card-frame"><span class="jms-card-icon">🍅</span></div>
+                <div class="jms-card-category">TECHNIQUE</div>
+                <div class="jms-card-name">POMODORO<br>TIMER</div>
+              </div>
+            </div>
+          </div><!-- /.jms-cards-row -->
+
+          <!-- Description + sub-modes -->
+          <div class="jms-body">
+            <div class="jms-desc-panel">
+              <p class="jms-desc-text" id="jmsDescText">Authentic deep work in a distraction-free session. Track your focused work time with full timer controls.</p>
+              <div class="jms-desc-rule"></div>
+              <div class="jms-submodes" id="jmsSubmodes"></div>
+            </div>
+          </div><!-- /.jms-body -->
+
+          <!-- Confirm button bar (bottom, centered — like LoL confirm) -->
+          <div class="jms-footer">
+            <button class="jms-confirm-btn" id="jmsConfirmBtn">
+              <span class="jms-confirm-x">✕</span>
+              <span class="jms-confirm-text">CONFIRM</span>
+              <span class="jms-confirm-arrow">▶</span>
+            </button>
+          </div>
+
+        </div><!-- /#journeyModeSelect -->
+
+        <!-- ══════════════════════════════════════════════════
+             JOURNEY: TIMER VIEW (shown after CONFIRM)
+             ══════════════════════════════════════════════════ -->
+        <div id="journeyTimerView" class="journey-timer-view" style="display:none;">
+
+          <!-- Back bar -->
+          <div class="journey-back-bar">
+            <button id="journeyBackBtn" class="btn-ghost">← CHANGE MODE</button>
+            <span class="journey-active-mode" id="journeyActiveModeLabel">⚔️ Work Session</span>
+          </div>
 
         <!-- Lobby: main area + right panel -->
         <div class="journey-lobby">
@@ -257,6 +367,8 @@
             <label>Sessions: <span id="pomSessions">0</span>/4</label>
           </div>
         </div>
+
+        </div><!-- /#journeyTimerView -->
 
       </div><!-- /#tab-journey -->
 

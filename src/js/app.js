@@ -176,6 +176,19 @@ function initTabs() {
       const contentEl = document.getElementById('content');
       if (contentEl) contentEl.scrollTop = 0;
 
+      // When returning to Journey, reset to mode-select unless timer is running
+      if (target === 'journey') {
+        const timerState = window.Timer ? window.Timer.getState() : null;
+        if (!timerState || !timerState.isRunning) {
+          const modeSelect = document.getElementById('journeyModeSelect');
+          const timerView = document.getElementById('journeyTimerView');
+          const pomPanel = document.getElementById('pomodoroPanel');
+          if (modeSelect) modeSelect.style.display = 'flex';
+          if (timerView) timerView.style.display = 'none';
+          if (pomPanel) pomPanel.style.display = 'none';
+        }
+      }
+
       // Refresh data-heavy tabs when opened
       if (target === 'chronicle' && window.Chronicle) {
         window.Chronicle.renderChronicle();
@@ -360,6 +373,205 @@ function initQuickNotes() {
 }
 
 // ── Application Init ──────────────────────────────────────────
+// ── Journey Mode Selection ────────────────────────────────────
+
+var JMS_MODES = {
+  working: {
+    desc: 'Authentic deep work in a distraction-free session. Track your focused work time with full timer controls.',
+    submodes: [
+      { id: 60,       label: 'STANDARD',        detail: '1 hour session' },
+      { id: 120,      label: 'DEEP WORK',        detail: '2 hour session' },
+      { id: 30,       label: 'SPRINT',           detail: '30 minute session' },
+      { id: 240,      label: 'MARATHON',         detail: '4 hour session' },
+      { id: 'custom', label: 'CUSTOM DURATION',  detail: 'Set your own time' }
+    ]
+  },
+  studying: {
+    desc: 'Focused study session for academic work, reading, or skill-building. Build your arcane knowledge.',
+    submodes: [
+      { id: 60,       label: 'STANDARD',         detail: '1 hour session' },
+      { id: 90,       label: 'EXAM PREP',        detail: '90 minute session' },
+      { id: 120,      label: 'DEEP STUDY',       detail: '2 hour session' },
+      { id: 30,       label: 'QUICK REVIEW',     detail: '30 minute session' },
+      { id: 'custom', label: 'CUSTOM DURATION',  detail: 'Set your own time' }
+    ]
+  },
+  custom: {
+    desc: 'Design your own adventure. Set a custom label and duration for any type of focused activity.',
+    submodes: [
+      { id: 30,       label: 'SHORT',            detail: '30 minute session' },
+      { id: 60,       label: 'MEDIUM',           detail: '1 hour session' },
+      { id: 90,       label: 'LONG',             detail: '90 minute session' },
+      { id: 'custom', label: 'CUSTOM DURATION',  detail: 'Set your own time' }
+    ]
+  },
+  pomodoro: {
+    desc: 'The Pomodoro Technique: work in focused sprints with structured breaks to maintain peak performance.',
+    submodes: [
+      { id: 'pom-classic', label: 'CLASSIC',      detail: '25 min work / 5 min break' },
+      { id: 'pom-short',   label: 'SHORT SPRINT', detail: '15 min work / 3 min break' },
+      { id: 'pom-long',    label: 'DEEP FOCUS',   detail: '50 min work / 10 min break' },
+      { id: 'pom-custom',  label: 'CUSTOM',       detail: 'Set your own intervals' }
+    ]
+  }
+};
+
+var jmsState = { mode: 'working', subMode: 60 };
+
+function jmsSelectMode(mode) {
+  jmsState.mode = mode;
+  var modeData = JMS_MODES[mode];
+  jmsState.subMode = modeData && modeData.submodes.length > 0 ? modeData.submodes[0].id : 60;
+
+  document.querySelectorAll('.jms-card[data-mode]').forEach(function (c) {
+    c.classList.toggle('selected', c.dataset.mode === mode);
+  });
+
+  var descEl = document.getElementById('jmsDescText');
+  if (descEl && modeData) descEl.textContent = modeData.desc;
+
+  var submodesEl = document.getElementById('jmsSubmodes');
+  if (submodesEl && modeData) {
+    submodesEl.innerHTML = modeData.submodes.map(function (sm, i) {
+      return '<div class="jms-submode' + (i === 0 ? ' selected' : '') + '" data-submode="' + sm.id + '">' +
+        '<span class="jms-submode-diamond">◆</span>' +
+        '<span class="jms-submode-label">' + sm.label + '</span>' +
+        '<span class="jms-submode-detail">' + sm.detail + '</span>' +
+        '</div>';
+    }).join('');
+
+    submodesEl.querySelectorAll('.jms-submode').forEach(function (el) {
+      el.addEventListener('click', function () {
+        submodesEl.querySelectorAll('.jms-submode').forEach(function (s) { s.classList.remove('selected'); });
+        this.classList.add('selected');
+        var raw = this.dataset.submode;
+        var parsed = parseInt(raw, 10);
+        jmsState.subMode = isNaN(parsed) ? raw : parsed;
+      });
+    });
+  }
+}
+
+function jmsConfirm() {
+  var mode = jmsState.mode;
+  var subMode = jmsState.subMode;
+
+  var modeSelect = document.getElementById('journeyModeSelect');
+  var timerView = document.getElementById('journeyTimerView');
+  if (modeSelect) modeSelect.style.display = 'none';
+  if (timerView) timerView.style.display = 'flex';
+
+  var modeNames = {
+    working:  '⚔️ Work Session',
+    studying: '📖 Study Session',
+    custom:   '✨ Custom Session',
+    pomodoro: '🍅 Pomodoro'
+  };
+  var labelEl = document.getElementById('journeyActiveModeLabel');
+  if (labelEl) labelEl.textContent = modeNames[mode] || mode;
+
+  var typeSelect = document.getElementById('timerTypeSelect');
+
+  if (mode === 'pomodoro') {
+    if (typeSelect) { typeSelect.value = 'working'; typeSelect.dispatchEvent(new Event('change')); }
+    var pomWork = document.getElementById('pomWork');
+    var pomBreak = document.getElementById('pomBreak');
+    if (subMode === 'pom-short') {
+      if (pomWork) pomWork.value = 15;
+      if (pomBreak) pomBreak.value = 3;
+    } else if (subMode === 'pom-long') {
+      if (pomWork) pomWork.value = 50;
+      if (pomBreak) pomBreak.value = 10;
+    } else {
+      if (pomWork) pomWork.value = 25;
+      if (pomBreak) pomBreak.value = 5;
+    }
+    if (pomWork) pomWork.dispatchEvent(new Event('change'));
+    if (pomBreak) pomBreak.dispatchEvent(new Event('change'));
+    var pomPanel = document.getElementById('pomodoroPanel');
+    if (pomPanel) pomPanel.style.display = 'block';
+  } else {
+    if (typeSelect) { typeSelect.value = mode; typeSelect.dispatchEvent(new Event('change')); }
+    var durationMins = typeof subMode === 'number' ? subMode : parseInt(subMode, 10);
+    if (!isNaN(durationMins) && durationMins > 0) {
+      var hours = Math.floor(durationMins / 60);
+      var mins = durationMins % 60;
+      var hoursInput = document.getElementById('durationHours');
+      var minsInput = document.getElementById('durationMinutes');
+      if (hoursInput) hoursInput.value = hours;
+      if (minsInput) minsInput.value = mins;
+      var setBtn = document.getElementById('setDurationBtn');
+      if (setBtn) setBtn.click();
+    }
+  }
+}
+
+function initModeSelection() {
+  document.querySelectorAll('.jms-card[data-mode]').forEach(function (card) {
+    card.addEventListener('click', function () { jmsSelectMode(this.dataset.mode); });
+  });
+
+  var confirmBtn = document.getElementById('jmsConfirmBtn');
+  if (confirmBtn) confirmBtn.addEventListener('click', jmsConfirm);
+
+  var backBtn = document.getElementById('journeyBackBtn');
+  if (backBtn) {
+    backBtn.addEventListener('click', function () {
+      var modeSelect = document.getElementById('journeyModeSelect');
+      var timerView = document.getElementById('journeyTimerView');
+      var pomPanel = document.getElementById('pomodoroPanel');
+      if (modeSelect) modeSelect.style.display = 'flex';
+      if (timerView) timerView.style.display = 'none';
+      if (pomPanel) pomPanel.style.display = 'none';
+    });
+  }
+
+  // Render initial selected state
+  jmsSelectMode('working');
+}
+
+// ── Nav Profile Mini-Widget ───────────────────────────────────
+
+async function initNavProfile() {
+  var profile = await Storage.get('profile', { name: 'Adventurer', avatarDataUrl: '' });
+  var sessions = await Storage.get('chronicle', []);
+  var totalSecs = sessions.reduce(function (sum, s) { return sum + (s.duration || 0); }, 0);
+  var totalHours = totalSecs / 3600;
+  var level = Math.min(30, Math.max(1, Math.floor(totalHours) + 1));
+
+  var nameEl = document.getElementById('navPfName');
+  var levelEl = document.getElementById('navPfLevel');
+  var avatarEl = document.getElementById('navPfAvatar');
+
+  if (nameEl) nameEl.textContent = profile.name || 'Adventurer';
+  if (levelEl) levelEl.textContent = level;
+  if (avatarEl) {
+    if (profile.avatarDataUrl) {
+      avatarEl.src = profile.avatarDataUrl;
+    } else {
+      var initial = (profile.name || 'A')[0].toUpperCase();
+      var svgStr = '<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34">' +
+        '<circle cx="17" cy="17" r="17" fill="#1e2328"/>' +
+        '<text x="17" y="22" font-family="system-ui,sans-serif" font-size="15" font-weight="bold" fill="#c8aa6e" text-anchor="middle">' + initial + '</text></svg>';
+      avatarEl.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+    }
+  }
+
+  var widget = document.getElementById('navProfileWidget');
+  if (widget) {
+    widget.addEventListener('click', function () {
+      document.querySelectorAll('.nav-tab').forEach(function (b) { b.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
+      var profilePanel = document.getElementById('tab-profile');
+      if (profilePanel) profilePanel.classList.add('active');
+      var contentEl = document.getElementById('content');
+      if (contentEl) contentEl.scrollTop = 0;
+      Storage.set('lastTab', 'profile');
+      if (window.Profile) window.Profile.updateProfileStats();
+    });
+  }
+}
+
 async function initApp() {
   // 1. Load settings first (sets AppSettings global)
   await Settings.init();
@@ -390,11 +602,15 @@ async function initApp() {
   initSpotifyPlayer();
   initQuickNotes();
 
-  // 7. Tab navigation
+  // 7. Mode selection + nav profile widget
+  initModeSelection();
+  await initNavProfile();
+
+  // 8. Tab navigation
   initTabs();
   await restoreLastTab();
 
-  // 8. Focus overlay click to exit
+  // 9. Focus overlay click to exit
   const overlay = document.getElementById('focusOverlay');
   if (overlay) {
     overlay.addEventListener('click', function () {
