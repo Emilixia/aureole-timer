@@ -168,9 +168,8 @@ var Reader = (function () {
       showError('PDF.js failed to load. Please check your network connection.');
       return;
     }
-    // Use local worker blob to avoid CSP restrictions
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    // Use local vendor worker (avoids CDN and CSP issues)
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
 
     try {
       _pdfDoc = await pdfjsLib.getDocument({ data: bytes }).promise;

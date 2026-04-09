@@ -56,14 +56,14 @@ function createWindow() {
         ...details.responseHeaders,
         'Content-Security-Policy': [
           "default-src 'self'; " +
-          "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; " +
-          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; " +
+          "script-src 'self' 'unsafe-inline'; " +
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
           "frame-src https://www.youtube.com https://youtube.com https://open.spotify.com https://w.soundcloud.com https://soundcloud.com; " +
           "img-src * blob: data:; " +
           "media-src * blob: data:; " +
-          "connect-src 'self' https://open.spotify.com https://*.spotify.com https://*.scdn.co https://cdnjs.cloudflare.com; " +
-          "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; " +
-          "worker-src blob:;"
+          "connect-src 'self' https://open.spotify.com https://*.spotify.com https://*.scdn.co; " +
+          "font-src 'self' data: https://fonts.gstatic.com; " +
+          "worker-src blob: 'self';"
         ]
       }
     });

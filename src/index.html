@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; frame-src https://www.youtube.com https://youtube.com https://open.spotify.com https://w.soundcloud.com https://soundcloud.com; img-src * blob: data:; media-src * blob: data:; connect-src 'self' https://open.spotify.com https://*.spotify.com https://*.scdn.co https://cdnjs.cloudflare.com; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; worker-src blob:;">
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; frame-src https://www.youtube.com https://youtube.com https://open.spotify.com https://w.soundcloud.com https://soundcloud.com; img-src * blob: data:; media-src * blob: data:; connect-src 'self' https://open.spotify.com https://*.spotify.com https://*.scdn.co; font-src 'self' data: https://fonts.gstatic.com; worker-src blob: 'self';">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <title>Frieren Chronomark</title>
@@ -1153,10 +1153,10 @@
   </div>
 
   <!-- JS files — load in order (no ES6 modules) -->
-  <!-- PDF.js: in-app PDF rendering -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <!-- mammoth.js: DOCX → HTML conversion -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <!-- PDF.js: in-app PDF rendering (local vendor copy) -->
+  <script src="vendor/pdf.min.js"></script>
+  <!-- mammoth.js: DOCX → HTML conversion (local vendor copy) -->
+  <script src="vendor/mammoth.browser.min.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/achievements.js"></script>
   <script src="js/reminders.js"></script>
