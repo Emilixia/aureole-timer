@@ -239,6 +239,8 @@ const Timer = (function () {
       : 0;
     updateAltProgressBars(percent);
   }
+
+  function updateWalkerPosition(percent) {
     const walker = document.getElementById('progressWalker');
     if (walker) {
       walker.style.left = 'calc(' + percent + '% - 16px)';
