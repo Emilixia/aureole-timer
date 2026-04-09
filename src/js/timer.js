@@ -669,15 +669,16 @@ const Timer = (function () {
     updatePomodoroDisplay();
   }
 
+  const DEFAULT_BG_URL = 'https://github.com/user-attachments/assets/9f47780c-bd58-444c-b733-7e5e47fc7fd8';
+
   async function loadCustomImages() {
     const customBg = await Storage.get('customBg');
-    if (customBg) {
-      const bgOverlay = document.getElementById('timerBgOverlay');
-      if (bgOverlay) {
-        bgOverlay.style.backgroundImage = 'url(' + customBg + ')';
-        bgOverlay.style.backgroundSize = 'cover';
-        bgOverlay.style.backgroundPosition = 'center';
-      }
+    const bgOverlay = document.getElementById('timerBgOverlay');
+    if (bgOverlay) {
+      const bgUrl = customBg || DEFAULT_BG_URL;
+      bgOverlay.style.backgroundImage = 'url(' + bgUrl + ')';
+      bgOverlay.style.backgroundSize = 'cover';
+      bgOverlay.style.backgroundPosition = 'center';
     }
 
     const customWalker = await Storage.get('customWalker');
