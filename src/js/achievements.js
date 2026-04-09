@@ -68,17 +68,32 @@ window.ACHIEVEMENTS = ACHIEVEMENTS;
 
 // ── Medals (milestone awards with a distinct visual style) ─────
 const MEDALS = [
-  { id: 'medal_work_100h',    name: '100h Worker',       desc: 'Logged 100 hours of work',      icon: '🥉', color: '#cd7f32', glow: 'rgba(205,127,50,0.6)',  category: 'work',     threshold: 360000 },
-  { id: 'medal_work_500h',    name: '500h Ironclad',     desc: 'Logged 500 hours of work',      icon: '🥈', color: '#c0c0c0', glow: 'rgba(192,192,192,0.6)', category: 'work',     threshold: 1800000 },
-  { id: 'medal_study_100h',   name: '100h Scholar',      desc: 'Studied for 100 hours',         icon: '🥉', color: '#cd7f32', glow: 'rgba(205,127,50,0.6)',  category: 'study',    threshold: 360000 },
-  { id: 'medal_study_500h',   name: '500h Grand Sage',   desc: 'Studied for 500 hours',         icon: '🥈', color: '#c0c0c0', glow: 'rgba(192,192,192,0.6)', category: 'study',    threshold: 1800000 },
-  { id: 'medal_streak_30',    name: '30-Day Oath',       desc: '30-day streak maintained',      icon: '🥉', color: '#cd7f32', glow: 'rgba(205,127,50,0.6)',  category: 'streak',   threshold: 30 },
-  { id: 'medal_streak_100',   name: '100-Day Legend',    desc: '100-day streak maintained',     icon: '🥇', color: '#d4a843', glow: 'rgba(212,168,67,0.8)',  category: 'streak',   threshold: 100 },
-  { id: 'medal_streak_365',   name: 'Year of Glory',     desc: '365-day streak — legendary!',  icon: '🌠', color: '#a78bfa', glow: 'rgba(167,139,250,0.8)', category: 'streak',   threshold: 365 },
-  { id: 'medal_sessions_100', name: 'Century Session',   desc: 'Completed 100 sessions',        icon: '🥉', color: '#cd7f32', glow: 'rgba(205,127,50,0.6)',  category: 'sessions', threshold: 100 },
-  { id: 'medal_sessions_500', name: 'Session Titan',     desc: 'Completed 500 sessions',        icon: '🥇', color: '#d4a843', glow: 'rgba(212,168,67,0.8)',  category: 'sessions', threshold: 500 },
-  { id: 'medal_tasks_100',    name: 'Spell Master',      desc: 'Completed 100 spells/tasks',    icon: '🥇', color: '#d4a843', glow: 'rgba(212,168,67,0.8)',  category: 'tasks',    threshold: 100 },
-  { id: 'medal_journal_100',  name: 'Chronicle Master',  desc: 'Wrote 100 journal entries',     icon: '🥇', color: '#d4a843', glow: 'rgba(212,168,67,0.8)',  category: 'journal',  threshold: 100 }
+  { id: 'medal_work_100h',    name: '100h Worker',          desc: 'Logged 100 hours of work',              icon: '🥉', color: '#cd7f32', glow: 'rgba(205,127,50,0.6)',  category: 'work',     threshold: 360000 },
+  { id: 'medal_work_500h',    name: '500h Ironclad',        desc: 'Logged 500 hours of work',              icon: '🥈', color: '#c0c0c0', glow: 'rgba(192,192,192,0.6)', category: 'work',     threshold: 1800000 },
+  { id: 'medal_work_1000h',   name: 'Archmage of Labor',    desc: 'Logged 1 000 hours of work',            icon: '⚗️', color: '#a78bfa', glow: 'rgba(167,139,250,0.9)', category: 'work',     threshold: 3600000 },
+  { id: 'medal_study_100h',   name: '100h Scholar',         desc: 'Studied for 100 hours',                 icon: '🥉', color: '#cd7f32', glow: 'rgba(205,127,50,0.6)',  category: 'study',    threshold: 360000 },
+  { id: 'medal_study_500h',   name: '500h Grand Sage',      desc: 'Studied for 500 hours',                 icon: '🥈', color: '#c0c0c0', glow: 'rgba(192,192,192,0.6)', category: 'study',    threshold: 1800000 },
+  { id: 'medal_study_1000h',  name: 'Thousand-Year Mage',   desc: 'Studied for 1 000 hours — like Frieren',icon: '🌟', color: '#e0c87a', glow: 'rgba(224,200,122,1.0)', category: 'study',    threshold: 3600000 },
+  { id: 'medal_streak_7',     name: 'First Flame',          desc: 'Kept the flame alive for 7 days',       icon: '🕯️', color: '#f97316', glow: 'rgba(249,115,22,0.6)',  category: 'streak',   threshold: 7 },
+  { id: 'medal_streak_30',    name: '30-Day Oath',          desc: '30-day streak maintained',              icon: '🥉', color: '#cd7f32', glow: 'rgba(205,127,50,0.6)',  category: 'streak',   threshold: 30 },
+  { id: 'medal_streak_100',   name: '100-Day Legend',       desc: '100-day streak maintained',             icon: '🥇', color: '#d4a843', glow: 'rgba(212,168,67,0.8)',  category: 'streak',   threshold: 100 },
+  { id: 'medal_streak_365',   name: 'Year of Glory',        desc: '365-day streak — legendary!',           icon: '🌠', color: '#a78bfa', glow: 'rgba(167,139,250,0.8)', category: 'streak',   threshold: 365 },
+  { id: 'medal_sessions_10',  name: 'Apprentice',           desc: 'Completed 10 sessions',                 icon: '🪄', color: '#7c5cbf', glow: 'rgba(124,92,191,0.6)',  category: 'sessions', threshold: 10 },
+  { id: 'medal_sessions_50',  name: 'Journeyman',           desc: 'Completed 50 sessions',                 icon: '⚔️', color: '#3d8b7a', glow: 'rgba(61,139,122,0.6)',  category: 'sessions', threshold: 50 },
+  { id: 'medal_sessions_100', name: 'Century Session',      desc: 'Completed 100 sessions',                icon: '🥉', color: '#cd7f32', glow: 'rgba(205,127,50,0.6)',  category: 'sessions', threshold: 100 },
+  { id: 'medal_sessions_500', name: 'Session Titan',        desc: 'Completed 500 sessions',                icon: '🥇', color: '#d4a843', glow: 'rgba(212,168,67,0.8)',  category: 'sessions', threshold: 500 },
+  { id: 'medal_sessions_1000',name: 'Eternal Wanderer',     desc: 'Completed 1 000 sessions — a true adventurer', icon: '🌌', color: '#818cf8', glow: 'rgba(129,140,248,0.9)', category: 'sessions', threshold: 1000 },
+  { id: 'medal_tasks_10',     name: 'Grimoire Initiate',    desc: 'Completed 10 spells/tasks',             icon: '📜', color: '#84cc16', glow: 'rgba(132,204,22,0.5)',  category: 'tasks',    threshold: 10 },
+  { id: 'medal_tasks_50',     name: 'Rune Weaver',          desc: 'Completed 50 spells/tasks',             icon: '🔮', color: '#8b5cf6', glow: 'rgba(139,92,246,0.6)',  category: 'tasks',    threshold: 50 },
+  { id: 'medal_tasks_100',    name: 'Spell Master',         desc: 'Completed 100 spells/tasks',            icon: '🥇', color: '#d4a843', glow: 'rgba(212,168,67,0.8)',  category: 'tasks',    threshold: 100 },
+  { id: 'medal_tasks_500',    name: 'Grand Grimoire',       desc: 'Completed 500 spells/tasks',            icon: '📖', color: '#a78bfa', glow: 'rgba(167,139,250,0.9)', category: 'tasks',    threshold: 500 },
+  { id: 'medal_journal_10',   name: 'First Ink',            desc: 'Wrote 10 journal entries',              icon: '🖊️', color: '#38bdf8', glow: 'rgba(56,189,248,0.5)',  category: 'journal',  threshold: 10 },
+  { id: 'medal_journal_50',   name: 'Story Keeper',         desc: 'Wrote 50 journal entries',              icon: '📒', color: '#0ea5e9', glow: 'rgba(14,165,233,0.6)',  category: 'journal',  threshold: 50 },
+  { id: 'medal_journal_100',  name: 'Chronicle Master',     desc: 'Wrote 100 journal entries',             icon: '🥇', color: '#d4a843', glow: 'rgba(212,168,67,0.8)',  category: 'journal',  threshold: 100 },
+  { id: 'medal_journal_365',  name: 'Tome of a Lifetime',   desc: 'Wrote 365 journal entries — one per day', icon: '🗺️', color: '#f59e0b', glow: 'rgba(245,158,11,0.8)', category: 'journal',  threshold: 365 },
+  { id: 'medal_early_bird',   name: 'Dawn Sentinel',        desc: 'Complete 5 sessions before 7 AM',       icon: '🌅', color: '#fb923c', glow: 'rgba(251,146,60,0.7)',  category: 'special',  threshold: 0 },
+  { id: 'medal_night_owl',    name: 'Moonwatch Mage',       desc: 'Complete 5 sessions after 10 PM',       icon: '🦉', color: '#6366f1', glow: 'rgba(99,102,241,0.7)',  category: 'special',  threshold: 0 },
+  { id: 'medal_pomodoro_25',  name: 'Tomato Sorcerer',      desc: 'Complete 25 Pomodoro cycles',           icon: '🍅', color: '#ef4444', glow: 'rgba(239,68,68,0.6)',   category: 'special',  threshold: 0 },
 ];
 
 window.MEDALS = MEDALS;
@@ -165,6 +180,7 @@ const Achievements = (function () {
         case 'sessions': met = (stats.totalSessions || 0) >= medal.threshold; break;
         case 'tasks':    met = (stats.tasksDone || 0) >= medal.threshold; break;
         case 'journal':  met = (stats.journalEntries || 0) >= medal.threshold; break;
+        case 'special':  met = !!(stats[medal.id]); break;
       }
 
       if (met) {

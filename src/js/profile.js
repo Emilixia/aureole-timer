@@ -146,6 +146,9 @@ const Profile = (function () {
       await window.Achievements.renderRibbonRack('ribbonRack');
       await window.Achievements.renderMedalRack('medalRack');
     }
+
+    // Keep the nav-bar level badge in sync
+    if (window.refreshNavProfile) window.refreshNavProfile();
   }
 
   async function handleAvatarUpload(file) {

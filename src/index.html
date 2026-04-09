@@ -188,10 +188,7 @@
             <!-- Timer Frame (game lobby center) -->
             <div class="journey-frame" id="journeyFrame">
               <div class="frame-bg" id="timerBgOverlay"></div>
-              <!-- Bell animation overlay (shown on timer completion) -->
-              <div id="bellOverlay" style="display:none;">
-                <img id="bellGif" src="../assets/frieren-bell.gif" alt="Timer complete!">
-              </div>
+              <!-- Bell animation shown in full-window overlay on timer completion -->
               <div class="frame-content">
                 <h2 class="frame-title">⚜ Frieren Chronomark ⚜</h2>
 
@@ -319,18 +316,17 @@
             <div class="panel music-panel">
               <h3 class="panel-title">🎵 Arcane Melodies</h3>
               <div class="music-url-row">
-                <input type="text" id="musicUrl" placeholder="Paste audio URL or SoundCloud link...">
+                <input type="text" id="musicUrl" placeholder="Paste Spotify track/playlist/album URL...">
                 <button id="loadMusicBtn" class="btn-primary btn-sm">▶ Load</button>
               </div>
               <div id="musicPlayerWrap">
-                <!-- HTML5 player for direct audio links -->
-                <audio id="audioPlayer" controls style="display:none;width:100%;margin-top:8px;"></audio>
-                <!-- Embed iframe for SoundCloud -->
-                <iframe id="musicFrame" src="about:blank" frameborder="0"
-                  allow="autoplay" loading="lazy"
-                  style="display:none;width:100%;height:120px;margin-top:8px;border-radius:var(--radius);"></iframe>
+                <!-- Spotify Embed iFrame -->
+                <iframe id="spotifyFrame" src="about:blank" frameborder="0"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                  style="display:none;width:100%;height:152px;margin-top:8px;border-radius:12px;"></iframe>
               </div>
-              <p class="music-hint">Supports direct mp3/ogg/wav URLs and SoundCloud links.</p>
+              <p class="music-hint">Paste any Spotify track, album or playlist URL.</p>
             </div>
 
             <!-- Quick Notes -->
@@ -598,6 +594,11 @@
 
           <!-- ═══ LEFT SIDEBAR ═══ -->
           <div class="prf-sidebar">
+
+            <!-- Profile Banner -->
+            <div class="prf-banner">
+              <img src="../assets/Profile Banner.png" class="prf-banner-img" alt="Profile Banner">
+            </div>
 
             <!-- Level badge (like LoL "300" badge in top-left of profile) -->
             <div class="prf-level-badge">
@@ -936,7 +937,7 @@
                   <p>📜 Detailed session chronicle with CSV export</p>
                   <p>🏆 Achievement system with ribbon rack</p>
                   <p>🍅 Pomodoro technique support</p>
-                  <p>🎵 Music player (audio URL &amp; SoundCloud)</p>
+                  <p>🎵 Spotify music player (iFrame embed)</p>
                   <p>🧠 ADHD-friendly focus mode</p>
                   <p>🌱 Daily habit/ritual tracker</p>
                 </div>
@@ -1018,6 +1019,12 @@
 
   <!-- Focus mode overlay -->
   <div id="focusOverlay" style="display:none;"></div>
+
+  <!-- Full-window bell animation overlay (shown on timer completion, close manually) -->
+  <div id="bellOverlay" style="display:none;">
+    <img id="bellGif" src="../assets/frieren-bell.gif" alt="Session complete!">
+    <button id="bellClose" class="bell-close-btn" title="Close">✕</button>
+  </div>
 
   <!-- JS files — load in order (no ES6 modules) -->
   <script src="js/storage.js"></script>

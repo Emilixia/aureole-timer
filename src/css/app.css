@@ -439,25 +439,57 @@ body.focus-mode #tab-journey { height: calc(100vh - var(--titlebar-height)); }
 .journey-frame {
   position: relative;
   flex: 1;
-  border: 1px solid rgba(120, 90, 40, 0.5);
-  border-top: 2px solid rgba(200, 170, 110, 0.4);
-  border-radius: var(--radius);
-  background: rgba(5, 10, 20, 0.85);
+  /* Multi-layer ornate border: outer glow + double inner lines */
+  border: 2px solid rgba(200, 170, 110, 0.65);
+  border-radius: 10px;
+  background: rgba(5, 10, 20, 0.87);
   padding: 28px 32px;
-  overflow: hidden;
+  overflow: visible;
   animation: none;
+  box-shadow:
+    0 0 0 1px rgba(120, 90, 40, 0.35),
+    0 0 0 5px rgba(10, 8, 4, 0.9),
+    0 0 0 6px rgba(200, 170, 110, 0.25),
+    0 0 24px rgba(200, 170, 110, 0.12),
+    inset 0 0 0 1px rgba(200, 170, 110, 0.08);
 }
 
-/* Gold shimmer top bar */
+/* Animated gold shimmer top edge */
 .journey-frame::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent 0%, rgba(200,170,110,0.15) 20%, rgba(200,170,110,0.6) 50%, rgba(200,170,110,0.15) 80%, transparent 100%);
+  top: -3px; left: 10%; right: 10%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, rgba(200,170,110,0.1) 15%, rgba(200,170,110,0.9) 50%, rgba(200,170,110,0.1) 85%, transparent 100%);
+  border-radius: 2px;
   pointer-events: none;
+  animation: shimmerSweep 4s ease-in-out infinite;
 }
-.journey-frame::after { display: none; }
+@keyframes shimmerSweep {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1;   }
+}
+
+/* Ornate SVG corner flourishes */
+.journey-frame::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  pointer-events: none;
+  border-radius: 14px;
+  background-image:
+    /* top-left corner */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='38' height='38' viewBox='0 0 38 38'%3E%3Cpath d='M2 18 Q2 2 18 2' fill='none' stroke='rgba(200,170,110,0.7)' stroke-width='1.5'/%3E%3Cpath d='M2 12 Q2 2 12 2' fill='none' stroke='rgba(200,170,110,0.4)' stroke-width='1'/%3E%3Ccircle cx='3' cy='3' r='2' fill='rgba(200,170,110,0.6)'/%3E%3Ccircle cx='3' cy='3' r='0.8' fill='rgba(255,240,180,0.9)'/%3E%3C/svg%3E"),
+    /* top-right corner */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='38' height='38' viewBox='0 0 38 38'%3E%3Cpath d='M36 18 Q36 2 20 2' fill='none' stroke='rgba(200,170,110,0.7)' stroke-width='1.5'/%3E%3Cpath d='M36 12 Q36 2 26 2' fill='none' stroke='rgba(200,170,110,0.4)' stroke-width='1'/%3E%3Ccircle cx='35' cy='3' r='2' fill='rgba(200,170,110,0.6)'/%3E%3Ccircle cx='35' cy='3' r='0.8' fill='rgba(255,240,180,0.9)'/%3E%3C/svg%3E"),
+    /* bottom-left corner */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='38' height='38' viewBox='0 0 38 38'%3E%3Cpath d='M2 20 Q2 36 18 36' fill='none' stroke='rgba(200,170,110,0.7)' stroke-width='1.5'/%3E%3Cpath d='M2 26 Q2 36 12 36' fill='none' stroke='rgba(200,170,110,0.4)' stroke-width='1'/%3E%3Ccircle cx='3' cy='35' r='2' fill='rgba(200,170,110,0.6)'/%3E%3Ccircle cx='3' cy='35' r='0.8' fill='rgba(255,240,180,0.9)'/%3E%3C/svg%3E"),
+    /* bottom-right corner */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='38' height='38' viewBox='0 0 38 38'%3E%3Cpath d='M36 20 Q36 36 20 36' fill='none' stroke='rgba(200,170,110,0.7)' stroke-width='1.5'/%3E%3Cpath d='M36 26 Q36 36 26 36' fill='none' stroke='rgba(200,170,110,0.4)' stroke-width='1'/%3E%3Ccircle cx='35' cy='35' r='2' fill='rgba(200,170,110,0.6)'/%3E%3Ccircle cx='35' cy='35' r='0.8' fill='rgba(255,240,180,0.9)'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: top left, top right, bottom left, bottom right;
+  background-size: 38px 38px;
+}
 
 .journey-frame.no-animation { animation: none; }
 
@@ -471,7 +503,7 @@ body.focus-mode #tab-journey { height: calc(100vh - var(--titlebar-height)); }
   pointer-events: none;
 }
 
-.frame-content { position: relative; z-index: 1; }
+.frame-content { position: relative; z-index: 1; text-align: center; }
 
 .frame-title {
   text-align: center;
@@ -499,6 +531,7 @@ body.focus-mode #tab-journey { height: calc(100vh - var(--titlebar-height)); }
 .time-inputs {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   margin-bottom: 12px;
   flex-wrap: wrap;
@@ -1586,12 +1619,34 @@ body.focus-mode #tab-journey { height: calc(100vh - var(--titlebar-height)); }
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 14px 16px;
+  padding: 0 14px 16px;
   background: rgba(3,8,20,0.9);
   border-right: 1px solid rgba(120,90,40,0.35);
   overflow-y: auto;
   gap: 12px;
   position: relative;
+}
+
+/* Profile Banner */
+.prf-banner {
+  width: 100%;
+  margin: 0 -14px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-bottom: 2px solid rgba(200,170,110,0.4);
+}
+.prf-banner-img {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  filter: brightness(0.9);
+}
+
+/* Level badge (like "300" badge in LoL) — add top margin when following the banner */
+.prf-banner + .prf-level-badge {
+  margin-top: 10px;
 }
 
 /* Level badge (like "300" badge in LoL) */
@@ -2383,6 +2438,7 @@ body.focus-mode #tab-journey .journey-right {
 .duration-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   margin-bottom: 14px;
   flex-wrap: wrap;
@@ -3493,29 +3549,52 @@ body.focus-mode #tab-journey .journey-right {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   TIMER COMPLETION BELL ANIMATION
+   TIMER COMPLETION BELL ANIMATION — full-window overlay
    ═══════════════════════════════════════════════════════════ */
 #bellOverlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 20;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(5, 5, 16, 0.55);
-  pointer-events: none;
-  border-radius: var(--radius);
-  animation: bellOverlayFadeIn 0.3s ease;
+  background: rgba(4, 4, 12, 0.82);
+  backdrop-filter: blur(6px);
+  animation: bellOverlayFadeIn 0.35s ease;
+  pointer-events: all;
 }
 @keyframes bellOverlayFadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 #bellGif {
-  max-width: 220px;
-  max-height: 220px;
+  max-width: min(480px, 90vw);
+  max-height: min(480px, 80vh);
   object-fit: contain;
-  filter: drop-shadow(0 0 20px rgba(212,168,67,0.7));
+  filter: drop-shadow(0 0 40px rgba(212,168,67,0.8));
+  border-radius: 12px;
+}
+.bell-close-btn {
+  position: fixed;
+  top: 22px;
+  right: 28px;
+  background: rgba(200,170,110,0.12);
+  border: 1px solid rgba(200,170,110,0.5);
+  color: var(--gold-light);
+  font-size: 1.4rem;
+  line-height: 1;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.15s;
+}
+.bell-close-btn:hover {
+  background: rgba(200,170,110,0.28);
+  transform: scale(1.1);
 }
 
 /* About GIF */

@@ -393,6 +393,24 @@ const Timer = (function () {
     const FULL_DAY_SECONDS = 8 * 60 * 60; // 8 hours in seconds
     if (todayTotal >= FULL_DAY_SECONDS) specialStats.full_day = true;
 
+    // Track early-bird (before 7 AM) and night-owl (after 10 PM) session counts
+    const earlyBirdSessions = allSessions.filter(function (s) {
+      var h = parseInt((s.startTime || s.endTimestamp ? new Date(s.startTimestamp || 0).getHours() : 12));
+      return h < 7;
+    }).length;
+    const nightOwlSessions = allSessions.filter(function (s) {
+      var h = parseInt((s.startTimestamp ? new Date(s.startTimestamp).getHours() : 12));
+      return h >= 22;
+    }).length;
+    if (earlyBirdSessions >= 5)  specialStats.medal_early_bird = true;
+    if (nightOwlSessions >= 5)   specialStats.medal_night_owl = true;
+
+    // Pomodoro counter (sessions <= 30 minutes)
+    const pomodoroSessions = allSessions.filter(function (s) {
+      return s.duration <= 1800;
+    }).length;
+    if (pomodoroSessions >= 25)  specialStats.medal_pomodoro_25 = true;
+
     // Compute aggregate stats
     const totalWork = allSessions
       .filter(function (s) { return s.type === 'working'; })
@@ -459,6 +477,35 @@ const Timer = (function () {
     }
   }
 
+  function showBellOverlay() {
+    var bellOverlay = document.getElementById('bellOverlay');
+    var bellGif = document.getElementById('bellGif');
+    var bellClose = document.getElementById('bellClose');
+    if (bellOverlay) {
+      // Force GIF restart by reloading src
+      if (bellGif) {
+        var src = bellGif.getAttribute('src');
+        bellGif.setAttribute('src', '');
+        bellGif.setAttribute('src', src);
+      }
+      bellOverlay.style.display = 'flex';
+      // Close button
+      if (bellClose && !bellClose._bound) {
+        bellClose._bound = true;
+        bellClose.addEventListener('click', function () {
+          bellOverlay.style.display = 'none';
+        });
+      }
+      // Also close on overlay backdrop click (not on the gif itself)
+      if (!bellOverlay._bound) {
+        bellOverlay._bound = true;
+        bellOverlay.addEventListener('click', function (e) {
+          if (e.target === bellOverlay) bellOverlay.style.display = 'none';
+        });
+      }
+    }
+  }
+
   function timerComplete() {
     clearInterval(state.intervalId);
     state.intervalId = null;
@@ -477,21 +524,7 @@ const Timer = (function () {
     if (window.App) window.App.stopEncouragement();
     if (window.showToast) window.showToast('✨ Session complete! Amazing work!', 'success');
 
-    // Show bell GIF animation overlay for 3 seconds
-    var bellOverlay = document.getElementById('bellOverlay');
-    var bellGif = document.getElementById('bellGif');
-    if (bellOverlay) {
-      // Force GIF restart by reloading src
-      if (bellGif) {
-        var src = bellGif.getAttribute('src');
-        bellGif.setAttribute('src', '');
-        bellGif.setAttribute('src', src);
-      }
-      bellOverlay.style.display = 'flex';
-      setTimeout(function () {
-        bellOverlay.style.display = 'none';
-      }, 3000);
-    }
+    showBellOverlay();
   }
 
   function applyManualTimes() {
@@ -839,7 +872,8 @@ const Timer = (function () {
     reset: resetTimer,
     applyManualTimes: applyManualTimes,
     applyProgressStyle: applyProgressStyle,
-    getState: getState
+    getState: getState,
+    showBellOverlay: showBellOverlay
   };
 })();
 

@@ -290,58 +290,41 @@ function initWindowControls() {
   }
 }
 
-// ── Music Player (HTML5 audio + SoundCloud embed) ─────────────
+// ── Music Player (Spotify iFrame API) ─────────────────────────
 function initMusicPlayer() {
   const loadBtn = document.getElementById('loadMusicBtn');
   const urlInput = document.getElementById('musicUrl');
-  const audioEl = document.getElementById('audioPlayer');
-  const frameEl = document.getElementById('musicFrame');
+  const spotifyFrame = document.getElementById('spotifyFrame');
 
-  function isSoundCloudUrl(url) {
-    return /soundcloud\.com\//i.test(url);
+  // Convert any Spotify web URL to the embed URL
+  function toSpotifyEmbed(raw) {
+    // Accept share links like https://open.spotify.com/track/ID?...
+    var match = raw.match(/spotify\.com\/(track|album|playlist|artist|episode|show)\/([A-Za-z0-9]+)/);
+    if (match) {
+      return 'https://open.spotify.com/embed/' + match[1] + '/' + match[2] + '?utm_source=generator&theme=0';
+    }
+    // Already an embed URL?
+    if (/open\.spotify\.com\/embed/.test(raw)) return raw;
+    return null;
   }
 
   function loadMusic() {
-    const raw = urlInput ? urlInput.value.trim() : '';
+    var raw = urlInput ? urlInput.value.trim() : '';
     if (!raw) {
-      if (window.showToast) showToast('Please enter an audio URL or SoundCloud link.', 'error');
+      if (window.showToast) showToast('Please paste a Spotify URL.', 'error');
       return;
     }
-
-    if (isSoundCloudUrl(raw)) {
-      // SoundCloud embed
-      const embedUrl = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(raw) +
-        '&auto_play=true&hide_related=true&show_comments=false&show_user=true&show_reposts=false&visual=false&color=7c5cbf';
-      if (audioEl) { audioEl.pause(); audioEl.style.display = 'none'; }
-      if (frameEl) {
-        frameEl.setAttribute('src', embedUrl);
-        frameEl.style.display = 'block';
-      }
-      if (window.showToast) showToast('Loading SoundCloud track... 🎵', 'info');
-    } else {
-      // Treat as direct audio URL (mp3, ogg, wav, etc.) — validate scheme first
-      if (frameEl) { frameEl.setAttribute('src', 'about:blank'); frameEl.style.display = 'none'; }
-      if (audioEl) {
-        try {
-          const parsed = new URL(raw);
-          if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-            if (window.showToast) showToast('Only http/https URLs are supported.', 'error');
-            return;
-          }
-          audioEl.src = parsed.href;
-        } catch (e) {
-          if (window.showToast) showToast('Invalid URL. Please enter a valid audio link.', 'error');
-          return;
-        }
-        audioEl.style.display = 'block';
-        audioEl.load();
-        audioEl.play().catch(function () {
-          if (window.showToast) showToast('Could not play audio. Check the URL.', 'error');
-        });
-      }
-      if (window.showToast) showToast('Loading audio... 🎵', 'info');
+    var embedUrl = toSpotifyEmbed(raw);
+    if (!embedUrl) {
+      if (window.showToast) showToast('Not a Spotify URL. Paste a track, album or playlist link.', 'error');
+      return;
+    }
+    if (spotifyFrame) {
+      spotifyFrame.setAttribute('src', embedUrl);
+      spotifyFrame.style.display = 'block';
     }
     Storage.set('musicUrl', raw);
+    if (window.showToast) showToast('Spotify player loaded 🎵', 'success');
   }
 
   if (loadBtn) loadBtn.addEventListener('click', loadMusic);
@@ -356,7 +339,14 @@ function initMusicPlayer() {
 
   // Restore saved URL
   Storage.get('musicUrl').then(function (savedUrl) {
-    if (savedUrl && urlInput) urlInput.value = savedUrl;
+    if (savedUrl && urlInput) {
+      urlInput.value = savedUrl;
+      var embedUrl = toSpotifyEmbed(savedUrl);
+      if (embedUrl && spotifyFrame) {
+        spotifyFrame.setAttribute('src', embedUrl);
+        spotifyFrame.style.display = 'block';
+      }
+    }
   });
 }
 
@@ -887,16 +877,11 @@ function initDebugPanel() {
   var bellBtn = document.getElementById('dbgTriggerBell');
   if (bellBtn) {
     bellBtn.addEventListener('click', function () {
-      var bellOverlay = document.getElementById('bellOverlay');
-      var bellGif = document.getElementById('bellGif');
-      if (bellOverlay) {
-        if (bellGif) {
-          var src = bellGif.getAttribute('src');
-          bellGif.setAttribute('src', '');
-          bellGif.setAttribute('src', src);
-        }
-        bellOverlay.style.display = 'flex';
-        setTimeout(function () { bellOverlay.style.display = 'none'; }, 3000);
+      if (window.Timer && window.Timer.showBellOverlay) {
+        window.Timer.showBellOverlay();
+      } else {
+        var bellOverlay = document.getElementById('bellOverlay');
+        if (bellOverlay) bellOverlay.style.display = 'flex';
       }
       showToast('Bell triggered! 🔔', 'info');
     });
