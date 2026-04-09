@@ -187,6 +187,14 @@ html, body {
   animation: gemFloat 3s ease-in-out infinite;
 }
 
+.topnav-logo .logo-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(200,170,110,0.5));
+}
+
 .topnav-logo .logo-text {
   font-size: 0.88rem;
   font-weight: 700;
@@ -386,6 +394,8 @@ body.focus-mode #tab-journey { height: calc(100vh - var(--titlebar-height)); }
   overflow: hidden;
   min-height: unset;
 }
+/* Must override the display:flex above when the tab is not active */
+#tab-journey.tab-panel:not(.active) { display: none; }
 
 /* Lobby: main area left + right panel */
 .journey-lobby {

@@ -173,6 +173,8 @@ function initTabs() {
       btn.classList.add('active');
       const panel = document.getElementById('tab-' + target);
       if (panel) panel.classList.add('active');
+      const contentEl = document.getElementById('content');
+      if (contentEl) contentEl.scrollTop = 0;
 
       // Refresh data-heavy tabs when opened
       if (target === 'chronicle' && window.Chronicle) {
