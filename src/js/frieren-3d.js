@@ -226,6 +226,26 @@ var FrierenCharacter = (function () {
     // Translate so the ankle/floor sits at y = 0
     model.position.set(0, -floorOffset, 0);
 
+    // ── Normalize bone/node scales ────────────────────────────────────────
+    // VRChat GLB exports frequently leave non-unit scale on individual bone
+    // nodes (e.g. clothing / costume bones), which causes skinned meshes to
+    // render at the wrong size relative to the body.  Resetting any bone
+    // whose local scale deviates from 1 by more than 10 % fixes oversized
+    // costume pieces without affecting the uniform root scale we just set.
+    // We skip the root scene node itself (whose scale we set intentionally).
+    model.traverse(function (node) {
+      // Only act on bone-type nodes or named skeletal nodes
+      if (node === model) return;
+      var s = node.scale;
+      var devX = Math.abs(s.x - 1);
+      var devY = Math.abs(s.y - 1);
+      var devZ = Math.abs(s.z - 1);
+      if (devX > 0.10 || devY > 0.10 || devZ > 0.10) {
+        node.scale.set(1, 1, 1);
+        node.updateMatrixWorld(true);
+      }
+    });
+
     // Keep original GLB materials so all textures (face, outfit) are preserved.
     // Only disable shadows which we don't need.
     model.traverse(function (node) {
