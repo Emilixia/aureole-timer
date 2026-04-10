@@ -37,17 +37,48 @@
     // ── Init 3D character ─────────────────────────────────
     var frieren3d = null;
     if (mount && typeof FrierenCharacter !== 'undefined') {
-      frieren3d = new FrierenCharacter(mount, { width: 320, height: 340 });
+      frieren3d = new FrierenCharacter(mount, { width: 340, height: 370 });
       frieren3d.init();
+    }
+
+    var minBtn     = document.getElementById('frierenMinBtn');
+    var minimized  = localStorage.getItem('frierenMinimized') === '1';
+
+    function applyMinimized(val) {
+      minimized = val;
+      localStorage.setItem('frierenMinimized', val ? '1' : '0');
+      if (val) {
+        companion.classList.add('frieren--minimized');
+        if (minBtn) minBtn.textContent = '✦';
+        if (minBtn) minBtn.title = 'Restore companion';
+        hideSpeech();
+        if (helpPanel) helpPanel.style.display = 'none';
+        helpVisible = false;
+      } else {
+        companion.classList.remove('frieren--minimized');
+        if (minBtn) minBtn.textContent = '−';
+        if (minBtn) minBtn.title = 'Minimize companion';
+      }
+    }
+
+    // Apply stored minimized state on load
+    applyMinimized(minimized);
+
+    if (minBtn) {
+      minBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        applyMinimized(!minimized);
+      });
     }
 
     // ── Click — toggle help ───────────────────────────────
     companion.addEventListener('click', function () {
-      toggleHelp();
+      if (!minimized) toggleHelp();
     });
 
     // ── Hover — wave ──────────────────────────────────────
     companion.addEventListener('mouseenter', function () {
+      if (minimized) return;
       if (frieren3d) frieren3d.wave();
       if (!helpVisible) showSpeech(pickSpeech());
     });

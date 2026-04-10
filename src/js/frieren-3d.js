@@ -109,11 +109,11 @@ var FrierenCharacter = (function () {
     var scene  = new T.Scene();
     this._scene = scene;
 
-    // Camera framed on upper torso + head; FOV=52° gives wider portrait crop
-    // with enough horizontal room for arms/hands during wave animations.
+    // Camera framed on bust-up (breast level → top of head).
+    // Provisional position overridden after model loads in _onModelLoaded.
     var camera = new T.PerspectiveCamera(52, this.W / this.H, 0.01, 50);
-    camera.position.set(0, 1.05, 1.65);
-    camera.lookAt(0, 1.05, 0);
+    camera.position.set(0, 1.35, 0.95);
+    camera.lookAt(0, 1.35, 0);
     this._camera = camera;
 
     // ── Lights ───────────────────────────────────────────────────────────
@@ -297,14 +297,14 @@ var FrierenCharacter = (function () {
       self2._baseRot[b.name] = { x: b.rotation.x, y: b.rotation.y, z: b.rotation.z };
     });
 
-    // Re-frame camera for a lower crop showing from knee level up.
+    // Re-frame camera for a tight bust-up portrait (breast level → head top).
     // Feet at y=0, head mesh top at ~TARGET_HEIGHT*1.12.
-    // Show from ~28 % of height (knee area) to just above head — character
-    // appears "lower" and more compact in the widget.
+    // waistY set to ~68% of height = breast/chest area so only upper torso +
+    // head is visible, making the character appear larger in the widget.
     var headTop  = TARGET_HEIGHT * 1.12;           // ≈ 1.68
-    var waistY   = TARGET_HEIGHT * 0.28;           // ≈ 0.42  (knee area)
-    var lookAtY  = (headTop + waistY) / 2;         // ≈ 1.05  (chest area)
-    var viewHalf = (headTop - waistY) / 2 * 1.30;  // half-extent + 30 % margin
+    var waistY   = TARGET_HEIGHT * 0.68;           // ≈ 1.02  (breast area)
+    var lookAtY  = (headTop + waistY) / 2;         // ≈ 1.35  (neck/shoulder)
+    var viewHalf = (headTop - waistY) / 2 * 1.22;  // half-extent + 22 % margin
     // FOV=52°  →  half-angle 26°  →  tan(26°)≈0.4877
     var camZ = viewHalf / Math.tan(26 * Math.PI / 180);
     this._camera.fov = 52;
