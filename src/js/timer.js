@@ -631,14 +631,73 @@ const Timer = (function () {
   // Pomodoro
   // ──────────────────────────────────────────────────────────
 
-  function updatePomodoroDisplay() {
-    const displayEl = document.getElementById('pomodoroDisplay');
-    const statusEl = document.getElementById('pomodoroStatus');
-    const sessionsEl = document.getElementById('pomSessions');
+  // Total seconds for current phase (used for ring progress)
+  function pomodoroTotalSecs() {
+    if (pomodoro.currentPhase === 'work') return pomodoro.workDuration * 60;
+    const isLongBreak = pomodoro.sessions % 4 === 0 && pomodoro.sessions > 0;
+    return isLongBreak ? pomodoro.breakDuration * 3 * 60 : pomodoro.breakDuration * 60;
+  }
 
+  function updatePomodoroDisplay() {
+    // Floating panel elements
+    const displayEl  = document.getElementById('pomodoroDisplay');
+    const statusEl   = document.getElementById('pomodoroStatus');
+    const sessionsEl = document.getElementById('pomSessions');
     if (displayEl) displayEl.textContent = formatTimeShort(pomodoro.remaining);
     if (statusEl) statusEl.textContent = pomodoro.currentPhase === 'work' ? 'Work Session' : 'Break Time';
     if (sessionsEl) sessionsEl.textContent = pomodoro.sessions;
+
+    // Dedicated view elements
+    const viewDisplay  = document.getElementById('pomViewDisplay');
+    const viewStatus   = document.getElementById('pomViewStatus');
+    const viewSubLabel = document.getElementById('pomViewSubLabel');
+    const viewSessions = document.getElementById('pomViewSessions');
+    const ringFill     = document.getElementById('pomViewRingFill');
+    const dots         = document.querySelectorAll('.pom-phase-dot');
+
+    if (viewDisplay) viewDisplay.textContent = formatTimeShort(pomodoro.remaining);
+    const isWork = pomodoro.currentPhase === 'work';
+    if (viewStatus) viewStatus.textContent = isWork ? '⚔ Work Session' : '☕ Break Time';
+    if (viewSubLabel) viewSubLabel.textContent = isWork ? 'Focus' : 'Rest';
+
+    // Ring: show remaining fraction (depleting)
+    if (ringFill) {
+      const total = pomodoroTotalSecs();
+      const circumference = 2 * Math.PI * 95; // r=95
+      const fraction = total > 0 ? Math.max(0, pomodoro.remaining / total) : 1;
+      ringFill.style.strokeDasharray = circumference;
+      ringFill.style.strokeDashoffset = circumference * (1 - fraction);
+      if (isWork) {
+        ringFill.classList.remove('break-phase');
+      } else {
+        ringFill.classList.add('break-phase');
+      }
+    }
+
+    if (viewSessions) viewSessions.textContent = pomodoro.sessions;
+
+    // Phase dots: completed sessions up to 4
+    if (dots.length) {
+      dots.forEach(function (dot, i) {
+        dot.classList.remove('active', 'done');
+        const sessionInCycle = pomodoro.sessions % 4;
+        if (i < sessionInCycle) {
+          dot.classList.add('done');
+        } else if (i === sessionInCycle && isWork) {
+          dot.classList.add('active');
+        }
+      });
+    }
+
+    // Update view start button text
+    const viewStartBtn = document.getElementById('pomViewStart');
+    if (viewStartBtn) {
+      viewStartBtn.textContent = pomodoro.isRunning ? '⏸ Pause' : '▶ Start';
+    }
+    const floatStartBtn = document.getElementById('pomStart');
+    if (floatStartBtn) {
+      floatStartBtn.textContent = pomodoro.isRunning ? '⏸ Pause' : '▶ Start';
+    }
   }
 
   function startPomodoro() {
@@ -661,13 +720,14 @@ const Timer = (function () {
     pomodoro.isRunning = false;
     pomodoro.isPaused = false;
     pomodoro.currentPhase = 'work';
+    pomodoro.sessions = 0;
 
-    const workInput = document.getElementById('pomWork');
-    const breakInput = document.getElementById('pomBreak');
-    pomodoro.workDuration = parseInt((workInput && workInput.value) || 25, 10);
+    // Read duration from whichever inputs are visible (view or floating panel)
+    const workInput  = document.getElementById('pomViewWork')  || document.getElementById('pomWork');
+    const breakInput = document.getElementById('pomViewBreak') || document.getElementById('pomBreak');
+    pomodoro.workDuration  = parseInt((workInput  && workInput.value)  || 25, 10);
     pomodoro.breakDuration = parseInt((breakInput && breakInput.value) || 5, 10);
     pomodoro.remaining = pomodoro.workDuration * 60;
-    pomodoro.sessions = 0;
     updatePomodoroDisplay();
   }
 
@@ -698,7 +758,7 @@ const Timer = (function () {
       if (window.showToast) window.showToast('⚡ Break over! Back to work!', 'info');
       if (window.aureole) window.aureole.showNotification('Break Over!', 'Time to focus again!');
       pomodoro.currentPhase = 'work';
-      const workInput = document.getElementById('pomWork');
+      const workInput = document.getElementById('pomViewWork') || document.getElementById('pomWork');
       pomodoro.workDuration = parseInt((workInput && workInput.value) || 25, 10);
       pomodoro.remaining = pomodoro.workDuration * 60;
     }
@@ -709,11 +769,12 @@ const Timer = (function () {
   }
 
   function initPomodoroControls() {
-    const pomodoroBtn = document.getElementById('pomodoroBtn');
+    // ── Floating panel wiring ─────────────────────────────
+    const pomodoroBtn     = document.getElementById('pomodoroBtn');
     const closePomodoroBtn = document.getElementById('closePomodoroBtn');
-    const pomPanel = document.getElementById('pomodoroPanel');
-    const pomStartBtn = document.getElementById('pomStart');
-    const pomResetBtn = document.getElementById('pomReset');
+    const pomPanel        = document.getElementById('pomodoroPanel');
+    const pomStartBtn     = document.getElementById('pomStart');
+    const pomResetBtn     = document.getElementById('pomReset');
 
     if (pomodoroBtn && pomPanel) {
       pomodoroBtn.addEventListener('click', function () {
@@ -731,26 +792,23 @@ const Timer = (function () {
           clearInterval(pomodoro.intervalId);
           pomodoro.intervalId = null;
           pomodoro.isRunning = false;
-          pomStartBtn.textContent = '▶ Start';
         } else {
           startPomodoro();
-          pomStartBtn.textContent = '⏸ Pause';
         }
+        updatePomodoroDisplay();
       });
     }
     if (pomResetBtn) {
-      pomResetBtn.addEventListener('click', function () {
-        resetPomodoro();
-        const pomStartBtn2 = document.getElementById('pomStart');
-        if (pomStartBtn2) pomStartBtn2.textContent = '▶ Start';
-      });
+      pomResetBtn.addEventListener('click', function () { resetPomodoro(); });
     }
 
-    const workInput = document.getElementById('pomWork');
+    const workInput  = document.getElementById('pomWork');
     const breakInput = document.getElementById('pomBreak');
     if (workInput) {
       workInput.addEventListener('change', function () {
         pomodoro.workDuration = parseInt(this.value, 10);
+        const vw = document.getElementById('pomViewWork');
+        if (vw) vw.value = this.value;
         if (!pomodoro.isRunning && pomodoro.currentPhase === 'work') {
           pomodoro.remaining = pomodoro.workDuration * 60;
           updatePomodoroDisplay();
@@ -760,6 +818,60 @@ const Timer = (function () {
     if (breakInput) {
       breakInput.addEventListener('change', function () {
         pomodoro.breakDuration = parseInt(this.value, 10);
+        const vb = document.getElementById('pomViewBreak');
+        if (vb) vb.value = this.value;
+        if (!pomodoro.isRunning && pomodoro.currentPhase === 'break') {
+          pomodoro.remaining = pomodoro.breakDuration * 60;
+          updatePomodoroDisplay();
+        }
+      });
+    }
+
+    // ── Dedicated view wiring ─────────────────────────────
+    const pomViewStart = document.getElementById('pomViewStart');
+    const pomViewReset = document.getElementById('pomViewReset');
+    const pomViewSkip  = document.getElementById('pomViewSkip');
+    const pomViewWork  = document.getElementById('pomViewWork');
+    const pomViewBreak = document.getElementById('pomViewBreak');
+
+    if (pomViewStart) {
+      pomViewStart.addEventListener('click', function () {
+        if (pomodoro.isRunning) {
+          clearInterval(pomodoro.intervalId);
+          pomodoro.intervalId = null;
+          pomodoro.isRunning = false;
+        } else {
+          startPomodoro();
+        }
+        updatePomodoroDisplay();
+      });
+    }
+    if (pomViewReset) {
+      pomViewReset.addEventListener('click', function () { resetPomodoro(); });
+    }
+    if (pomViewSkip) {
+      pomViewSkip.addEventListener('click', function () {
+        clearInterval(pomodoro.intervalId);
+        pomodoro.intervalId = null;
+        pomodoro.isRunning = false;
+        pomodoro.remaining = 0;
+        phaseComplete();
+      });
+    }
+    if (pomViewWork) {
+      pomViewWork.addEventListener('change', function () {
+        pomodoro.workDuration = parseInt(this.value, 10);
+        if (workInput) workInput.value = this.value;
+        if (!pomodoro.isRunning && pomodoro.currentPhase === 'work') {
+          pomodoro.remaining = pomodoro.workDuration * 60;
+          updatePomodoroDisplay();
+        }
+      });
+    }
+    if (pomViewBreak) {
+      pomViewBreak.addEventListener('change', function () {
+        pomodoro.breakDuration = parseInt(this.value, 10);
+        if (breakInput) breakInput.value = this.value;
         if (!pomodoro.isRunning && pomodoro.currentPhase === 'break') {
           pomodoro.remaining = pomodoro.breakDuration * 60;
           updatePomodoroDisplay();
@@ -937,7 +1049,8 @@ const Timer = (function () {
     applyManualTimes: applyManualTimes,
     applyProgressStyle: applyProgressStyle,
     getState: getState,
-    showBellOverlay: showBellOverlay
+    showBellOverlay: showBellOverlay,
+    resetPomodoro: resetPomodoro
   };
 })();
 

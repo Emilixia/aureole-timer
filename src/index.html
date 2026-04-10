@@ -400,6 +400,71 @@
 
         </div><!-- /#journeyTimerView -->
 
+        <!-- ══════════════════════════════════════════════════
+             JOURNEY: DEDICATED POMODORO SCREEN
+             ══════════════════════════════════════════════════ -->
+        <div id="journeyPomodoroView" class="journey-pomodoro-view" style="display:none;">
+
+          <!-- Back bar -->
+          <div class="journey-back-bar">
+            <button id="pomBackBtn" class="btn-ghost">← CHANGE MODE</button>
+            <span class="journey-active-mode">🍅 Pomodoro Timer</span>
+          </div>
+
+          <div class="pom-view-body">
+
+            <!-- Phase indicator dots -->
+            <div class="pom-phase-dots" id="pomViewDots">
+              <span class="pom-phase-dot active" data-idx="0"></span>
+              <span class="pom-phase-dot" data-idx="1"></span>
+              <span class="pom-phase-dot" data-idx="2"></span>
+              <span class="pom-phase-dot" data-idx="3"></span>
+            </div>
+
+            <!-- Session phase label -->
+            <div class="pom-view-phase" id="pomViewStatus">Work Session</div>
+
+            <!-- Ring + big timer -->
+            <div class="pom-ring-wrap">
+              <svg class="pom-ring-svg" viewBox="0 0 220 220">
+                <circle class="pom-ring-bg" cx="110" cy="110" r="95"/>
+                <circle class="pom-ring-fill" id="pomViewRingFill" cx="110" cy="110" r="95"/>
+              </svg>
+              <div class="pom-ring-inner">
+                <div class="pom-view-display" id="pomViewDisplay">25:00</div>
+                <div class="pom-view-sublabel" id="pomViewSubLabel">Focus</div>
+              </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="pom-view-controls">
+              <button id="pomViewReset" class="btn-secondary">↺ Reset</button>
+              <button id="pomViewStart" class="btn-begin-session pom-view-start-btn">▶ Start</button>
+              <button id="pomViewSkip" class="btn-ghost">⏭ Skip</button>
+            </div>
+
+            <!-- Config row -->
+            <div class="pom-view-config">
+              <label>Work
+                <input type="number" id="pomViewWork" value="25" min="1" max="90">
+                <span>min</span>
+              </label>
+              <div class="pom-view-config-sep">·</div>
+              <label>Break
+                <input type="number" id="pomViewBreak" value="5" min="1" max="30">
+                <span>min</span>
+              </label>
+              <div class="pom-view-config-sep">·</div>
+              <div class="pom-view-sessions-wrap">
+                <span>Sessions:</span>
+                <strong id="pomViewSessions">0</strong>
+                <span>/ 4</span>
+              </div>
+            </div>
+
+          </div><!-- /.pom-view-body -->
+        </div><!-- /#journeyPomodoroView -->
+
       </div><!-- /#tab-journey -->
 
 
@@ -1284,6 +1349,117 @@
   <script src="js/reader.js"></script>
   <script src="js/animations.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/frieren-companion.js"></script>
+
+  <!-- ── Frieren Companion Character ─────────────────────────── -->
+  <div id="frierenCompanion" class="frieren-companion" title="Ask Frieren for help!">
+    <div class="frieren-3d-card">
+      <div class="frieren-3d-inner">
+        <img class="frieren-sprite" src="../assets/frieren-default.gif" alt="Frieren" draggable="false">
+        <div class="frieren-sparkle"></div>
+      </div>
+      <div class="frieren-speech" id="frierenSpeech" style="display:none;">
+        <span id="frierenSpeechText">Hello, adventurer!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Frieren Help / FAQ Panel ────────────────────────────── -->
+  <div id="frierenHelpPanel" class="frieren-help-panel" style="display:none;">
+    <div class="frieren-help-header">
+      <img src="../assets/frieren-default.gif" alt="Frieren" class="frieren-help-avatar">
+      <div>
+        <div class="frieren-help-title">Frieren's Guide</div>
+        <div class="frieren-help-sub">Your Chronomark companion</div>
+      </div>
+      <button id="frierenHelpClose" class="frieren-help-close">✕</button>
+    </div>
+
+    <div class="frieren-help-tabs">
+      <button class="frieren-help-tab active" data-ftab="faq">❓ FAQ</button>
+      <button class="frieren-help-tab" data-ftab="tips">💡 Tips</button>
+      <button class="frieren-help-tab" data-ftab="about">⚜ About</button>
+    </div>
+
+    <div class="frieren-help-body">
+
+      <!-- FAQ -->
+      <div class="frieren-help-section active" id="ftab-faq">
+        <div class="faq-item">
+          <div class="faq-q">How do I set a timer?</div>
+          <div class="faq-a">Use the <strong>Start / End Time</strong> inputs and press <em>Apply</em>, or set a duration directly with <em>Set Duration</em>. Use the <strong>⏱ Now</strong> button to auto-fill current time as start — any time already elapsed will be subtracted.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Why does the bar deplete?</div>
+          <div class="faq-a">The progress bar shows <strong>remaining time</strong> like a mana bar — it starts full and drains to zero as your session runs out. This keeps you aware of how much time you have left.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">How does Pomodoro work?</div>
+          <div class="faq-a">Select <strong>Pomodoro Timer</strong> on the mode screen. Work 25 min → Break 5 min, repeat. Every 4 cycles you get a long break. You can customise durations in the config row.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">How do I use Focus Mode?</div>
+          <div class="faq-a">Click <strong>🧠 Focus Mode</strong> to hide all distractions and show only the timer. Press it again or press <kbd>Esc</kbd> to exit.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Where are my sessions saved?</div>
+          <div class="faq-a">All sessions are saved automatically to the <strong>Chronicle</strong> tab where you can view your history, streaks and stats.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Can I change the background?</div>
+          <div class="faq-a">Yes! In the timer screen right panel, click <em>Upload Background</em> to use your own image.</div>
+        </div>
+      </div>
+
+      <!-- Tips -->
+      <div class="frieren-help-section" id="ftab-tips">
+        <div class="faq-item">
+          <div class="faq-q">🌟 Time-anchored sessions</div>
+          <div class="faq-a">Always set a start AND end time at the beginning of your day. If you open the app late, hit <strong>⏱ Now</strong> to auto-offset — the timer will know how far in you already are.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">🍅 Pomodoro for focus sprints</div>
+          <div class="faq-a">Try 25/5 for coding or writing, 50/10 for deep study. After 4 sessions take a longer 15–30 min break to recharge.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">📓 Journal as you go</div>
+          <div class="faq-a">Use the <strong>Quick Notes</strong> field before stopping a session — your notes are saved with the session in Chronicle.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">🔔 Enable break reminders</div>
+          <div class="faq-a">In Settings → Timer, enable <em>Break Reminders</em> so you get a nudge every 30–60 minutes without watching the clock.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">🧩 Drag me around!</div>
+          <div class="faq-a">You can drag me to any corner of the screen. I'll stay out of your way while you work.</div>
+        </div>
+      </div>
+
+      <!-- About -->
+      <div class="frieren-help-section" id="ftab-about">
+        <div style="text-align:center; padding: 12px 0 8px;">
+          <div style="font-size:1.5rem; font-weight:700; color:var(--accent-hover); letter-spacing:2px;">⚜ Aureole Timer ⚜</div>
+          <div style="color:var(--text-muted); font-size:0.8rem; margin-top:4px;">Frieren Chronomark</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-a">A focus and productivity timer inspired by <em>Frieren: Beyond Journey's End</em>. Track deep work, study sessions and Pomodoro cycles with a beautiful UI built for neurodiverse adventurers.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Features</div>
+          <div class="faq-a">
+            ✔ Start/End time with automatic elapsed-time offset<br>
+            ✔ Depleting mana-style progress bar<br>
+            ✔ Dedicated Pomodoro screen with ring timer<br>
+            ✔ Journal, Grimoire, Chronicle &amp; Reader tabs<br>
+            ✔ Achievements &amp; Profile system<br>
+            ✔ Customisable backgrounds &amp; walker sprite<br>
+            ✔ Break reminders &amp; Focus Mode
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.frieren-help-body -->
+  </div><!-- /#frierenHelpPanel -->
 
 </body>
 </html>

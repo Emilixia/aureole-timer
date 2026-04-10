@@ -709,50 +709,53 @@ function jmsConfirm() {
   var mode = jmsState.mode;
   var subMode = jmsState.subMode;
 
-  var modeSelect = document.getElementById('journeyModeSelect');
-  var timerView = document.getElementById('journeyTimerView');
+  var modeSelect    = document.getElementById('journeyModeSelect');
+  var timerView     = document.getElementById('journeyTimerView');
+  var pomodoroView  = document.getElementById('journeyPomodoroView');
+
+  // Hide all views first
   if (modeSelect) modeSelect.style.display = 'none';
-  if (timerView) timerView.style.display = 'flex';
-
-  var modeNames = {
-    working:  '⚔️ Work Session',
-    studying: '📖 Study Session',
-    custom:   '✨ Custom Session',
-    pomodoro: '🍅 Pomodoro'
-  };
-  var labelEl = document.getElementById('journeyActiveModeLabel');
-  if (labelEl) labelEl.textContent = modeNames[mode] || mode;
-
-  var typeSelect = document.getElementById('timerTypeSelect');
+  if (timerView)    timerView.style.display = 'none';
+  if (pomodoroView) pomodoroView.style.display = 'none';
 
   if (mode === 'pomodoro') {
-    if (typeSelect) { typeSelect.value = 'working'; typeSelect.dispatchEvent(new Event('change')); }
-    var pomWork = document.getElementById('pomWork');
-    var pomBreak = document.getElementById('pomBreak');
-    if (subMode === 'pom-short') {
-      if (pomWork) pomWork.value = 15;
-      if (pomBreak) pomBreak.value = 3;
-    } else if (subMode === 'pom-long') {
-      if (pomWork) pomWork.value = 50;
-      if (pomBreak) pomBreak.value = 10;
-    } else {
-      if (pomWork) pomWork.value = 25;
-      if (pomBreak) pomBreak.value = 5;
-    }
-    if (pomWork) pomWork.dispatchEvent(new Event('change'));
+    // ── Show dedicated Pomodoro screen ────────────────────
+    if (pomodoroView) pomodoroView.style.display = 'flex';
+
+    // Set durations from sub-mode
+    var pomWork      = document.getElementById('pomViewWork');
+    var pomBreak     = document.getElementById('pomViewBreak');
+    var pomWorkFloat = document.getElementById('pomWork');
+    var pomBreakFloat = document.getElementById('pomBreak');
+    var workVal = 25, breakVal = 5;
+    if (subMode === 'pom-short') { workVal = 15; breakVal = 3; }
+    else if (subMode === 'pom-long') { workVal = 50; breakVal = 10; }
+    if (pomWork)      pomWork.value  = workVal;
+    if (pomBreak)     pomBreak.value = breakVal;
+    if (pomWorkFloat)  pomWorkFloat.value  = workVal;
+    if (pomBreakFloat) pomBreakFloat.value = breakVal;
+    if (pomWork)  pomWork.dispatchEvent(new Event('change'));
     if (pomBreak) pomBreak.dispatchEvent(new Event('change'));
-    var pomPanel = document.getElementById('pomodoroPanel');
-    if (pomPanel) pomPanel.style.display = 'block';
+    // Reset to fresh state
+    if (window.Timer) window.Timer.resetPomodoro();
   } else {
+    // ── Show regular timer view ───────────────────────────
+    if (timerView) timerView.style.display = 'flex';
+
+    var modeNames = { working: '⚔️ Work Session', studying: '📖 Study Session', custom: '✨ Custom Session' };
+    var labelEl = document.getElementById('journeyActiveModeLabel');
+    if (labelEl) labelEl.textContent = modeNames[mode] || mode;
+
+    var typeSelect = document.getElementById('timerTypeSelect');
     if (typeSelect) { typeSelect.value = mode; typeSelect.dispatchEvent(new Event('change')); }
     var durationMins = typeof subMode === 'number' ? subMode : parseInt(subMode, 10);
     if (!isNaN(durationMins) && durationMins > 0) {
       var hours = Math.floor(durationMins / 60);
       var mins = durationMins % 60;
       var hoursInput = document.getElementById('durationHours');
-      var minsInput = document.getElementById('durationMinutes');
+      var minsInput  = document.getElementById('durationMinutes');
       if (hoursInput) hoursInput.value = hours;
-      if (minsInput) minsInput.value = mins;
+      if (minsInput)  minsInput.value  = mins;
       var setBtn = document.getElementById('setDurationBtn');
       if (setBtn) setBtn.click();
     }
@@ -772,15 +775,29 @@ function initModeSelection() {
   var confirmBtn = document.getElementById('jmsConfirmBtn');
   if (confirmBtn) confirmBtn.addEventListener('click', jmsConfirm);
 
+  // Regular timer back button
   var backBtn = document.getElementById('journeyBackBtn');
   if (backBtn) {
     backBtn.addEventListener('click', function () {
-      var modeSelect = document.getElementById('journeyModeSelect');
-      var timerView = document.getElementById('journeyTimerView');
-      var pomPanel = document.getElementById('pomodoroPanel');
-      if (modeSelect) modeSelect.style.display = 'flex';
-      if (timerView) timerView.style.display = 'none';
-      if (pomPanel) pomPanel.style.display = 'none';
+      var modeSelect   = document.getElementById('journeyModeSelect');
+      var timerView    = document.getElementById('journeyTimerView');
+      var pomodoroView = document.getElementById('journeyPomodoroView');
+      var pomPanel     = document.getElementById('pomodoroPanel');
+      if (modeSelect)   modeSelect.style.display = 'flex';
+      if (timerView)    timerView.style.display   = 'none';
+      if (pomodoroView) pomodoroView.style.display = 'none';
+      if (pomPanel)     pomPanel.style.display     = 'none';
+    });
+  }
+
+  // Pomodoro view back button
+  var pomBackBtn = document.getElementById('pomBackBtn');
+  if (pomBackBtn) {
+    pomBackBtn.addEventListener('click', function () {
+      var modeSelect   = document.getElementById('journeyModeSelect');
+      var pomodoroView = document.getElementById('journeyPomodoroView');
+      if (modeSelect)   modeSelect.style.display   = 'flex';
+      if (pomodoroView) pomodoroView.style.display  = 'none';
     });
   }
 
