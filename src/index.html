@@ -885,6 +885,11 @@
                 <span id="fontSizeVal">14px</span>
               </div>
               <div class="setting-group">
+                <label>UI Scale</label>
+                <input type="range" id="uiScale" min="0.7" max="1.4" step="0.05" value="1">
+                <span id="uiScaleVal">100%</span>
+              </div>
+              <div class="setting-group">
                 <label>Particle Effects</label>
                 <input type="checkbox" id="particleEffects" checked>
               </div>
@@ -1141,8 +1146,6 @@
               </div>
             </div>
 
-          </div><!-- /.settings-content -->
-
             <!-- DEBUG PANEL (hidden until unlocked) -->
             <div class="settings-panel" id="settings-debug">
               <h3>🐛 Debug / Cheat Mode</h3>
@@ -1205,6 +1208,8 @@
                 <button id="dbgClearAchievements" class="btn-danger btn-sm">🗑 Clear Achievements</button>
               </div>
             </div><!-- /#settings-debug -->
+
+          </div><!-- /.settings-content -->
         </div><!-- /.settings-layout -->
       </div><!-- /#tab-settings -->
 
@@ -1218,7 +1223,10 @@
           <span class="games-currency-icon">💎</span>
           <span class="games-currency-label">Arcane Shards:</span>
           <span class="games-currency-val" id="gamesCurrencyVal">0</span>
-          <span class="games-currency-hint">(earn 1 shard per focus minute)</span>
+          <span class="games-currency-sep">·</span>
+          <span class="games-currency-label">All-time earned:</span>
+          <span class="games-currency-val" id="gamesTotalEarned">0</span>
+          <span class="games-currency-hint">(1 shard / focus minute)</span>
         </div>
 
         <!-- Sub-tabs -->

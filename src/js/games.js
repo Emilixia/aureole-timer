@@ -4,20 +4,26 @@ var Games = (function () {
 
   // ── Currency ──────────────────────────────────────────────────────────────
   var _currency = 0;
+  var _totalEarned = 0;
 
   async function loadCurrency() {
     _currency = await Storage.get('gamesCurrency', 0);
+    _totalEarned = await Storage.get('gamesTotalEarned', 0);
     renderCurrency();
   }
   async function saveCurrency() {
     await Storage.set('gamesCurrency', _currency);
+    await Storage.set('gamesTotalEarned', _totalEarned);
   }
   function renderCurrency() {
     var el = document.getElementById('gamesCurrencyVal');
-    if (el) el.textContent = _currency;
+    if (el) el.textContent = _currency.toLocaleString();
+    var tot = document.getElementById('gamesTotalEarned');
+    if (tot) tot.textContent = _totalEarned.toLocaleString();
   }
   function addCurrency(amount) {
     _currency = Math.max(0, _currency + amount);
+    if (amount > 0) _totalEarned += amount;
     saveCurrency();
     renderCurrency();
   }
@@ -272,25 +278,41 @@ var Games = (function () {
     var fillEl = document.getElementById('bpXpFill');
     var tierEl = document.getElementById('bpTierVal');
     var trackEl = document.getElementById('bpTrack');
-    if (xpEl)   xpEl.textContent  = _bpXP;
-    if (nextEl) nextEl.textContent = BP_XP_PER_TIER;
+    if (xpEl)   xpEl.textContent  = _bpXP.toLocaleString();
+    if (nextEl) nextEl.textContent = BP_XP_PER_TIER.toLocaleString();
     if (fillEl) fillEl.style.width = Math.min(100, (_bpXP / BP_XP_PER_TIER) * 100) + '%';
     if (tierEl) tierEl.textContent = _bpTier;
     if (!trackEl) return;
     trackEl.innerHTML = '';
-    for (var i = 1; i <= BP_TIERS; i++) {
-      var reward = BP_REWARDS[i];
-      var unlocked = i <= _bpTier;
-      var claimed  = _bpClaimed.indexOf(i) !== -1;
-      var div = document.createElement('div');
-      div.className = 'bp-tier' + (unlocked ? ' unlocked' : '') + (claimed ? ' claimed' : '') + (i === _bpTier ? ' current' : '');
-      div.innerHTML =
-        '<div class="bp-tier-num">T' + i + '</div>' +
-        '<div class="bp-tier-reward">' + reward.emoji + '</div>' +
-        '<div class="bp-tier-label">' + (reward.shards ? '+' + reward.shards + '💎' : reward.label) + '</div>' +
-        (unlocked && !claimed ? '<button class="bp-claim-btn" data-tier="' + i + '">Claim</button>' : '');
-      trackEl.appendChild(div);
+
+    // Render tiers in groups of 10 with chapter labels
+    for (var chapter = 0; chapter < 5; chapter++) {
+      var chapterStart = chapter * 10 + 1;
+      var chapterEnd   = chapter * 10 + 10;
+      var chapterLabel = ['I — Whispers of Mana', 'II — Arcane Trials', 'III — Celestial Rift', 'IV — Void\'s Edge', 'V — Eternal Odyssey'][chapter];
+
+      var chDiv = document.createElement('div');
+      chDiv.className = 'bp-chapter';
+      chDiv.innerHTML = '<div class="bp-chapter-label">Chapter ' + chapterLabel + '</div><div class="bp-chapter-row" id="bp-chapter-' + chapter + '"></div>';
+      trackEl.appendChild(chDiv);
+      var row = chDiv.querySelector('.bp-chapter-row');
+
+      for (var i = chapterStart; i <= chapterEnd; i++) {
+        var reward = BP_REWARDS[i];
+        var unlocked = i <= _bpTier;
+        var claimed  = _bpClaimed.indexOf(i) !== -1;
+        var isCurrent = i === _bpTier;
+        var div = document.createElement('div');
+        div.className = 'bp-tier' + (unlocked ? ' unlocked' : '') + (claimed ? ' claimed' : '') + (isCurrent ? ' current' : '');
+        div.innerHTML =
+          '<div class="bp-tier-num">T' + i + '</div>' +
+          '<div class="bp-tier-reward">' + reward.emoji + '</div>' +
+          '<div class="bp-tier-label">+' + reward.shards + '💎</div>' +
+          (unlocked && !claimed ? '<button class="bp-claim-btn" data-tier="' + i + '">Claim</button>' : '');
+        row.appendChild(div);
+      }
     }
+
     // Wire claim buttons
     trackEl.querySelectorAll('.bp-claim-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {

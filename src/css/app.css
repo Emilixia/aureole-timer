@@ -4327,7 +4327,7 @@ body.no-ui-animations .ripple { display: none !important; }
   display: flex;
   flex-direction: column;
   padding: 0 !important;
-  height: 100%;
+  height: calc(100vh - var(--titlebar-height) - var(--topnav-height));
   overflow: hidden;
 }
 .games-panel.active { display: flex !important; }
@@ -4351,6 +4351,8 @@ body.no-ui-animations .ripple { display: none !important; }
   font-variant-numeric: tabular-nums;
 }
 .games-currency-hint { font-size: 0.72rem; color: var(--text-muted); margin-left: 4px; }
+
+.games-currency-sep { color: var(--border); margin: 0 4px; }
 
 /* Sub-tabs */
 .games-tabs {
@@ -4712,4 +4714,41 @@ body.no-ui-animations .ripple { display: none !important; }
   box-shadow: none;
   transform: scale(0.88);
   cursor: default;
+}
+
+/* ── Battle Pass chapter groups ──────────────────────────────────── */
+.bp-track { display: flex; flex-direction: column; gap: 20px; }
+
+.bp-chapter { display: flex; flex-direction: column; gap: 8px; }
+.bp-chapter-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  padding: 0 2px;
+  border-left: 3px solid var(--gold);
+  padding-left: 8px;
+}
+.bp-chapter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ── Debug panel add-shards button ───────────────────────────────── */
+.setting-group input[type="number"] {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  padding: 6px 10px;
+  font-size: 0.85rem;
+}
+.setting-group select {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  padding: 6px 10px;
+  font-size: 0.85rem;
 }

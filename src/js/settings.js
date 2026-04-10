@@ -27,7 +27,7 @@ const DEFAULT_SETTINGS = {
   breakReminders: true,
   dailyReminder: true,
   dailyReminderTime: '09:00',
-  // Focus/ADHD
+  uiScale: 1.0,
   autoPomodoro: false,
   focusHidesSidebar: true,
   hyperfocusTimer: 120,
@@ -64,6 +64,11 @@ const Settings = (function () {
     root.style.setProperty('--sidebar-width', (current.sidebarWidth || 220) + 'px');
 
     document.body.style.fontSize = (current.fontSize || 14) + 'px';
+
+    // UI zoom/scale
+    const scale = current.uiScale || 1.0;
+    document.documentElement.style.zoom = scale;
+
     // UI animations master toggle
     document.body.classList.toggle('no-ui-animations', current.uiAnimations === false);
 
@@ -132,6 +137,7 @@ const Settings = (function () {
       'secondaryColor': current.secondaryColor,
       'bgColor': current.bgColor,
       'fontSize': current.fontSize,
+      'uiScale': current.uiScale,
       'particleEffects': current.particleEffects,
       'borderAnimations': current.borderAnimations,
       'sidebarWidth': current.sidebarWidth,
@@ -169,6 +175,8 @@ const Settings = (function () {
 
     const fontSizeVal = document.getElementById('fontSizeVal');
     if (fontSizeVal) fontSizeVal.textContent = (current.fontSize || 14) + 'px';
+    const uiScaleVal = document.getElementById('uiScaleVal');
+    if (uiScaleVal) uiScaleVal.textContent = Math.round((current.uiScale || 1) * 100) + '%';
     const sidebarWidthVal = document.getElementById('sidebarWidthVal');
     if (sidebarWidthVal) sidebarWidthVal.textContent = (current.sidebarWidth || 220) + 'px';
 
@@ -179,7 +187,7 @@ const Settings = (function () {
     const fields = [
       'accentColor', 'secondaryColor', 'bgColor',
       'defaultWorkDuration', 'defaultStudyDuration', 'breakReminderInterval',
-      'hyperfocusTimer', 'dailyReminderTime', 'sidebarWidth', 'fontSize',
+      'hyperfocusTimer', 'dailyReminderTime', 'sidebarWidth', 'fontSize', 'uiScale',
       'progressBarStyle', 'bgEffect', 'tabTransition'
     ];
     const checkboxes = [
@@ -236,6 +244,15 @@ const Settings = (function () {
         document.body.style.fontSize = this.value + 'px';
         const val = document.getElementById('fontSizeVal');
         if (val) val.textContent = this.value + 'px';
+      });
+    }
+    const uiScaleEl = document.getElementById('uiScale');
+    if (uiScaleEl) {
+      uiScaleEl.addEventListener('input', function () {
+        current.uiScale = Number(this.value);
+        document.documentElement.style.zoom = current.uiScale;
+        const val = document.getElementById('uiScaleVal');
+        if (val) val.textContent = Math.round(current.uiScale * 100) + '%';
       });
     }
     if (sidebarWidthEl) {
