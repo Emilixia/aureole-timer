@@ -53,7 +53,6 @@
       <button class="nav-tab" data-tab="grimoire">GRIMOIRE</button>
       <button class="nav-tab" data-tab="chronicle">CHRONICLE</button>
       <button class="nav-tab" data-tab="reader">READER</button>
-      <button class="nav-tab" data-tab="games">🎮 GAMES</button>
       <button class="nav-tab" data-tab="settings">SETTINGS</button>
     </div>
 
@@ -215,6 +214,7 @@
                 <!-- Manual time inputs -->
                 <div class="time-inputs">
                   <label>Start <input type="time" id="startTimeInput"></label>
+                  <button id="setNowBtn" class="btn-secondary btn-sm" title="Set start to current time">⏱ Now</button>
                   <label>End <input type="time" id="endTimeInput"></label>
                   <button id="applyTimesBtn" class="btn-primary btn-sm">Apply</button>
                 </div>
@@ -1213,137 +1213,7 @@
         </div><!-- /.settings-layout -->
       </div><!-- /#tab-settings -->
 
-      <!-- ═══════════════════════════════════════════════════
-           GAMES TAB
-           ═══════════════════════════════════════════════════ -->
-      <div id="tab-games" class="tab-panel games-panel">
 
-        <!-- Currency bar -->
-        <div class="games-currency-bar">
-          <span class="games-currency-icon">💎</span>
-          <span class="games-currency-label">Arcane Shards:</span>
-          <span class="games-currency-val" id="gamesCurrencyVal">0</span>
-          <span class="games-currency-sep">·</span>
-          <span class="games-currency-label">All-time earned:</span>
-          <span class="games-currency-val" id="gamesTotalEarned">0</span>
-          <span class="games-currency-hint">(1 shard / focus minute)</span>
-        </div>
-
-        <!-- Sub-tabs -->
-        <div class="games-tabs">
-          <button class="games-tab active" data-gtab="gacha">⚗️ Arcane Cases</button>
-          <button class="games-tab" data-gtab="battlepass">🏆 Battle Pass</button>
-          <button class="games-tab" data-gtab="fidget">🎯 Fidget Zone</button>
-        </div>
-
-        <!-- ── GACHA PANEL ── -->
-        <div class="games-section active" id="gsec-gacha">
-          <div class="gacha-layout">
-
-            <!-- Case selector -->
-            <div class="gacha-cases-row">
-              <div class="gacha-case-card active" data-case="arcane">
-                <div class="gacha-case-img">🔮</div>
-                <div class="gacha-case-name">Arcane Case</div>
-                <div class="gacha-case-cost">50 💎</div>
-              </div>
-              <div class="gacha-case-card" data-case="celestial">
-                <div class="gacha-case-img">🌟</div>
-                <div class="gacha-case-name">Celestial Case</div>
-                <div class="gacha-case-cost">120 💎</div>
-              </div>
-              <div class="gacha-case-card" data-case="void">
-                <div class="gacha-case-img">🌑</div>
-                <div class="gacha-case-name">Void Case</div>
-                <div class="gacha-case-cost">200 💎</div>
-              </div>
-            </div>
-
-            <!-- Reel + open area -->
-            <div class="gacha-open-area">
-              <div class="gacha-reel-wrap" id="gachaReelWrap">
-                <div class="gacha-reel-marker"></div>
-                <div class="gacha-reel" id="gachaReel"></div>
-              </div>
-              <button class="gacha-open-btn" id="gachaOpenBtn">✨ Open Case</button>
-              <div class="gacha-result" id="gachaResult" style="display:none;"></div>
-            </div>
-
-            <!-- Inventory -->
-            <div class="gacha-inventory">
-              <div class="gacha-inv-header">
-                <span>📦 Collection</span>
-                <span class="gacha-inv-count" id="gachaInvCount">0 items</span>
-              </div>
-              <div class="gacha-inv-grid" id="gachaInvGrid"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── BATTLE PASS PANEL ── -->
-        <div class="games-section" id="gsec-battlepass">
-          <div class="bp-header">
-            <div class="bp-season-title">✨ Season I — Arcane Odyssey</div>
-            <div class="bp-xp-bar-wrap">
-              <div class="bp-xp-label">
-                Pass XP: <span id="bpXpVal">0</span> / <span id="bpXpNext">500</span>
-              </div>
-              <div class="bp-xp-track">
-                <div class="bp-xp-fill" id="bpXpFill" style="width:0%"></div>
-              </div>
-              <div class="bp-level-badge">Tier <span id="bpTierVal">1</span></div>
-            </div>
-          </div>
-          <div class="bp-track" id="bpTrack"></div>
-        </div>
-
-        <!-- ── FIDGET ZONE PANEL ── -->
-        <div class="games-section" id="gsec-fidget">
-          <div class="fidget-layout">
-
-            <!-- Fidget Spinner -->
-            <div class="fidget-card" id="fidgetSpinnerCard">
-              <h3 class="fidget-title">🌀 Fidget Spinner</h3>
-              <p class="fidget-hint">Click or hold to spin!</p>
-              <div class="fidget-spinner-wrap">
-                <div class="fidget-spinner" id="fidgetSpinner">
-                  <div class="fidget-blade"></div>
-                  <div class="fidget-blade"></div>
-                  <div class="fidget-blade"></div>
-                  <div class="fidget-center"></div>
-                </div>
-              </div>
-              <div class="fidget-spinner-speed" id="fidgetSpinnerSpeed">RPM: 0</div>
-            </div>
-
-            <!-- 3D Stress Cube -->
-            <div class="fidget-card" id="fidgetCubeCard">
-              <h3 class="fidget-title">🎲 Stress Cube</h3>
-              <p class="fidget-hint">Drag to rotate!</p>
-              <div class="fidget-cube-scene">
-                <div class="fidget-cube" id="fidgetCube">
-                  <div class="fidget-face front">✨</div>
-                  <div class="fidget-face back">🔮</div>
-                  <div class="fidget-face left">⚗️</div>
-                  <div class="fidget-face right">🌟</div>
-                  <div class="fidget-face top">💎</div>
-                  <div class="fidget-face bottom">🌙</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Bubble Wrap -->
-            <div class="fidget-card fidget-bubble-card" id="fidgetBubbleCard">
-              <h3 class="fidget-title">🫧 Bubble Wrap</h3>
-              <p class="fidget-hint">Pop them all!</p>
-              <div class="fidget-bubble-grid" id="fidgetBubbleGrid"></div>
-              <button class="btn-ghost btn-sm" id="fidgetBubbleReset" style="margin-top:10px;">↺ Refill</button>
-            </div>
-
-          </div>
-        </div>
-
-      </div><!-- /#tab-games -->
 
     </main>
   </div><!-- /#appLayout -->
@@ -1412,7 +1282,6 @@
   <script src="js/profile.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/reader.js"></script>
-  <script src="js/games.js"></script>
   <script src="js/animations.js"></script>
   <script src="js/app.js"></script>
 

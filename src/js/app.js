@@ -893,8 +893,7 @@ async function initApp() {
   // 6b. Initialize document reader
   if (window.Reader) Reader.init();
 
-  // 6c. Initialize games module
-  if (window.Games) Games.init();
+  // 6c. (games module removed)
 
   // 7. Mode selection + nav profile widget
   initModeSelection();

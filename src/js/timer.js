@@ -68,7 +68,7 @@ const Timer = (function () {
     }
 
     const percent = state.totalDuration > 0
-      ? Math.min(100, (state.elapsed / state.totalDuration) * 100)
+      ? Math.max(0, ((state.totalDuration - state.elapsed) / state.totalDuration) * 100)
       : 0;
 
     if (state.totalDuration > 0) {
@@ -243,9 +243,9 @@ const Timer = (function () {
     } else {
       stopManaSparkles();
     }
-    // Reset all alternative displays to current percent
+    // Reset all alternative displays to current percent (remaining fraction)
     const percent = state.totalDuration > 0
-      ? Math.min(100, (state.elapsed / state.totalDuration) * 100)
+      ? Math.max(0, ((state.totalDuration - state.elapsed) / state.totalDuration) * 100)
       : 0;
     updateAltProgressBars(percent);
   }
@@ -449,7 +449,6 @@ const Timer = (function () {
 
     if (window.Chronicle) window.Chronicle.renderChronicle();
     if (window.Profile) window.Profile.updateProfileStats();
-    if (window.Games) window.Games.awardSessionShards(duration);
 
     const settings = window.AppSettings || {};
     if (settings.autoSaveSessions !== false) {
@@ -568,10 +567,32 @@ const Timer = (function () {
     const parts1 = startInput.value.split(':').map(Number);
     const parts2 = endInput.value.split(':').map(Number);
     let startSec = parts1[0] * 3600 + parts1[1] * 60;
-    let endSec = parts2[0] * 3600 + parts2[1] * 60;
+    let endSec   = parts2[0] * 3600 + parts2[1] * 60;
     if (endSec <= startSec) endSec += 86400;
 
-    state.totalDuration = endSec - startSec;
+    const totalDuration = endSec - startSec;
+
+    // If current time is already past the start time, pre-advance elapsed
+    const now = new Date();
+    const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    // Normalise nowSec relative to startSec (handle midnight wraparound)
+    let normNow = nowSec;
+    if (normNow < startSec) normNow += 86400; // now is next-day relative to start
+    const alreadyElapsed = normNow - startSec;
+
+    if (alreadyElapsed > 0 && alreadyElapsed < totalDuration) {
+      state.elapsed = alreadyElapsed;
+      if (window.showToast) window.showToast(
+        'Started ' + Math.floor(alreadyElapsed / 60) + ' min ago — timer offset applied.', 'info'
+      );
+    } else if (alreadyElapsed >= totalDuration) {
+      if (window.showToast) window.showToast('End time is already in the past!', 'error');
+      return;
+    } else {
+      state.elapsed = 0;
+    }
+
+    state.totalDuration = totalDuration;
 
     const startLabel = document.getElementById('progressStart');
     const endLabel = document.getElementById('progressEnd');
@@ -580,7 +601,8 @@ const Timer = (function () {
 
     updateDisplay();
     if (window.showToast) {
-      window.showToast('Timer set: ' + Math.round(state.totalDuration / 60) + ' minutes', 'info');
+      const remaining = totalDuration - state.elapsed;
+      window.showToast('Timer set: ' + Math.round(remaining / 60) + ' min remaining', 'info');
     }
   }
 
@@ -785,6 +807,18 @@ const Timer = (function () {
     if (stopBtn) stopBtn.addEventListener('click', stopTimer);
     if (resetBtn) resetBtn.addEventListener('click', resetTimer);
     if (applyBtn) applyBtn.addEventListener('click', applyManualTimes);
+
+    const setNowBtn = document.getElementById('setNowBtn');
+    if (setNowBtn) {
+      setNowBtn.addEventListener('click', function () {
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        const startInput = document.getElementById('startTimeInput');
+        if (startInput) startInput.value = hh + ':' + mm;
+        if (window.showToast) window.showToast('Start time set to now (' + hh + ':' + mm + ')', 'info');
+      });
+    }
 
     if (setDurationBtn) {
       setDurationBtn.addEventListener('click', function () {
