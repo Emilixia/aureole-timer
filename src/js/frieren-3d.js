@@ -92,10 +92,11 @@ var FrierenCharacter = (function () {
     var scene  = new T.Scene();
     this._scene = scene;
 
-    // Camera framed to show head+upper body; we'll adjust after model loads
+    // Camera framed to show head+upper body; adjusted after model loads
+    // Pre-load position matches what _onLoad will compute for TARGET_HEIGHT=1.5
     var camera = new T.PerspectiveCamera(28, this.W / this.H, 0.01, 50);
-    camera.position.set(0, 1.55, 3.2);
-    camera.lookAt(0, 1.35, 0);
+    camera.position.set(0, 1.12, 2.5);
+    camera.lookAt(0, 1.05, 0);
     this._camera = camera;
 
     // ── Lights ───────────────────────────────────────────────────────────
@@ -148,48 +149,59 @@ var FrierenCharacter = (function () {
     // Ensure all world matrices are up-to-date before any measurement
     model.updateWorldMatrix(true, true);
 
-    // ── Scale & position via specific humanoid bones ──────────────────────
-    // Measuring scale from specific named bones (_rootJoint → Head_06) is
-    // far more reliable than Box3.setFromObject() on skinned meshes, which
-    // only sees raw bind-pose geometry and produces a wildly wrong height
-    // when VRChat accessory/costume meshes have large vertex offsets.
-    // Using ALL bones is also unreliable (hair/skirt bones extend the bbox).
-    var rootBone = null, headBone = null;
+    // ── Scale & position using the 18 main body bones ────────────────────
+    // We sample the bounding box of only the known humanoid body skeleton
+    // (spine chain + arms + legs/ankles), deliberately excluding hair, skirt,
+    // and other accessory bones whose outlier positions corrupt a full-bone
+    // bbox.  Ankle bones give a reliable floor; the head bone gives the top.
+    //
+    // We intentionally do NOT use just two anchor bones (root→head) because
+    // their Y distance is model-dependent and may be nearly zero if the root
+    // sits close to the head joint in this specific export.
+    var BODY_BONE_NAMES = [
+      '_rootJoint', 'Hips_02', 'Spine_03', 'Chest_04', 'Neck_05', 'Head_06',
+      'Right shoulder_026', 'Right arm_027', 'Right elbow_028',
+      'Left shoulder_045',  'Left arm_046',  'Left elbow_047',
+      'Right leg_066', 'Right knee_067', 'Right ankle_068',
+      'Left leg_069',  'Left knee_070',  'Left ankle_071'
+    ];
+
+    var bodyBox = new T.Box3();
+    var bodyBonesFound = 0;
     model.traverse(function (node) {
-      if (node.name === '_rootJoint') rootBone = node;
-      else if (node.name === 'Head_06') headBone = node;
+      if (BODY_BONE_NAMES.indexOf(node.name) !== -1) {
+        var wp = new T.Vector3();
+        node.getWorldPosition(wp);
+        bodyBox.expandByPoint(wp);
+        bodyBonesFound++;
+      }
     });
 
-    var scale       = 1.0;
-    var floorOffset = 0;   // world-Y of root after scaling → translated to y=0
+    // Target skeleton height in world-units.  The head bone sits at the
+    // base of the skull; add 12 % headroom so the actual head mesh isn't
+    // clipped.  Final rendered height ≈ TARGET_HEIGHT * 1.12 ≈ 1.68 units.
+    var TARGET_HEIGHT  = 1.5;
+    var scale          = 1.0;
+    var floorOffset    = 0;
 
-    if (rootBone && headBone) {
-      var rootWP = new T.Vector3();
-      var headWP = new T.Vector3();
-      rootBone.getWorldPosition(rootWP);
-      headBone.getWorldPosition(headWP);
-      var boneHeight = headWP.y - rootWP.y;
-      if (boneHeight > 0.001) {
-        // Normalise root→head to ~1.55 world-units (leaves space above for hat/hair)
-        scale = 1.55 / boneHeight;
-        // rootWP.y is the root's world-Y at scale=1, position=(0,0,0).
-        // After model.scale = scale, it becomes rootWP.y * scale.
-        // We offset model.position.y by -(rootWP.y * scale) to put feet at y=0.
-        floorOffset = rootWP.y * scale;
-      }
+    if (bodyBonesFound >= 6) {
+      var bsz = new T.Vector3(); bodyBox.getSize(bsz);
+      var skelH = bsz.y;
+      scale       = TARGET_HEIGHT / Math.max(skelH * 1.12, 0.01);
+      floorOffset = bodyBox.min.y * scale;
+    } else {
+      // Fallback: full-object bbox (non-rigged or unknown skeleton)
+      var fb  = new T.Box3().setFromObject(model);
+      var fsz = new T.Vector3(); fb.getSize(fsz);
+      scale       = TARGET_HEIGHT / Math.max(fsz.y, 0.01);
+      floorOffset = fb.min.y * scale;
     }
 
-    if (scale === 1.0) {
-      // Fallback when specific bones are absent or degenerate
-      var box    = new T.Box3().setFromObject(model);
-      var size   = new T.Vector3(); box.getSize(size);
-      if (size.y > 0.001) {
-        scale       = 1.8 / size.y;
-        floorOffset = box.min.y * scale;
-      }
-    }
+    // Hard-clamp to catch degenerate exports
+    scale = Math.max(0.1, Math.min(scale, 10.0));
 
     model.scale.setScalar(scale);
+    // Translate so the ankle/floor sits at y = 0
     model.position.set(0, -floorOffset, 0);
 
     // ── Apply toon shading ────────────────────────────────────────────────
@@ -265,10 +277,14 @@ var FrierenCharacter = (function () {
       self2._baseRot[b.name] = { x: b.rotation.x, y: b.rotation.y, z: b.rotation.z };
     });
 
-    // Re-frame camera now that we know the model's real size
-    // Show upper body: camera at chest height, slightly elevated
-    this._camera.position.set(0, 1.35, 2.6);
-    this._camera.lookAt(0, 1.15, 0);
+    // Re-frame camera based on actual character dimensions.
+    // TARGET_HEIGHT = 1.5 → feet at y=0, top of head ~y=1.68.
+    // We aim at 70 % of TARGET_HEIGHT (chest/neck) and pull back so the
+    // upper body fills the portrait canvas comfortably.
+    var lookAtY = TARGET_HEIGHT * 0.70;   // ≈ 1.05  (chest / neck area)
+    var camZ    = TARGET_HEIGHT * 1.65;   // ≈ 2.475 (pull-back distance)
+    this._camera.position.set(0, lookAtY + 0.07, camZ);
+    this._camera.lookAt(0, lookAtY, 0);
 
     console.log('[Frieren3D] Model loaded. Bones found:', Object.keys(this._bones).length,
                 'Hair bones:', this._hairBones.length,
