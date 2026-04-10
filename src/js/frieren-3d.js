@@ -145,54 +145,52 @@ var FrierenCharacter = (function () {
     this._model = model;
     this._modelRoot.add(model);
 
-    // ── Reset skeleton to bind pose ───────────────────────────────────────
-    // VRChat SkinnedMesh geometry is stored in bind-pose space; resetting
-    // ensures the rendered pose matches the stored vertex positions.
+    // Ensure all world matrices are up-to-date before any measurement
+    model.updateWorldMatrix(true, true);
+
+    // ── Scale & position via specific humanoid bones ──────────────────────
+    // Measuring scale from specific named bones (_rootJoint → Head_06) is
+    // far more reliable than Box3.setFromObject() on skinned meshes, which
+    // only sees raw bind-pose geometry and produces a wildly wrong height
+    // when VRChat accessory/costume meshes have large vertex offsets.
+    // Using ALL bones is also unreliable (hair/skirt bones extend the bbox).
+    var rootBone = null, headBone = null;
     model.traverse(function (node) {
-      if (node.isSkinnedMesh && node.skeleton) {
-        node.skeleton.pose();
-      }
+      if (node.name === '_rootJoint') rootBone = node;
+      else if (node.name === 'Head_06') headBone = node;
     });
 
-    // ── Scale & center using BONE positions ──────────────────────────────
-    // Box3.setFromObject() measures raw skinned-mesh geometry (bind pose),
-    // not the actual rendered positions, so it produces a wrong scale when
-    // the model's bones are not in bind pose.  Use bone world-positions
-    // instead, which are always reliable for a well-formed GLB.
-    var boneBox   = new T.Box3();
-    var boneCount = 0;
-    model.traverse(function (node) {
-      if (node.isBone || node.type === 'Bone') {
-        var wp = new T.Vector3();
-        node.getWorldPosition(wp);
-        boneBox.expandByPoint(wp);
-        boneCount++;
-      }
-    });
+    var scale       = 1.0;
+    var floorOffset = 0;   // world-Y of root after scaling → translated to y=0
 
-    var box;
-    if (boneCount >= 3) {
-      box = boneBox;
-    } else {
-      // Fallback: full-object bbox (non-rigged or very simple model)
-      box = new T.Box3().setFromObject(model);
+    if (rootBone && headBone) {
+      var rootWP = new T.Vector3();
+      var headWP = new T.Vector3();
+      rootBone.getWorldPosition(rootWP);
+      headBone.getWorldPosition(headWP);
+      var boneHeight = headWP.y - rootWP.y;
+      if (boneHeight > 0.001) {
+        // Normalise root→head to ~1.55 world-units (leaves space above for hat/hair)
+        scale = 1.55 / boneHeight;
+        // rootWP.y is the root's world-Y at scale=1, position=(0,0,0).
+        // After model.scale = scale, it becomes rootWP.y * scale.
+        // We offset model.position.y by -(rootWP.y * scale) to put feet at y=0.
+        floorOffset = rootWP.y * scale;
+      }
     }
 
-    var size   = new T.Vector3(); box.getSize(size);
-    var center = new T.Vector3(); box.getCenter(center);
+    if (scale === 1.0) {
+      // Fallback when specific bones are absent or degenerate
+      var box    = new T.Box3().setFromObject(model);
+      var size   = new T.Vector3(); box.getSize(size);
+      if (size.y > 0.001) {
+        scale       = 1.8 / size.y;
+        floorOffset = box.min.y * scale;
+      }
+    }
 
-    // Normalise to ~1.8 world-units tall (standard character height)
-    var heightY = Math.max(size.y, 0.01);
-    var scale   = 1.8 / heightY;
     model.scale.setScalar(scale);
-
-    // Recompute center/min after applying scale
-    var scaledCx  = center.x * scale;
-    var scaledMinY = box.min.y * scale;
-    var scaledCz  = center.z * scale;
-
-    // Translate so feet sit at y=0, horizontally centred
-    model.position.set(-scaledCx, -scaledMinY, -scaledCz);
+    model.position.set(0, -floorOffset, 0);
 
     // ── Apply toon shading ────────────────────────────────────────────────
     model.traverse(function (node) {
