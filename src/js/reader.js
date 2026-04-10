@@ -321,10 +321,7 @@ var Reader = (function () {
     ctx.lineWidth     = s.width || 2;
     ctx.lineCap       = 'round';
     ctx.lineJoin      = 'round';
-    if (s.highlight) {
-      ctx.globalCompositeOperation = 'multiply';
-      ctx.lineWidth = s.width || 18;
-    }
+    // source-over (default) works correctly on the transparent annotation canvas
     ctx.beginPath();
     ctx.moveTo(s.points[0].x, s.points[0].y);
     for (var i = 1; i < s.points.length; i++) {
@@ -365,6 +362,8 @@ var Reader = (function () {
     });
     var canvas = el('readerAnnotCanvas');
     if (canvas) {
+      // Toggle pointer-events: only intercept mouse when a tool is active
+      canvas.style.pointerEvents = (name === 'none') ? 'none' : 'auto';
       canvas.style.cursor =
         name === 'none'      ? 'default'    :
         name === 'text'      ? 'text'       :
@@ -432,14 +431,14 @@ var Reader = (function () {
       var pos = getCanvasPos(canvas, e);
       _drawPath.push(pos);
 
-      // Live preview
+      // Live preview — use source-over with alpha; 'multiply' on transparent canvas gives no result
       ctx.save();
-      ctx.globalAlpha   = _tool === 'highlight' ? 0.35 : 1;
+      ctx.globalAlpha   = _tool === 'highlight' ? 0.38 : 1;
       ctx.strokeStyle   = _tool === 'highlight' ? '#ffe94d' : '#ff3366';
       ctx.lineWidth     = _tool === 'highlight' ? Math.max(14, 18 / _pdfScale) : Math.max(1.5, 2 / _pdfScale);
       ctx.lineCap       = 'round';
       ctx.lineJoin      = 'round';
-      if (_tool === 'highlight') ctx.globalCompositeOperation = 'multiply';
+      // no globalCompositeOperation override — source-over works correctly on transparent canvas
       ctx.beginPath();
       var len = _drawPath.length;
       ctx.moveTo(_drawPath[len - 2].x, _drawPath[len - 2].y);
@@ -456,8 +455,8 @@ var Reader = (function () {
         points:    _drawPath,
         color:     _tool === 'highlight' ? '#ffe94d' : '#ff3366',
         width:     _tool === 'highlight' ? Math.max(14, 18 / _pdfScale) : Math.max(1.5, 2 / _pdfScale),
-        alpha:     _tool === 'highlight' ? 0.35 : 1,
-        highlight: _tool === 'highlight'
+        alpha:     _tool === 'highlight' ? 0.38 : 1
+        // no 'highlight' flag — source-over with alpha works on transparent canvas
       };
       var data = getAnnotData(_activeId, _pdfPage);
       data.strokes.push(stroke);

@@ -3965,3 +3965,155 @@ body.focus-mode #tab-journey .journey-right {
   border-color: var(--gold);
   background: rgba(200,170,110,0.07);
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NAVBAR RUNNING-TIMER PILL
+   ══════════════════════════════════════════════════════════════════════════ */
+.topnav-timer-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  background: rgba(0, 0, 0, 0.40);
+  border: 1.5px solid rgba(124, 92, 191, 0.70);
+  border-radius: 20px;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 0 6px rgba(124, 92, 191, 0.25), inset 0 0 0 1px rgba(255,255,255,0.04);
+  flex-shrink: 0;
+}
+.topnav-timer-pill:hover {
+  background: rgba(124, 92, 191, 0.22);
+  border-color: var(--gold, #c9a227);
+  box-shadow: 0 0 10px rgba(201,162,39,0.3);
+}
+.topnav-timer-icon {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+.topnav-timer-val {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--gold, #c9a227);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   READER — CANVAS STACK + ANNOTATION OVERLAY
+   ══════════════════════════════════════════════════════════════════════════ */
+.reader-canvas-stack {
+  position: relative;
+  display: inline-block;
+  line-height: 0; /* removes inline-block gap under canvases */
+}
+#readerPdfCanvas {
+  display: block;
+}
+.reader-annot-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  pointer-events: none; /* default: transparent to mouse; JS sets 'auto' when tool active */
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   READER — ANNOTATION TOOLBAR
+   ══════════════════════════════════════════════════════════════════════════ */
+.reader-annot-toolbar {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.20);
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.reader-tool-btn {
+  font-size: 0.72rem !important;
+  padding: 3px 9px !important;
+  border-radius: 5px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.reader-tool-btn.active {
+  background: rgba(124, 92, 191, 0.45) !important;
+  color: #fff !important;
+  border-color: rgba(124, 92, 191, 0.85) !important;
+  box-shadow: 0 0 6px rgba(124, 92, 191, 0.4);
+}
+.reader-toolbar-sep {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.14);
+  margin: 0 2px;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   READER — MANUAL PAGE INPUT
+   ══════════════════════════════════════════════════════════════════════════ */
+.reader-page-input {
+  width: 48px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  color: inherit;
+  font-size: 0.82rem;
+  padding: 1px 4px;
+  -moz-appearance: textfield;
+}
+.reader-page-input::-webkit-inner-spin-button,
+.reader-page-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.reader-page-input:focus {
+  outline: none;
+  border-color: var(--gold, #c9a227);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PROFILE — MILITARY RANK BLOCK (sidebar)
+   ══════════════════════════════════════════════════════════════════════════ */
+.prf-rank-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  border-radius: 8px;
+  margin: 6px 0 10px;
+}
+.prf-rank-insignia {
+  flex-shrink: 0;
+  width: 56px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.prf-rank-insignia svg {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+.prf-rank-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.prf-rank-grade {
+  font-size: 0.65rem;
+  color: var(--text-muted, #888);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.prf-rank-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--gold, #c9a227);
+  letter-spacing: 0.04em;
+}
+.prf-stat-rank {
+  font-size: 0.7rem !important;
+}

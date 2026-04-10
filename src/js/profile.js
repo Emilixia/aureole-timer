@@ -2,29 +2,142 @@
 
 const Profile = (function () {
 
-  // ── Military rank table (18 grades, Private → General) ────────────────────
-  // Each entry: { grade, name, minLevel, insignia: HTML string }
+  // ── Military rank insignia SVG generator ──────────────────────────────────
+  function buildInsigniaSVG(grade) {
+    var BG = '#2a3d2a', GOLD = '#c9a227', SILVER = '#a8b8c4', DARK = '#111';
+
+    // 5-pointed star polygon centered at (cx, cy) with outer radius r
+    function star(cx, cy, r, fill) {
+      var pts = [];
+      for (var i = 0; i < 10; i++) {
+        var angle = (i * 36 - 90) * Math.PI / 180;
+        var rad = (i % 2 === 0) ? r : r * 0.42;
+        pts.push((cx + rad * Math.cos(angle)).toFixed(1) + ',' + (cy + rad * Math.sin(angle)).toFixed(1));
+      }
+      return '<polygon points="' + pts.join(' ') + '" fill="' + fill + '"/>';
+    }
+
+    // Enlisted chevron badge — 56×72 viewBox, gold V-stripes + optional rockers
+    function chevBadge(nChev, nRock, decal) {
+      var t = 4, sg = 2; // stripe half-height and gap
+      var stripeH = t * 2 + sg; // 10px per stripe
+      var totalH  = (nChev + nRock) * stripeH;
+      var topPad  = Math.round((72 - totalH) / 2);
+      var content = '';
+
+      // Chevrons (V pointing up)
+      for (var c = 0; c < nChev; c++) {
+        var y0 = topPad + c * stripeH;
+        content +=
+          '<polygon points="' +
+          '3,' + (y0 + t) + ' ' +
+          '28,' + y0 + ' ' +
+          '53,' + (y0 + t) + ' ' +
+          '53,' + (y0 + t * 2) + ' ' +
+          '28,' + (y0 + t) + ' ' +
+          '3,' + (y0 + t * 2) +
+          '" fill="' + GOLD + '"/>';
+      }
+
+      // Rockers (concave arcs below chevrons)
+      for (var r = 0; r < nRock; r++) {
+        var ry = topPad + nChev * stripeH + r * stripeH;
+        content +=
+          '<path d="M3,' + ry + ' Q28,' + (ry + t * 2.2) + ' 53,' + ry +
+          ' L53,' + (ry + t) + ' Q28,' + (ry + t * 2.2 + t) + ' 3,' + (ry + t) + ' Z"' +
+          ' fill="' + GOLD + '"/>';
+      }
+
+      // Decal above chevrons (E-9 star)
+      if (decal === 'star' && topPad > 8) {
+        content += star(28, topPad - 9, 6, GOLD);
+      }
+
+      return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 72" width="56" height="72">' +
+             '<rect width="56" height="72" fill="' + BG + '" rx="4"/>' +
+             content + '</svg>';
+    }
+
+    // Officer epaulet board — 48×64 viewBox
+    function epaulet(inner) {
+      return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 64" width="48" height="64">' +
+             '<path d="M6,14 L42,14 L44,56 Q24,62 4,56 Z" fill="' + BG + '"/>' +
+             '<circle cx="24" cy="14" r="5" fill="' + GOLD + '" stroke="' + DARK + '" stroke-width="0.5"/>' +
+             inner + '</svg>';
+    }
+
+    // Simplified oak-leaf silhouette (4-lobe symmetric)
+    function oakLeaf(fill) {
+      return '<path d="M24,27 C22,22 15,22 15,28 C15,33 20,33 20,37 C17,37 13,39 13,43 C13,47 18,47 21,47' +
+             ' L24,52 L27,47 C30,47 35,47 35,43 C35,39 31,37 28,37 C28,33 33,33 33,28 C33,22 26,22 24,27 Z"' +
+             ' fill="' + fill + '"/>';
+    }
+
+    // Simplified eagle silhouette (spread wings, for Colonel)
+    function eagle() {
+      return '<path d="M24,26 C21,23 10,28 6,34 C11,31 17,33 21,32 C21,37 23,42 24,44' +
+             ' C25,42 27,37 27,32 C31,33 37,31 42,34 C38,28 27,23 24,26 Z' +
+             ' M22,44 L20,54 L24,50 L28,54 L26,44 Z" fill="' + GOLD + '"/>';
+    }
+
+    switch (grade) {
+      case 'E-1': return chevBadge(1, 0, null);
+      case 'E-2': return chevBadge(1, 0, null);
+      case 'E-3': return chevBadge(2, 0, null);
+      case 'E-4': return chevBadge(2, 0, null);
+      case 'E-5': return chevBadge(3, 0, null);
+      case 'E-6': return chevBadge(3, 1, null);
+      case 'E-7': return chevBadge(3, 2, null);
+      case 'E-8': return chevBadge(3, 3, null);
+      case 'E-9': return chevBadge(3, 3, 'star');
+      case 'W-1': return epaulet(
+        '<rect x="9" y="37" width="30" height="7" rx="1" fill="' + GOLD + '" opacity="0.45"/>' +
+        '<rect x="9" y="37" width="14" height="7" rx="1" fill="' + GOLD + '"/>'
+      );
+      case 'O-1': return epaulet('<rect x="9" y="40" width="30" height="9" rx="1" fill="' + GOLD + '"/>');
+      case 'O-2': return epaulet('<rect x="9" y="40" width="30" height="9" rx="1" fill="' + SILVER + '"/>');
+      case 'O-3': return epaulet(
+        '<rect x="9" y="33" width="30" height="8" rx="1" fill="' + SILVER + '"/>' +
+        '<rect x="9" y="44" width="30" height="8" rx="1" fill="' + SILVER + '"/>'
+      );
+      case 'O-4': return epaulet(oakLeaf(GOLD));
+      case 'O-5': return epaulet(oakLeaf(SILVER));
+      case 'O-6': return epaulet(eagle());
+      case 'O-7': return epaulet(star(24, 41, 10, SILVER));
+      case 'O-8': return epaulet(star(15, 43, 9, SILVER) + star(33, 43, 9, SILVER));
+      case 'O-9': return epaulet(
+        star(24, 32, 9, SILVER) + star(13, 47, 9, SILVER) + star(35, 47, 9, SILVER)
+      );
+      case 'O-10': return epaulet(
+        star(24, 27, 8, SILVER) + star(12, 40, 8, SILVER) +
+        star(36, 40, 8, SILVER) + star(24, 53, 8, SILVER)
+      );
+      default: return '';
+    }
+  }
+
+  // ── Military rank table (E-1 Private → O-10 General) ──────────────────────
   const RANKS = [
-    { grade: 'E-1',  name: 'Private',            minLevel:  1, insignia: '' },
-    { grade: 'E-2',  name: 'Private First Class', minLevel:  3, insignia: '<i class="ins-chevron">∧</i>' },
-    { grade: 'E-3',  name: 'Lance Corporal',      minLevel:  5, insignia: '<i class="ins-chevron">∧</i><i class="ins-chevron">∧</i>' },
-    { grade: 'E-4',  name: 'Corporal',            minLevel:  8, insignia: '<span class="ins-row"><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i></span>' },
-    { grade: 'E-5',  name: 'Sergeant',            minLevel: 12, insignia: '<span class="ins-row"><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i></span>' },
-    { grade: 'E-6',  name: 'Staff Sergeant',      minLevel: 17, insignia: '<span class="ins-row"><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i></span><span class="ins-rocker">⌣</span>' },
-    { grade: 'E-7',  name: 'Sergeant First Class',minLevel: 23, insignia: '<span class="ins-row"><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i></span><span class="ins-rocker">⌣⌣</span>' },
-    { grade: 'E-8',  name: 'Master Sergeant',     minLevel: 30, insignia: '<span class="ins-row"><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i></span><span class="ins-rocker">⌣⌣⌣</span>' },
-    { grade: 'E-9',  name: 'Sergeant Major',      minLevel: 38, insignia: '<span class="ins-row"><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i><i class="ins-chevron">∧</i></span><span class="ins-rocker ins-star">⌣★⌣</span>' },
-    { grade: 'W-1',  name: 'Warrant Officer',     minLevel: 47, insignia: '<span class="ins-bar ins-bar-split"></span>' },
-    { grade: 'O-1',  name: '2nd Lieutenant',      minLevel: 57, insignia: '<span class="ins-bar ins-bar-gold"></span>' },
-    { grade: 'O-2',  name: '1st Lieutenant',      minLevel: 68, insignia: '<span class="ins-bar ins-bar-silver"></span>' },
-    { grade: 'O-3',  name: 'Captain',             minLevel: 80, insignia: '<span class="ins-bar ins-bar-gold"></span><span class="ins-bar ins-bar-gold" style="margin-left:3px"></span>' },
-    { grade: 'O-4',  name: 'Major',               minLevel: 93, insignia: '<span class="ins-leaf ins-leaf-gold">❧</span>' },
-    { grade: 'O-5',  name: 'Lt. Colonel',         minLevel:107, insignia: '<span class="ins-leaf ins-leaf-silver">❧</span>' },
-    { grade: 'O-6',  name: 'Colonel',             minLevel:122, insignia: '<span class="ins-eagle">🦅</span>' },
-    { grade: 'O-7',  name: 'Brigadier General',   minLevel:138, insignia: '<span class="ins-star-row">★</span>' },
-    { grade: 'O-8',  name: 'Major General',       minLevel:155, insignia: '<span class="ins-star-row">★★</span>' },
-    { grade: 'O-9',  name: 'Lt. General',         minLevel:173, insignia: '<span class="ins-star-row">★★★</span>' },
-    { grade: 'O-10', name: 'General',             minLevel:192, insignia: '<span class="ins-star-row">★★★★</span>' },
+    { grade: 'E-1',  name: 'Private',             minLevel:   1 },
+    { grade: 'E-2',  name: 'Private First Class',  minLevel:   3 },
+    { grade: 'E-3',  name: 'Lance Corporal',        minLevel:   5 },
+    { grade: 'E-4',  name: 'Corporal',              minLevel:   8 },
+    { grade: 'E-5',  name: 'Sergeant',              minLevel:  12 },
+    { grade: 'E-6',  name: 'Staff Sergeant',        minLevel:  17 },
+    { grade: 'E-7',  name: 'Sergeant First Class',  minLevel:  23 },
+    { grade: 'E-8',  name: 'Master Sergeant',       minLevel:  30 },
+    { grade: 'E-9',  name: 'Sergeant Major',        minLevel:  38 },
+    { grade: 'W-1',  name: 'Warrant Officer',       minLevel:  47 },
+    { grade: 'O-1',  name: '2nd Lieutenant',        minLevel:  57 },
+    { grade: 'O-2',  name: '1st Lieutenant',        minLevel:  68 },
+    { grade: 'O-3',  name: 'Captain',               minLevel:  80 },
+    { grade: 'O-4',  name: 'Major',                 minLevel:  93 },
+    { grade: 'O-5',  name: 'Lt. Colonel',           minLevel: 107 },
+    { grade: 'O-6',  name: 'Colonel',               minLevel: 122 },
+    { grade: 'O-7',  name: 'Brigadier General',     minLevel: 138 },
+    { grade: 'O-8',  name: 'Major General',         minLevel: 155 },
+    { grade: 'O-9',  name: 'Lt. General',           minLevel: 173 },
+    { grade: 'O-10', name: 'General',               minLevel: 192 },
   ];
 
   function getRankForLevel(level) {
