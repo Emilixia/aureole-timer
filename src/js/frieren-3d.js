@@ -203,6 +203,8 @@ var FrierenCharacter = (function () {
     model.scale.setScalar(scale);
     // Translate so the ankle/floor sits at y = 0
     model.position.set(0, -floorOffset, 0);
+    // Rotate to face the camera (model's front is -Z; camera is at +Z)
+    model.rotation.y = Math.PI;
 
     // ── Apply toon shading ────────────────────────────────────────────────
     model.traverse(function (node) {
