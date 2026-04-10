@@ -276,6 +276,10 @@ const Profile = (function () {
     if (xpNextEl) xpNextEl.textContent = xpInfo.xpForNext;
     if (levelBadgeEl) levelBadgeEl.textContent = xpInfo.level;
 
+    // Keep the nav-bar level badge in sync directly
+    const navLevelEl = document.getElementById('navPfLevel');
+    if (navLevelEl) navLevelEl.textContent = xpInfo.level;
+
     // Military rank
     const rank = getRankForLevel(xpInfo.level);
     const rankInsigniaEl = document.getElementById('prfRankInsignia');

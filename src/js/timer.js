@@ -13,7 +13,8 @@ const Timer = (function () {
     intervalId: null,
     sessionStartTimestamp: null,
     lastBreakReminder: 0,
-    tenMinWarnFired: false
+    tenMinWarnFired: false,
+    oneMinWarnFired: false
   };
 
   // Pomodoro state
@@ -270,6 +271,7 @@ const Timer = (function () {
       state.sessionStartTimestamp = Date.now();
       state.lastBreakReminder = 0;
       state.tenMinWarnFired = false;
+      state.oneMinWarnFired = false;
     }
 
     state.intervalId = setInterval(function () {
@@ -277,6 +279,7 @@ const Timer = (function () {
       updateDisplay();
       checkBreakReminder();
       checkTenMinuteWarning();
+      checkOneMinuteWarning();
     }, 1000);
 
     // Visual running states
@@ -350,6 +353,7 @@ const Timer = (function () {
     state.elapsed = 0;
     state.sessionStartTimestamp = null;
     state.tenMinWarnFired = false;
+    state.oneMinWarnFired = false;
 
     updateDisplay();
     updateButtonStates();
@@ -483,6 +487,20 @@ const Timer = (function () {
       const settings = window.AppSettings || {};
       if (window.aureole && settings.desktopNotifications) {
         window.aureole.showNotification('10 Minutes Left ⏰', 'You\'re about to finish your session. Keep going!');
+      }
+    }
+  }
+
+  function checkOneMinuteWarning() {
+    if (!state.isRunning || state.oneMinWarnFired) return;
+    if (state.totalDuration <= 0) return;
+    const remaining = state.totalDuration - state.elapsed;
+    if (remaining <= 60 && remaining > 0) {
+      state.oneMinWarnFired = true;
+      if (window.showToast) window.showToast('⏰ 1 minute remaining in your session!', 'info');
+      const settings = window.AppSettings || {};
+      if (window.aureole && settings.desktopNotifications) {
+        window.aureole.showNotification('1 Minute Left ⏰', 'Almost done! Finish strong!');
       }
     }
   }

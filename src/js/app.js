@@ -793,7 +793,9 @@ function initModeSelection() {
 async function initNavProfile() {
   var profile = await Storage.get('profile', { name: 'Adventurer', avatarDataUrl: '' });
   var sessions = await Storage.get('chronicle', []);
-  var totalSecs = sessions.reduce(function (sum, s) { return sum + (s.duration || 0); }, 0);
+  var totalSecs = sessions
+    .filter(function (s) { return s.type === 'working' || s.type === 'studying'; })
+    .reduce(function (sum, s) { return sum + (s.duration || 0); }, 0);
   var totalMins = Math.floor(totalSecs / 60);
   // XP level: same formula as profile.js — level n needs n*60 minutes
   var level = 1;

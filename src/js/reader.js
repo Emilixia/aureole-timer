@@ -20,6 +20,16 @@ var Reader = (function () {
   var _annots     = {};        // { docId_page: { strokes:[], texts:[] } }
   var _annotsDirty = false;
 
+  // Customization state
+  var _drawColor        = '#ff3366';
+  var _highlightColor   = '#ffe94d';
+  var _highlightOpacity = 0.38;  // 0–1
+  var _penStyle         = 'pen'; // 'pen' | 'marker' | 'brush'
+
+  // Pending text placement (used by custom text popup)
+  var _textPendingPos = null;
+  var _textPendingCtx = null;
+
   // ── Helpers ────────────────────────────────────────────────────────────────
   function el(id) { return document.getElementById(id); }
 
@@ -319,9 +329,9 @@ var Reader = (function () {
     ctx.globalAlpha   = s.alpha || 1;
     ctx.strokeStyle   = s.color || '#ff3366';
     ctx.lineWidth     = s.width || 2;
-    ctx.lineCap       = 'round';
+    ctx.lineCap       = s.lineCap || 'round';
     ctx.lineJoin      = 'round';
-    // source-over (default) works correctly on the transparent annotation canvas
+    if (s.shadow) { ctx.shadowBlur = 6; ctx.shadowColor = s.shadow; }
     ctx.beginPath();
     ctx.moveTo(s.points[0].x, s.points[0].y);
     for (var i = 1; i < s.points.length; i++) {
@@ -350,6 +360,53 @@ var Reader = (function () {
     // Strokes are stored incrementally; nothing extra to flush.
     // Mark dirty so saveAnnotations() persists.
     _annotsDirty = true;
+  }
+
+  // ── Custom text input popup ─────────────────────────────────────────────────
+  function showTextPopup(screenX, screenY, onConfirm) {
+    var popup = el('readerTextPopup');
+    var input = el('readerTextInput');
+    var okBtn = el('readerTextOk');
+    var cancelBtn = el('readerTextCancel');
+    if (!popup || !input) return;
+
+    // Position popup near the click, keeping it on-screen
+    var pw = 240, ph = 100;
+    var left = Math.min(screenX, window.innerWidth  - pw - 10);
+    var top  = Math.min(screenY, window.innerHeight - ph - 10);
+    popup.style.left = left + 'px';
+    popup.style.top  = top  + 'px';
+    input.value = '';
+    popup.style.display = 'block';
+    setTimeout(function () { input.focus(); }, 30);
+
+    function confirm() {
+      var txt = input.value.trim();
+      popup.style.display = 'none';
+      cleanup();
+      if (txt) onConfirm(txt);
+    }
+    function cancel() {
+      popup.style.display = 'none';
+      cleanup();
+    }
+    function onKey(e) {
+      if (e.key === 'Enter') confirm();
+      if (e.key === 'Escape') cancel();
+    }
+
+    // Clone buttons to clear previous listeners
+    var newOk     = okBtn.cloneNode(true);
+    var newCancel = cancelBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(newOk, okBtn);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+    newOk.addEventListener('click', confirm);
+    newCancel.addEventListener('click', cancel);
+    input.addEventListener('keydown', onKey);
+
+    function cleanup() {
+      input.removeEventListener('keydown', onKey);
+    }
   }
 
   // ── Tool bar wiring ────────────────────────────────────────────────────────
@@ -394,13 +451,15 @@ var Reader = (function () {
       var pos = getCanvasPos(canvas, e);
 
       if (_tool === 'text') {
-        var txt = window.prompt('Enter annotation text:');
-        if (!txt) return;
-        var t = { x: pos.x, y: pos.y, text: txt, color: '#ffdd44', size: Math.max(10, Math.round(14 / _pdfScale)) };
-        var data = getAnnotData(_activeId, _pdfPage);
-        data.texts.push(t);
-        drawText(ctx, t);
-        _annotsDirty = true;
+        // Use custom popup instead of window.prompt (which is blocked in Electron)
+        showTextPopup(e.clientX, e.clientY, function (txt) {
+          var t = { x: pos.x, y: pos.y, text: txt, color: _drawColor, size: Math.max(10, Math.round(14 / _pdfScale)) };
+          var data = getAnnotData(_activeId, _pdfPage);
+          data.texts.push(t);
+          drawText(ctx, t);
+          _annotsDirty = true;
+          saveAnnotations();
+        });
         return;
       }
 
@@ -431,14 +490,19 @@ var Reader = (function () {
       var pos = getCanvasPos(canvas, e);
       _drawPath.push(pos);
 
-      // Live preview — use source-over with alpha; 'multiply' on transparent canvas gives no result
+      var isHL = _tool === 'highlight';
       ctx.save();
-      ctx.globalAlpha   = _tool === 'highlight' ? 0.38 : 1;
-      ctx.strokeStyle   = _tool === 'highlight' ? '#ffe94d' : '#ff3366';
-      ctx.lineWidth     = _tool === 'highlight' ? Math.max(14, 18 / _pdfScale) : Math.max(1.5, 2 / _pdfScale);
-      ctx.lineCap       = 'round';
-      ctx.lineJoin      = 'round';
-      // no globalCompositeOperation override — source-over works correctly on transparent canvas
+      ctx.globalAlpha = isHL ? _highlightOpacity : 1;
+      ctx.strokeStyle = isHL ? _highlightColor : _drawColor;
+      ctx.lineWidth   = isHL
+        ? Math.max(14, 18 / _pdfScale)
+        : _penLineWidth(_penStyle, _pdfScale);
+      ctx.lineCap  = _penLineCap(_penStyle);
+      ctx.lineJoin = 'round';
+      if (_penStyle === 'brush' && !isHL) {
+        ctx.shadowBlur  = 6;
+        ctx.shadowColor = _drawColor;
+      }
       ctx.beginPath();
       var len = _drawPath.length;
       ctx.moveTo(_drawPath[len - 2].x, _drawPath[len - 2].y);
@@ -451,12 +515,16 @@ var Reader = (function () {
       if (!_drawing) return;
       _drawing = false;
       if (_drawPath.length < 2) return;
+      var isHL = _tool === 'highlight';
       var stroke = {
-        points:    _drawPath,
-        color:     _tool === 'highlight' ? '#ffe94d' : '#ff3366',
-        width:     _tool === 'highlight' ? Math.max(14, 18 / _pdfScale) : Math.max(1.5, 2 / _pdfScale),
-        alpha:     _tool === 'highlight' ? 0.38 : 1
-        // no 'highlight' flag — source-over with alpha works on transparent canvas
+        points: _drawPath,
+        color:  isHL ? _highlightColor : _drawColor,
+        width:  isHL
+          ? Math.max(14, 18 / _pdfScale)
+          : _penLineWidth(_penStyle, _pdfScale),
+        alpha:  isHL ? _highlightOpacity : 1,
+        lineCap: _penLineCap(_penStyle),
+        shadow:  (!isHL && _penStyle === 'brush') ? _drawColor : null
       };
       var data = getAnnotData(_activeId, _pdfPage);
       data.strokes.push(stroke);

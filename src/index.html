@@ -797,7 +797,29 @@
               <button id="readerTool_highlight" class="btn-ghost btn-sm reader-tool-btn" title="Highlight">🖊 Highlight</button>
               <button id="readerTool_text"      class="btn-ghost btn-sm reader-tool-btn" title="Add text note">T Text</button>
               <button id="readerTool_erase"     class="btn-ghost btn-sm reader-tool-btn" title="Erase near click">◻ Erase</button>
-              <button id="readerClearAnnot"     class="btn-ghost btn-sm reader-tool-btn" title="Clear all annotations on this page" style="margin-left:auto; color:var(--danger);">🗑 Clear page</button>
+              <div class="reader-toolbar-sep"></div>
+              <!-- Draw pen style -->
+              <select id="readerPenStyle" class="reader-select" title="Pen style">
+                <option value="pen">🖊 Pen</option>
+                <option value="marker">📍 Marker</option>
+                <option value="brush">🖌 Brush</option>
+              </select>
+              <!-- Draw / text color -->
+              <label class="reader-color-label" title="Draw/Text color">
+                <input type="color" id="readerDrawColor" value="#ff3366" class="reader-color-input">
+                <span>Color</span>
+              </label>
+              <!-- Highlight color -->
+              <label class="reader-color-label" title="Highlight color">
+                <input type="color" id="readerHighlightColor" value="#ffe94d" class="reader-color-input">
+                <span>HL</span>
+              </label>
+              <!-- Highlight opacity -->
+              <label class="reader-color-label" title="Highlight opacity">
+                <input type="range" id="readerHighlightOpacity" min="10" max="80" value="38" class="reader-opacity-slider">
+                <span id="readerHighlightOpacityLabel">38%</span>
+              </label>
+              <button id="readerClearAnnot" class="btn-ghost btn-sm reader-tool-btn" title="Clear all annotations on this page" style="margin-left:auto; color:var(--danger);">🗑 Clear page</button>
             </div>
             <!-- Canvas stack: PDF underneath, annotation overlay on top -->
             <div id="readerPdfScroll" class="reader-pdf-scroll">
@@ -1196,8 +1218,10 @@
 
   <!-- Full-window bell animation overlay (shown on timer completion, close manually) -->
   <div id="bellOverlay" style="display:none;">
-    <img id="bellGif" src="../assets/frieren-bell.gif" alt="Session complete!">
-    <button id="bellClose" class="bell-close-btn" title="Close">✕</button>
+    <div class="bell-inner">
+      <button id="bellClose" class="bell-close-btn" title="Close">✕</button>
+      <img id="bellGif" src="../assets/frieren-bell.gif" alt="Session complete!">
+    </div>
   </div>
 
   <!-- World Clock config modal -->
@@ -1216,6 +1240,17 @@
         <button id="wcModalCancel" class="btn-ghost btn-sm">Cancel</button>
         <button id="wcModalSave" class="btn-primary btn-sm">Save</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Reader: custom inline text input popup (replaces window.prompt) -->
+  <div id="readerTextPopup" style="display:none;position:fixed;z-index:9000;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px;box-shadow:0 4px 20px rgba(0,0,0,0.5);min-width:220px;">
+    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px;">Annotation text:</div>
+    <input type="text" id="readerTextInput" placeholder="Enter text…" maxlength="200"
+      style="width:100%;box-sizing:border-box;padding:6px 8px;background:var(--bg-base);border:1px solid var(--border);border-radius:5px;color:var(--text-primary);font-size:0.88rem;">
+    <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end;">
+      <button id="readerTextCancel" class="btn-ghost btn-sm">Cancel</button>
+      <button id="readerTextOk" class="btn-primary btn-sm">Add</button>
     </div>
   </div>
 
