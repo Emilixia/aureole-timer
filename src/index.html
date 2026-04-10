@@ -921,6 +921,7 @@
             <button class="settings-tab" data-settings="timer">⏱ Timer</button>
             <button class="settings-tab" data-settings="notifications">🔔 Notifications</button>
             <button class="settings-tab" data-settings="adhd">🧠 Focus</button>
+            <button class="settings-tab" data-settings="companion">🧝 Companion</button>
             <button class="settings-tab" data-settings="data">💾 Data</button>
             <button class="settings-tab" data-settings="about">ℹ About</button>
             <!-- Hidden debug tab — unlocked by clicking Settings heading 5 times -->
@@ -1027,12 +1028,102 @@
               </div>
             </div>
 
+            <!-- Companion settings -->
+            <div class="settings-panel" id="settings-companion">
+              <h3>🧝 Companion Character</h3>
+
+              <!-- ── Model & Visibility ───────────────────────────── -->
+              <div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+                <h4 style="margin:0 0 10px;font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;">🗿 Model</h4>
+                <div class="setting-group">
+                  <label>Character Model</label>
+                  <select id="companionModel">
+                    <option value="model1">🧙 Classic Frieren (Model 1)</option>
+                    <option value="model2">✨ Frieren v2 (Model 2)</option>
+                  </select>
+                </div>
+                <div class="setting-group">
+                  <label>Show Companion</label>
+                  <input type="checkbox" id="companionVisible" checked>
+                </div>
+              </div>
+
+              <!-- ── Camera Framing ───────────────────────────────── -->
+              <div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+                <h4 style="margin:0 0 6px;font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;">📷 Camera Framing</h4>
+                <p style="font-size:0.78rem;color:var(--text-muted);margin:0 0 12px;">Values are fractions of skeleton height (1.0 = top of head area). Adjust to control which part of the character is framed.</p>
+                <div class="setting-group">
+                  <label>Frame Top <small style="color:var(--text-muted)">(higher = more headroom above)</small></label>
+                  <input type="range" id="companionHeadFraction" min="0.80" max="2.00" step="0.01" value="1.12">
+                  <span id="companionHeadFractionVal">1.12</span>
+                </div>
+                <div class="setting-group">
+                  <label>Frame Bottom <small style="color:var(--text-muted)">(lower = see more of body)</small></label>
+                  <input type="range" id="companionWaistFraction" min="0.00" max="1.40" step="0.01" value="0.68">
+                  <span id="companionWaistFractionVal">0.68</span>
+                </div>
+                <div class="setting-group">
+                  <label>Camera FOV <small style="color:var(--text-muted)">(lower = tighter/closer)</small></label>
+                  <input type="range" id="companionFov" min="15" max="90" step="1" value="52">
+                  <span id="companionFovVal">52°</span>
+                </div>
+                <div class="setting-group">
+                  <label>Zoom Factor <small style="color:var(--text-muted)">(higher = zoom in more)</small></label>
+                  <input type="range" id="companionZoom" min="0.30" max="3.00" step="0.05" value="1.00">
+                  <span id="companionZoomVal">1.00×</span>
+                </div>
+              </div>
+
+              <!-- ── Camera Position ──────────────────────────────── -->
+              <div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+                <h4 style="margin:0 0 10px;font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;">↔ Camera Position</h4>
+                <div class="setting-group">
+                  <label>Horizontal Offset <small style="color:var(--text-muted)">(negative = shift left)</small></label>
+                  <input type="range" id="companionCameraX" min="-1.00" max="1.00" step="0.01" value="0">
+                  <span id="companionCameraXVal">0.00</span>
+                </div>
+                <div class="setting-group">
+                  <label>Vertical Offset <small style="color:var(--text-muted)">(positive = look higher)</small></label>
+                  <input type="range" id="companionCameraY" min="-0.50" max="0.50" step="0.01" value="0.08">
+                  <span id="companionCameraYVal">0.08</span>
+                </div>
+              </div>
+
+              <!-- ── Widget Size ───────────────────────────────────── -->
+              <div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+                <h4 style="margin:0 0 10px;font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;">📐 Widget Size</h4>
+                <div class="setting-group">
+                  <label>Preset</label>
+                  <select id="companionSizePreset">
+                    <option value="small">Small (280 × 310)</option>
+                    <option value="medium" selected>Medium (340 × 370)</option>
+                    <option value="large">Large (420 × 460)</option>
+                    <option value="xlarge">X-Large (520 × 560)</option>
+                    <option value="custom">Custom…</option>
+                  </select>
+                </div>
+                <div id="companionCustomSizeRow" style="display:none;">
+                  <div class="setting-group">
+                    <label>Width (px)</label>
+                    <input type="number" id="companionWidth" min="80" max="700" value="340">
+                  </div>
+                  <div class="setting-group">
+                    <label>Height (px)</label>
+                    <input type="number" id="companionHeight" min="80" max="700" value="370">
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button id="saveCompanionSettings" class="btn-primary">💾 Save &amp; Apply</button>
+                <button id="previewCompanionSettings" class="btn-secondary">👁 Preview</button>
+                <button id="resetCompanionSettings" class="btn-secondary">↺ Reset Defaults</button>
+              </div>
+            </div>
+
             <!-- Timer settings -->
             <div class="settings-panel" id="settings-timer">
               <h3>⏱ Timer Settings</h3>
-              <div class="setting-group">
-                <label>Default Work Duration (minutes)</label>
-                <input type="number" id="defaultWorkDuration" value="60" min="1" max="480">
               </div>
               <div class="setting-group">
                 <label>Default Study Duration (minutes)</label>

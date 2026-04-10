@@ -1,21 +1,13 @@
 /**
- * FrierenCharacter — loads vrchat_frieren.glb via GLTFLoader.
- * Applies MeshToonMaterial (cel/anime shading) to all meshes and drives the real
- * armature bones procedurally: idle sway, hair physics, blink, peek, wave, excited,
- * nod, think, stretch, clap.
+ * FrierenCharacter — loads vrchat_frieren.glb or vrchat_frieren_2.glb via GLTFLoader.
+ * Drives the armature bones procedurally: idle sway, hair physics, blink, peek, wave,
+ * excited, nod, think, stretch, clap, and more.
  *
- * Bone map (from the embedded skeleton — 91 nodes, UE4-style naming):
- *   _rootJoint, Root_01
- *   pelvis_02
- *   spine_01_03, spine_02_04, spine_03_05
- *   neck_01_044, head_045
- *   clavicle_r_025 / clavicle_l_06
- *   upperarm_r_026 / upperarm_l_07
- *   lowerarm_r_027 / lowerarm_l_08
- *   hand_r_028     / hand_l_09
- *   index_01-03_r/l, middle_01-03_r/l, ring_01-03_r/l, pinky_01-03_r/l, thumb_01-03_r/l
- *   thigh_r_00,  calf_r_050,  foot_r_051
- *   thigh_l_046, calf_l_047,  foot_l_048
+ * Supports two models:
+ *   Model 1 (vrchat_frieren.glb)  — UE4-style bones: pelvis_02, spine_01_03, head_045 …
+ *   Model 2 (vrchat_frieren_2.glb)— MMD/VRM bones:  Hips_02, Spine_03, Head_06 …
+ *
+ * Camera framing and widget size are fully reconfigurable at runtime via reconfigure().
  */
 
 /* global THREE, GLTFLoader */
@@ -23,8 +15,8 @@
 var FrierenCharacter = (function () {
   'use strict';
 
-  // Path to the GLB, relative to src/index.html (which is in src/)
-  var GLB_PATH = '../assets/vrchat_frieren.glb';
+  // Default GLB path
+  var DEFAULT_GLB = '../assets/vrchat_frieren.glb';
 
   // ── Math helpers ──────────────────────────────────────────────────────────
   function lerp(a, b, t) { return a + (b - a) * t; }
@@ -36,8 +28,20 @@ var FrierenCharacter = (function () {
   function FrierenCharacter(container, opts) {
     opts = opts || {};
     this.container  = container;
-    this.W          = opts.width  || 200;
-    this.H          = opts.height || 340;
+    this.W          = opts.width  || 340;
+    this.H          = opts.height || 370;
+
+    // Model path
+    this._glbPath = opts.glbPath || DEFAULT_GLB;
+
+    // Camera framing parameters (reconfigurable)
+    this._waistFraction  = opts.waistFraction  != null ? opts.waistFraction  : 0.68;
+    this._headFraction   = opts.headFraction   != null ? opts.headFraction   : 1.12;
+    this._fov            = opts.fov            != null ? opts.fov            : 52;
+    this._cameraXOffset  = opts.cameraXOffset  != null ? opts.cameraXOffset  : 0;
+    this._cameraYOffset  = opts.cameraYOffset  != null ? opts.cameraYOffset  : 0.08;
+    this._zoomFactor     = opts.zoomFactor     != null ? opts.zoomFactor     : 1.0;
+    this._TARGET_HEIGHT  = 1.5;
 
     // Peek state — always fully visible (fixed bottom-right, no hiding)
     this._peekTarget   = 1;
@@ -134,7 +138,7 @@ var FrierenCharacter = (function () {
     // ── Load GLB ─────────────────────────────────────────────────────────
     var loader = new GLTFLoader();
     loader.load(
-      GLB_PATH,
+      this._glbPath,
       function (gltf) { self._onLoad(gltf); },
       undefined,
       function (err) { console.error('[Frieren3D] GLB load error:', err); }
@@ -166,23 +170,24 @@ var FrierenCharacter = (function () {
     // Ensure all world matrices are up-to-date before any measurement
     model.updateWorldMatrix(true, true);
 
-    // ── Scale & position using the 18 main body bones ────────────────────
-    // We sample the bounding box of only the known humanoid body skeleton
-    // (spine chain + arms + legs/ankles), deliberately excluding hair, skirt,
-    // and other accessory bones whose outlier positions corrupt a full-bone
-    // bbox.  Ankle bones give a reliable floor; the head bone gives the top.
-    //
-    // We intentionally do NOT use just two anchor bones (root→head) because
-    // their Y distance is model-dependent and may be nearly zero if the root
-    // sits close to the head joint in this specific export.
+    // ── Scale & position using known body bones from both supported models ──
+    // Combining bone name lists from model 1 (UE4) and model 2 (MMD/VRM) so
+    // the same code path works for both without branching.
     var BODY_BONE_NAMES = [
+      // Model 1 (UE4-style)
       '_rootJoint', 'Root_01', 'pelvis_02',
       'spine_01_03', 'spine_02_04', 'spine_03_05',
       'neck_01_044', 'head_045',
       'clavicle_r_025', 'upperarm_r_026', 'lowerarm_r_027',
       'clavicle_l_06',  'upperarm_l_07',  'lowerarm_l_08',
       'thigh_r_00', 'calf_r_050', 'foot_r_051',
-      'thigh_l_046', 'calf_l_047', 'foot_l_048'
+      'thigh_l_046', 'calf_l_047', 'foot_l_048',
+      // Model 2 (MMD/VRM-style)
+      'Hips_02', 'Spine_03', 'Chest_04', 'Neck_05', 'Head_06',
+      'Right shoulder_026', 'Right arm_027', 'Right elbow_028',
+      'Left shoulder_045',  'Left arm_046',  'Left elbow_047',
+      'Right leg_066', 'Right knee_067', 'Right ankle_068',
+      'Left leg_069',  'Left knee_070',  'Left ankle_071',
     ];
 
     var bodyBox = new T.Box3();
@@ -196,10 +201,8 @@ var FrierenCharacter = (function () {
       }
     });
 
-    // Target skeleton height in world-units.  The head bone sits at the
-    // base of the skull; add 12 % headroom so the actual head mesh isn't
-    // clipped.  Final rendered height ≈ TARGET_HEIGHT * 1.12 ≈ 1.68 units.
-    var TARGET_HEIGHT  = 1.5;
+    // Target skeleton height in world-units.
+    var TARGET_HEIGHT  = this._TARGET_HEIGHT;
     var scale          = 1.0;
     var floorOffset    = 0;
 
@@ -261,56 +264,20 @@ var FrierenCharacter = (function () {
       }
     });
 
-    // Cache baseline rotations for all animated bones
-    var animBoneNames = [
-      '_rootJoint', 'Root_01', 'pelvis_02',
-      'spine_01_03', 'spine_02_04', 'spine_03_05',
-      'neck_01_044', 'head_045',
-      'clavicle_r_025', 'upperarm_r_026', 'lowerarm_r_027', 'hand_r_028',
-      'clavicle_l_06',  'upperarm_l_07',  'lowerarm_l_08',  'hand_l_09',
-      'thigh_r_00', 'calf_r_050', 'foot_r_051',
-      'thigh_l_046', 'calf_l_047', 'foot_l_048',
-      // Right fingers
-      'index_01_r_029', 'index_02_r_030', 'index_03_r_031',
-      'middle_01_r_032', 'middle_02_r_033', 'middle_03_r_034',
-      'ring_01_r_038',   'ring_02_r_039',   'ring_03_r_040',
-      'pinky_01_r_035',  'pinky_02_r_036',  'pinky_03_r_037',
-      'thumb_01_r_041',  'thumb_02_r_042',  'thumb_03_r_043',
-      // Left fingers
-      'index_01_l_010', 'index_02_l_011', 'index_03_l_012',
-      'middle_01_l_013', 'middle_02_l_014', 'middle_03_l_015',
-      'ring_01_l_019',   'ring_02_l_020',   'ring_03_l_021',
-      'pinky_01_l_016',  'pinky_02_l_017',  'pinky_03_l_018',
-      'thumb_01_l_022',  'thumb_02_l_023',  'thumb_03_l_024',
-    ];
+    // Cache baseline rotations for ALL collected nodes (works with any model)
     var self2 = this;
-    animBoneNames.forEach(function (n) {
+    Object.keys(this._bones).forEach(function (n) {
       var b = self2._bones[n];
       if (b) {
         self2._baseRot[n] = { x: b.rotation.x, y: b.rotation.y, z: b.rotation.z };
       }
     });
-    this._hairBones.forEach(function (b) {
-      self2._baseRot[b.name] = { x: b.rotation.x, y: b.rotation.y, z: b.rotation.z };
-    });
-    this._skirtBones.forEach(function (b) {
-      self2._baseRot[b.name] = { x: b.rotation.x, y: b.rotation.y, z: b.rotation.z };
-    });
 
-    // Re-frame camera for a tight bust-up portrait (breast level → head top).
-    // Feet at y=0, head mesh top at ~TARGET_HEIGHT*1.12.
-    // waistY set to ~68% of height = breast/chest area so only upper torso +
-    // head is visible, making the character appear larger in the widget.
-    var headTop  = TARGET_HEIGHT * 1.12;           // ≈ 1.68
-    var waistY   = TARGET_HEIGHT * 0.68;           // ≈ 1.02  (breast area)
-    var lookAtY  = (headTop + waistY) / 2;         // ≈ 1.35  (neck/shoulder)
-    var viewHalf = (headTop - waistY) / 2 * 1.22;  // half-extent + 22 % margin
-    // FOV=52°  →  half-angle 26°  →  tan(26°)≈0.4877
-    var camZ = viewHalf / Math.tan(26 * Math.PI / 180);
-    this._camera.fov = 52;
-    this._camera.updateProjectionMatrix();
-    this._camera.position.set(0, lookAtY + 0.08, camZ);
-    this._camera.lookAt(0, lookAtY, 0);
+    // Build cross-model bone aliases so animation code works with both models
+    this._buildBoneAliases();
+
+    // Frame the camera
+    this._reframeCamera();
 
     console.log('[Frieren3D] Model loaded. Bones found:', Object.keys(this._bones).length,
                 'Hair bones:', this._hairBones.length,
@@ -324,7 +291,184 @@ var FrierenCharacter = (function () {
     this._modelRoot.position.y = -this.HIDE_OFFSET * (1 - e);
   };
 
-  // ── Animation update ──────────────────────────────────────────────────────
+  // ── Cross-model bone alias builder ────────────────────────────────────────
+  // Creates backwards-compatible aliases so all animation code works with
+  // both model 1 (UE4 names) and model 2 (MMD/VRM names).
+  FrierenCharacter.prototype._buildBoneAliases = function () {
+    var b  = this._bones;
+    var br = this._baseRot;
+
+    // [model-1-name, model-2-name] pairs — whichever exists is aliased to the other
+    var bodyPairs = [
+      ['pelvis_02',      'Hips_02'],
+      ['spine_01_03',    'Spine_03'],
+      ['spine_02_04',    'Chest_04'],
+      ['spine_03_05',    'Chest_04'],   // model 2 has no separate spine_03
+      ['neck_01_044',    'Neck_05'],
+      ['head_045',       'Head_06'],
+      ['clavicle_r_025', 'Right shoulder_026'],
+      ['clavicle_l_06',  'Left shoulder_045'],
+      ['upperarm_r_026', 'Right arm_027'],
+      ['upperarm_l_07',  'Left arm_046'],
+      ['lowerarm_r_027', 'Right elbow_028'],
+      ['lowerarm_l_08',  'Left elbow_047'],
+      ['hand_r_028',     'Right wrist_029'],
+      ['hand_l_09',      'Left wrist_048'],
+      ['thigh_r_00',     'Right leg_066'],
+      ['thigh_l_046',    'Left leg_069'],
+      ['calf_r_050',     'Right knee_067'],
+      ['calf_l_047',     'Left knee_070'],
+      ['foot_r_051',     'Right ankle_068'],
+      ['foot_l_048',     'Left ankle_071'],
+    ];
+
+    bodyPairs.forEach(function (pair) {
+      var m1 = pair[0], m2 = pair[1];
+      if (!b[m1] && b[m2])  { b[m1]  = b[m2];  }
+      if (!b[m2] && b[m1])  { b[m2]  = b[m1];  }
+      if (!br[m1] && br[m2]) { br[m1] = br[m2]; }
+      if (!br[m2] && br[m1]) { br[m2] = br[m1]; }
+    });
+
+    // Finger cross-aliases: model-1 UE4 ↔ model-2 MMD
+    var fingerPairs = [
+      // Right hand
+      ['index_01_r_029',  'IndexFinger1_R_042'],
+      ['index_02_r_030',  'IndexFinger2_R_043'],
+      ['index_03_r_031',  'IndexFinger3_R_044'],
+      ['middle_01_r_032', 'MiddleFinger1_R_039'],
+      ['middle_02_r_033', 'MiddleFinger2_R_040'],
+      ['middle_03_r_034', 'MiddleFinger3_R_041'],
+      ['ring_01_r_038',   'RingFinger1_R_036'],
+      ['ring_02_r_039',   'RingFinger2_R_037'],
+      ['ring_03_r_040',   'RingFinger3_R_038'],
+      ['pinky_01_r_035',  'LittleFinger1_R_033'],
+      ['pinky_02_r_036',  'LittleFinger2_R_034'],
+      ['pinky_03_r_037',  'LittleFinger3_R_035'],
+      ['thumb_01_r_041',  'Thumb0_R_030'],
+      ['thumb_02_r_042',  'Thumb1_R_031'],
+      ['thumb_03_r_043',  'Thumb2_R_032'],
+      // Left hand
+      ['index_01_l_010',  'IndexFinger1_L_061'],
+      ['index_02_l_011',  'IndexFinger2_L_062'],
+      ['index_03_l_012',  'IndexFinger3_L_063'],
+      ['middle_01_l_013', 'MiddleFinger1_L_058'],
+      ['middle_02_l_014', 'MiddleFinger2_L_059'],
+      ['middle_03_l_015', 'MiddleFinger3_L_060'],
+      ['ring_01_l_019',   'RingFinger1_L_055'],
+      ['ring_02_l_020',   'RingFinger2_L_056'],
+      ['ring_03_l_021',   'RingFinger3_L_057'],
+      ['pinky_01_l_016',  'LittleFinger1_L_052'],
+      ['pinky_02_l_017',  'LittleFinger2_L_053'],
+      ['pinky_03_l_018',  'LittleFinger3_L_054'],
+      ['thumb_01_l_022',  'Thumb0_L_049'],
+      ['thumb_02_l_023',  'Thumb1_L_050'],
+      ['thumb_03_l_024',  'Thumb2_L_051'],
+    ];
+
+    fingerPairs.forEach(function (pair) {
+      var m1 = pair[0], m2 = pair[1];
+      if (!b[m1] && b[m2])   { b[m1]  = b[m2];  }
+      if (!b[m2] && b[m1])   { b[m2]  = b[m1];  }
+      if (!br[m1] && br[m2]) { br[m1] = br[m2]; }
+      if (!br[m2] && br[m1]) { br[m2] = br[m1]; }
+    });
+  };
+
+  // ── Camera reframing ─────────────────────────────────────────────────────
+  // Re-positions the camera according to the current framing parameters.
+  // Called after model load and whenever reconfigure() changes camera opts.
+  FrierenCharacter.prototype._reframeCamera = function () {
+    if (!this._camera) return;
+    var targetH  = this._TARGET_HEIGHT;
+    var headTop  = targetH * this._headFraction;
+    var waistY   = targetH * this._waistFraction;
+    var lookAtY  = (headTop + waistY) / 2;
+    var viewHalf = (headTop - waistY) / 2 * (1.22 / this._zoomFactor);
+    var fovHalf  = this._fov / 2 * Math.PI / 180;
+    var camZ     = viewHalf / Math.tan(fovHalf);
+    this._camera.fov = this._fov;
+    this._camera.aspect = this.W / this.H;
+    this._camera.updateProjectionMatrix();
+    this._camera.position.set(this._cameraXOffset, lookAtY + this._cameraYOffset, camZ);
+    this._camera.lookAt(this._cameraXOffset, lookAtY, 0);
+  };
+
+  // ── Public: reconfigure camera / model ───────────────────────────────────
+  // opts: { glbPath, waistFraction, headFraction, fov, cameraXOffset, cameraYOffset, zoomFactor }
+  FrierenCharacter.prototype.reconfigure = function (opts) {
+    opts = opts || {};
+    var newPath = opts.glbPath;
+
+    // Update framing params first (switchModel will use them after load)
+    if (opts.waistFraction  != null) this._waistFraction  = +opts.waistFraction;
+    if (opts.headFraction   != null) this._headFraction   = +opts.headFraction;
+    if (opts.fov            != null) this._fov            = +opts.fov;
+    if (opts.cameraXOffset  != null) this._cameraXOffset  = +opts.cameraXOffset;
+    if (opts.cameraYOffset  != null) this._cameraYOffset  = +opts.cameraYOffset;
+    if (opts.zoomFactor     != null) this._zoomFactor     = +opts.zoomFactor;
+
+    if (newPath && newPath !== this._glbPath) {
+      this.switchModel(newPath);
+    } else if (this._model) {
+      this._reframeCamera();
+    }
+  };
+
+  // ── Public: switch to a different GLB ────────────────────────────────────
+  FrierenCharacter.prototype.switchModel = function (path) {
+    var self = this;
+    if (typeof GLTFLoader === 'undefined') return;
+
+    // Dispose and remove old model
+    if (this._model) {
+      this._modelRoot.remove(this._model);
+      this._model.traverse(function (node) {
+        if (node.isMesh) {
+          if (node.geometry) node.geometry.dispose();
+          if (node.material) {
+            var mats = Array.isArray(node.material) ? node.material : [node.material];
+            mats.forEach(function (m) { m.dispose(); });
+          }
+        }
+      });
+      this._model = null;
+    }
+
+    // Reset bone / animation state
+    this._bones       = {};
+    this._hairBones   = [];
+    this._skirtBones  = [];
+    this._eyeBones    = [];
+    this._baseRot     = {};
+    this._action      = null;
+    this._returnBlend = null;
+
+    this._glbPath = path;
+    var loader = new GLTFLoader();
+    loader.load(
+      path,
+      function (gltf) { self._onLoad(gltf); },
+      undefined,
+      function (err) { console.error('[Frieren3D] switchModel load error:', err); }
+    );
+  };
+
+  // ── Public: resize the renderer canvas ───────────────────────────────────
+  FrierenCharacter.prototype.resize = function (w, h) {
+    this.W = w;
+    this.H = h;
+    if (this._renderer) {
+      this._renderer.setSize(w, h);
+    }
+    if (this._camera) {
+      this._camera.aspect = w / h;
+      this._camera.updateProjectionMatrix();
+    }
+    this._reframeCamera();
+  };
+
+
   FrierenCharacter.prototype._update = function (dt) {
     this._animTime += dt;
     this._updatePeek(dt);

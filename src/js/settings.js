@@ -36,6 +36,28 @@ const DEFAULT_SETTINGS = {
   encouragementMessages: true
 };
 
+// Companion (3D character) settings stored separately for clarity
+const DEFAULT_COMPANION = {
+  model: 'model1',           // 'model1' | 'model2'
+  visible: true,
+  waistFraction: 0.68,       // camera frame bottom (fraction of skeleton height)
+  headFraction: 1.12,        // camera frame top
+  fov: 52,                   // camera field-of-view
+  zoomFactor: 1.0,           // extra zoom multiplier
+  cameraXOffset: 0,          // horizontal camera shift
+  cameraYOffset: 0.08,       // vertical camera shift
+  sizePreset: 'medium',      // 'small' | 'medium' | 'large' | 'xlarge' | 'custom'
+  width: 340,
+  height: 370,
+};
+
+const COMPANION_SIZE_PRESETS = {
+  small:  [280, 310],
+  medium: [340, 370],
+  large:  [420, 460],
+  xlarge: [520, 560],
+};
+
 const Settings = (function () {
   let current = Object.assign({}, DEFAULT_SETTINGS);
 
@@ -405,6 +427,13 @@ const Settings = (function () {
     initSettingsTabs();
     await restoreLastTab();
 
+    // Companion settings — load, populate, and bind controls
+    const companionSaved = loadCompanionSettings();
+    populateCompanionForm(companionSaved);
+    bindCompanionControls();
+    // Apply on startup (after a tick so FrierenCompanion is ready)
+    setTimeout(function () { applyCompanionSettings(companionSaved); }, 250);
+
     // Save buttons
     document.querySelectorAll('#saveTimerSettings, #saveNotifSettings, #saveAdhdSettings').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -460,12 +489,184 @@ const Settings = (function () {
     }
   }
 
+  // ── Companion settings helpers ────────────────────────────────────────────
+  function loadCompanionSettings() {
+    try {
+      const raw = localStorage.getItem('companionSettings');
+      return raw ? Object.assign({}, DEFAULT_COMPANION, JSON.parse(raw)) : Object.assign({}, DEFAULT_COMPANION);
+    } catch (e) {
+      return Object.assign({}, DEFAULT_COMPANION);
+    }
+  }
+
+  function saveCompanionSettings(cs) {
+    localStorage.setItem('companionSettings', JSON.stringify(cs));
+  }
+
+  function populateCompanionForm(cs) {
+    const set = function (id, val) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (el.type === 'checkbox') el.checked = !!val;
+      else el.value = val;
+    };
+    set('companionModel', cs.model || 'model1');
+    set('companionVisible', cs.visible !== false);
+    set('companionHeadFraction', cs.headFraction);
+    set('companionWaistFraction', cs.waistFraction);
+    set('companionFov', cs.fov);
+    set('companionZoom', cs.zoomFactor);
+    set('companionCameraX', cs.cameraXOffset);
+    set('companionCameraY', cs.cameraYOffset);
+    set('companionSizePreset', cs.sizePreset || 'medium');
+    set('companionWidth', cs.width || 340);
+    set('companionHeight', cs.height || 370);
+
+    updateCompanionSliderLabels(cs);
+
+    const customRow = document.getElementById('companionCustomSizeRow');
+    if (customRow) customRow.style.display = cs.sizePreset === 'custom' ? '' : 'none';
+  }
+
+  function updateCompanionSliderLabels(cs) {
+    const lbl = function (id, val, suffix) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = (typeof val === 'number' ? val.toFixed(2) : val) + (suffix || '');
+    };
+    lbl('companionHeadFractionVal', +cs.headFraction);
+    lbl('companionWaistFractionVal', +cs.waistFraction);
+    lbl('companionFovVal', Math.round(+cs.fov), '°');
+    lbl('companionZoomVal', (+cs.zoomFactor).toFixed(2), '×');
+    lbl('companionCameraXVal', (+cs.cameraXOffset).toFixed(2));
+    lbl('companionCameraYVal', (+cs.cameraYOffset).toFixed(2));
+  }
+
+  function readCompanionForm() {
+    const get = function (id) { const el = document.getElementById(id); return el ? el.value : null; };
+    const chk = function (id) { const el = document.getElementById(id); return el ? el.checked : true; };
+    return {
+      model:         get('companionModel') || 'model1',
+      visible:       chk('companionVisible'),
+      headFraction:  parseFloat(get('companionHeadFraction')) || DEFAULT_COMPANION.headFraction,
+      waistFraction: parseFloat(get('companionWaistFraction')) || DEFAULT_COMPANION.waistFraction,
+      fov:           parseFloat(get('companionFov')) || DEFAULT_COMPANION.fov,
+      zoomFactor:    parseFloat(get('companionZoom')) || DEFAULT_COMPANION.zoomFactor,
+      cameraXOffset: parseFloat(get('companionCameraX')) || 0,
+      cameraYOffset: parseFloat(get('companionCameraY')) || DEFAULT_COMPANION.cameraYOffset,
+      sizePreset:    get('companionSizePreset') || 'medium',
+      width:         parseInt(get('companionWidth'))  || 340,
+      height:        parseInt(get('companionHeight')) || 370,
+    };
+  }
+
+  function applyCompanionSettings(cs) {
+    const companion = document.getElementById('frierenCompanion');
+    if (!companion) return;
+
+    // Visibility
+    companion.style.display = cs.visible !== false ? '' : 'none';
+
+    // Determine dimensions
+    let w = cs.width || 340;
+    let h = cs.height || 370;
+    if (cs.sizePreset && COMPANION_SIZE_PRESETS[cs.sizePreset]) {
+      [w, h] = COMPANION_SIZE_PRESETS[cs.sizePreset];
+    }
+    companion.style.width  = w + 'px';
+    companion.style.height = h + 'px';
+
+    // Model path
+    const glbPath = cs.model === 'model2'
+      ? '../assets/vrchat_frieren_2.glb'
+      : '../assets/vrchat_frieren.glb';
+
+    // Apply to 3D character
+    if (window.FrierenCompanion && window.FrierenCompanion.reconfigure) {
+      window.FrierenCompanion.reconfigure({
+        glbPath:       glbPath,
+        waistFraction: cs.waistFraction,
+        headFraction:  cs.headFraction,
+        fov:           cs.fov,
+        zoomFactor:    cs.zoomFactor,
+        cameraXOffset: cs.cameraXOffset,
+        cameraYOffset: cs.cameraYOffset,
+      });
+      if (window.FrierenCompanion.resize) {
+        window.FrierenCompanion.resize(w, h);
+      }
+    }
+  }
+
+  function bindCompanionControls() {
+    // Live label updates for sliders
+    const sliderBindings = [
+      ['companionHeadFraction',  'companionHeadFractionVal',  '', 2],
+      ['companionWaistFraction', 'companionWaistFractionVal', '', 2],
+      ['companionFov',           'companionFovVal',           '°', 0],
+      ['companionZoom',          'companionZoomVal',          '×', 2],
+      ['companionCameraX',       'companionCameraXVal',       '', 2],
+      ['companionCameraY',       'companionCameraYVal',       '', 2],
+    ];
+    sliderBindings.forEach(function ([inputId, labelId, suffix, decimals]) {
+      const el = document.getElementById(inputId);
+      const lbl = document.getElementById(labelId);
+      if (el && lbl) {
+        el.addEventListener('input', function () {
+          lbl.textContent = parseFloat(this.value).toFixed(decimals) + suffix;
+        });
+      }
+    });
+
+    // Size preset toggle
+    const presetEl = document.getElementById('companionSizePreset');
+    const customRow = document.getElementById('companionCustomSizeRow');
+    if (presetEl && customRow) {
+      presetEl.addEventListener('change', function () {
+        customRow.style.display = this.value === 'custom' ? '' : 'none';
+      });
+    }
+
+    // Preview button — applies without saving
+    const previewBtn = document.getElementById('previewCompanionSettings');
+    if (previewBtn) {
+      previewBtn.addEventListener('click', function () {
+        const cs = readCompanionForm();
+        applyCompanionSettings(cs);
+        if (window.showToast) window.showToast('Preview applied! 👁', 'info');
+      });
+    }
+
+    // Save & Apply
+    const saveBtn = document.getElementById('saveCompanionSettings');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', function () {
+        const cs = readCompanionForm();
+        saveCompanionSettings(cs);
+        applyCompanionSettings(cs);
+        if (window.showToast) window.showToast('Companion settings saved! 🧝', 'success');
+      });
+    }
+
+    // Reset defaults
+    const resetBtn = document.getElementById('resetCompanionSettings');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
+        const def = Object.assign({}, DEFAULT_COMPANION);
+        saveCompanionSettings(def);
+        populateCompanionForm(def);
+        applyCompanionSettings(def);
+        if (window.showToast) window.showToast('Companion settings reset! ↺', 'info');
+      });
+    }
+  }
+
   return {
     init: init,
     loadSettings: loadSettings,
     saveSettings: saveSettings,
     applySettings: applySettings,
-    getCurrent: function () { return current; }
+    getCurrent: function () { return current; },
+    getCompanionDefaults: function () { return Object.assign({}, DEFAULT_COMPANION); },
   };
 })();
 

@@ -41,6 +41,22 @@
       frieren3d.init();
     }
 
+    // ── Expose global API for settings panel ──────────────────────────────
+    window.FrierenCompanion = {
+      reconfigure: function (opts) {
+        if (frieren3d) frieren3d.reconfigure(opts);
+      },
+      resize: function (w, h) {
+        if (frieren3d) frieren3d.resize(w, h);
+        // Also resize the mount element so the renderer fits
+        if (mount) {
+          mount.style.width  = w + 'px';
+          mount.style.height = h + 'px';
+        }
+      },
+      getCharacter: function () { return frieren3d; },
+    };
+
     var minBtn     = document.getElementById('frierenMinBtn');
     var minimized  = localStorage.getItem('frierenMinimized') === '1';
 
