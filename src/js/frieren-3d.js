@@ -99,10 +99,10 @@ var FrierenCharacter = (function () {
     var scene  = new T.Scene();
     this._scene = scene;
 
-    // Camera framed on upper torso + head; FOV=38° gives tight portrait crop.
-    // Pre-load values match what _onLoad computes for TARGET_HEIGHT=1.5.
-    var camera = new T.PerspectiveCamera(38, this.W / this.H, 0.01, 50);
-    camera.position.set(0, 1.32, 1.5);
+    // Camera framed on upper torso + head; FOV=52° gives wider portrait crop
+    // with enough horizontal room for arms/hands during wave animations.
+    var camera = new T.PerspectiveCamera(52, this.W / this.H, 0.01, 50);
+    camera.position.set(0, 1.32, 1.3);
     camera.lookAt(0, 1.22, 0);
     this._camera = camera;
 
@@ -293,10 +293,10 @@ var FrierenCharacter = (function () {
     var headTop  = TARGET_HEIGHT * 1.12;           // ≈ 1.68
     var waistY   = TARGET_HEIGHT * 0.50;           // ≈ 0.75
     var lookAtY  = (headTop + waistY) / 2;         // ≈ 1.215  (chest/shoulder area)
-    var viewHalf = (headTop - waistY) / 2 * 1.15;  // half-extent + 15 % margin
-    // FOV=38°  →  half-angle 19°  →  tan(19°)≈0.3443
-    var camZ = viewHalf / Math.tan(19 * Math.PI / 180);
-    this._camera.fov = 38;
+    var viewHalf = (headTop - waistY) / 2 * 1.30;  // half-extent + 30 % margin
+    // FOV=52°  →  half-angle 26°  →  tan(26°)≈0.4877
+    var camZ = viewHalf / Math.tan(26 * Math.PI / 180);
+    this._camera.fov = 52;
     this._camera.updateProjectionMatrix();
     this._camera.position.set(0, lookAtY + 0.08, camZ);
     this._camera.lookAt(0, lookAtY, 0);

@@ -37,7 +37,7 @@
     // ── Init 3D character ─────────────────────────────────
     var frieren3d = null;
     if (mount && typeof FrierenCharacter !== 'undefined') {
-      frieren3d = new FrierenCharacter(mount, { width: 260, height: 340 });
+      frieren3d = new FrierenCharacter(mount, { width: 320, height: 340 });
       frieren3d.init();
     }
 
