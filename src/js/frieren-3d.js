@@ -245,10 +245,15 @@ var FrierenCharacter = (function () {
     //
     // Two-tier correction based on degree of oversize:
     //   ratio > 4  (e.g. a costume at 7× body height):
-    //       corrFactor = 0.78 × skelH / maxY  → top aligns ≈ 78 % body height
+    //       corrFactor = 0.78 × skelH / maxDim  → top aligns ≈ 78 % body height
     //   ratio > 1.3  (e.g. a boot at 2× body height):
-    //       corrFactor = 0.20 × skelH / maxY  → top aligns ≈ 20 % body height
+    //       corrFactor = 0.20 × skelH / maxDim  → top aligns ≈ 20 % body height
     // Both formulas evaluate to ≈ 0.1 for the offending meshes in model 2.
+    //
+    // NOTE: Some GLB exports (e.g. VRChat model 2) store geometry in Z-up space,
+    // meaning bb.max.y ≈ 0 while bb.max.z holds the true height extent.  To
+    // handle both Y-up and Z-up authored geometry we use the largest absolute
+    // value across all six bbox faces as the representative dimension.
     var _skelH = skelH; // capture for closure
     model.traverse(function (node) {
       if (!node.isSkinnedMesh) return;
@@ -257,13 +262,16 @@ var FrierenCharacter = (function () {
       geom.computeBoundingBox();
       var bb = geom.boundingBox;
       if (!bb) return;
-      var maxY  = bb.max.y;
-      var ratio = maxY / _skelH;
+      var maxDim = Math.max(
+        Math.abs(bb.max.x), Math.abs(bb.max.y), Math.abs(bb.max.z),
+        Math.abs(bb.min.x), Math.abs(bb.min.y), Math.abs(bb.min.z)
+      );
+      var ratio = maxDim / _skelH;
       var corrFactor;
       if (ratio > 4) {
-        corrFactor = 0.78 * _skelH / maxY;
+        corrFactor = 0.78 * _skelH / maxDim;
       } else if (ratio > 1.3) {
-        corrFactor = 0.20 * _skelH / maxY;
+        corrFactor = 0.20 * _skelH / maxDim;
       } else {
         return; // geometry is within expected body bounds — no correction needed
       }
