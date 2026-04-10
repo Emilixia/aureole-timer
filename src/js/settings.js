@@ -39,7 +39,7 @@ const DEFAULT_SETTINGS = {
 // Companion (3D character) settings stored separately for clarity
 const DEFAULT_COMPANION = {
   model: 'model1',           // 'model1' | 'model2'
-  visible: true,
+  visible: false,
   waistFraction: 0.68,       // camera frame bottom (fraction of skeleton height)
   headFraction: 1.12,        // camera frame top
   fov: 52,                   // camera field-of-view

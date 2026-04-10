@@ -206,15 +206,22 @@ var FrierenCharacter = (function () {
     var scale          = 1.0;
     var floorOffset    = 0;
 
+    var skelH = 1.0; // reference skeleton height used for geometry correction below
     if (bodyBonesFound >= 6) {
       var bsz = new T.Vector3(); bodyBox.getSize(bsz);
-      var skelH = bsz.y;
+      // Some GLB exports (e.g. VRChat model 2) store the skeleton in a Z-up
+      // coordinate system due to an accumulated 90° rotation on the root hip
+      // bone.  In that case bsz.y ≈ 0 and bsz.z holds the true height.  Use
+      // the largest axis to obtain a meaningful skeleton height regardless of
+      // which axis is actually "up" in the skeleton's local space.
+      skelH       = Math.max(bsz.x, bsz.y, bsz.z);
       scale       = TARGET_HEIGHT / Math.max(skelH * 1.12, 0.01);
       floorOffset = bodyBox.min.y * scale;
     } else {
       // Fallback: full-object bbox (non-rigged or unknown skeleton)
       var fb  = new T.Box3().setFromObject(model);
       var fsz = new T.Vector3(); fb.getSize(fsz);
+      skelH       = Math.max(fsz.x, fsz.y, fsz.z);
       scale       = TARGET_HEIGHT / Math.max(fsz.y, 0.01);
       floorOffset = fb.min.y * scale;
     }
@@ -226,24 +233,42 @@ var FrierenCharacter = (function () {
     // Translate so the ankle/floor sits at y = 0
     model.position.set(0, -floorOffset, 0);
 
-    // ── Normalize bone/node scales ────────────────────────────────────────
-    // VRChat GLB exports frequently leave non-unit scale on individual bone
-    // nodes (e.g. clothing / costume bones), which causes skinned meshes to
-    // render at the wrong size relative to the body.  Resetting any bone
-    // whose local scale deviates from 1 by more than 10 % fixes oversized
-    // costume pieces without affecting the uniform root scale we just set.
-    // We skip the root scene node itself (whose scale we set intentionally).
+    // ── Correct geometry-oversized SkinnedMesh nodes ──────────────────────
+    // Some VRChat GLB exports contain SkinnedMesh nodes whose vertex positions
+    // are authored at a much larger coordinate scale than the body skeleton
+    // (e.g. boot or costume meshes at ~10× body size).  Because all nodes in
+    // these files have unit scale transforms, the earlier bone-scale pass
+    // cannot detect or fix this; the error is baked into the geometry itself.
+    // We detect it by comparing each SkinnedMesh's geometry bounding-box maxY
+    // against the skeleton reference height, then apply a per-node scale
+    // correction so the rendered mesh matches body proportions.
+    //
+    // Two-tier correction based on degree of oversize:
+    //   ratio > 4  (e.g. a costume at 7× body height):
+    //       corrFactor = 0.78 × skelH / maxY  → top aligns ≈ 78 % body height
+    //   ratio > 1.3  (e.g. a boot at 2× body height):
+    //       corrFactor = 0.20 × skelH / maxY  → top aligns ≈ 20 % body height
+    // Both formulas evaluate to ≈ 0.1 for the offending meshes in model 2.
+    var _skelH = skelH; // capture for closure
     model.traverse(function (node) {
-      // Only act on bone-type nodes or named skeletal nodes
-      if (node === model) return;
-      var s = node.scale;
-      var devX = Math.abs(s.x - 1);
-      var devY = Math.abs(s.y - 1);
-      var devZ = Math.abs(s.z - 1);
-      if (devX > 0.10 || devY > 0.10 || devZ > 0.10) {
-        node.scale.set(1, 1, 1);
-        node.updateMatrixWorld(true);
+      if (!node.isSkinnedMesh) return;
+      var geom = node.geometry;
+      if (!geom) return;
+      geom.computeBoundingBox();
+      var bb = geom.boundingBox;
+      if (!bb) return;
+      var maxY  = bb.max.y;
+      var ratio = maxY / _skelH;
+      var corrFactor;
+      if (ratio > 4) {
+        corrFactor = 0.78 * _skelH / maxY;
+      } else if (ratio > 1.3) {
+        corrFactor = 0.20 * _skelH / maxY;
+      } else {
+        return; // geometry is within expected body bounds — no correction needed
       }
+      node.scale.setScalar(corrFactor);
+      node.updateMatrixWorld(true);
     });
 
     // Keep original GLB materials so all textures (face, outfit) are preserved.
