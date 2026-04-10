@@ -203,28 +203,13 @@ var FrierenCharacter = (function () {
     model.scale.setScalar(scale);
     // Translate so the ankle/floor sits at y = 0
     model.position.set(0, -floorOffset, 0);
-    // Rotate to face the camera (model's front is -Z; camera is at +Z)
-    model.rotation.y = Math.PI;
 
-    // ── Apply toon shading ────────────────────────────────────────────────
+    // Keep original GLB materials so all textures (face, outfit) are preserved.
+    // Only disable shadows which we don't need.
     model.traverse(function (node) {
       if (!node.isMesh) return;
       node.castShadow    = false;
       node.receiveShadow = false;
-      var mats = Array.isArray(node.material) ? node.material : [node.material];
-      var newMats = mats.map(function (mat) {
-        if (!mat) return mat;
-        var toon = new T.MeshToonMaterial({
-          color:     mat.color     || new T.Color(0xffffff),
-          map:       mat.map       || null,
-          alphaMap:  mat.alphaMap  || null,
-          transparent: (mat.transparent || (mat.alphaMap != null)),
-          alphaTest:   mat.alphaTest || 0,
-          side:        mat.side !== undefined ? mat.side : T.FrontSide,
-        });
-        return toon;
-      });
-      node.material = Array.isArray(node.material) ? newMats : newMats[0];
     });
 
     // ── Collect bones ─────────────────────────────────────────────────────
