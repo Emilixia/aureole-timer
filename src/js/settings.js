@@ -10,6 +10,10 @@ const DEFAULT_SETTINGS = {
   borderAnimations: true,
   sidebarWidth: 220,
   progressBarStyle: 'mana',
+  // Animation
+  bgEffect: 'particles',    // 'particles' | 'sparkles' | 'matrix' | 'starfield' | 'aurora' | 'none'
+  tabTransition: 'slide',   // 'slide' | 'fade' | 'zoom' | 'none'
+  uiAnimations: true,       // master toggle: ripples, hover lifts, pop-ins
   // Timer
   defaultWorkDuration: 60,
   defaultStudyDuration: 90,
@@ -60,9 +64,17 @@ const Settings = (function () {
     root.style.setProperty('--sidebar-width', (current.sidebarWidth || 220) + 'px');
 
     document.body.style.fontSize = (current.fontSize || 14) + 'px';
+    // UI animations master toggle
+    document.body.classList.toggle('no-ui-animations', current.uiAnimations === false);
 
-    // Particle effects
-    if (window.App) {
+    // Particle effects / background effect
+    if (window.Animations) {
+      if (current.particleEffects !== false) {
+        Animations.applyBgEffect(current.bgEffect || 'particles');
+      } else {
+        Animations.stopBgEffect();
+      }
+    } else if (window.App) {
       if (current.particleEffects) {
         window.App.startParticles();
       } else {
@@ -124,6 +136,9 @@ const Settings = (function () {
       'borderAnimations': current.borderAnimations,
       'sidebarWidth': current.sidebarWidth,
       'progressBarStyle': current.progressBarStyle,
+      'bgEffect': current.bgEffect,
+      'tabTransition': current.tabTransition,
+      'uiAnimations': current.uiAnimations,
       'defaultWorkDuration': current.defaultWorkDuration,
       'defaultStudyDuration': current.defaultStudyDuration,
       'autoSaveSessions': current.autoSaveSessions,
@@ -165,13 +180,13 @@ const Settings = (function () {
       'accentColor', 'secondaryColor', 'bgColor',
       'defaultWorkDuration', 'defaultStudyDuration', 'breakReminderInterval',
       'hyperfocusTimer', 'dailyReminderTime', 'sidebarWidth', 'fontSize',
-      'progressBarStyle'
+      'progressBarStyle', 'bgEffect', 'tabTransition'
     ];
     const checkboxes = [
       'particleEffects', 'borderAnimations', 'autoSaveSessions', 'timerSounds',
       'desktopNotifications', 'timerCompleteNotif', 'breakReminders',
       'dailyReminder', 'autoPomodoro', 'focusHidesSidebar', 'progressPulse',
-      'timeBlindenessHelper', 'encouragementMessages'
+      'timeBlindenessHelper', 'encouragementMessages', 'uiAnimations'
     ];
 
     for (const id of fields) {
@@ -237,6 +252,29 @@ const Settings = (function () {
       progressBarStyleEl.addEventListener('change', function () {
         current.progressBarStyle = this.value;
         applyProgressBarStyle(this.value);
+      });
+    }
+
+    const bgEffectEl = document.getElementById('bgEffect');
+    if (bgEffectEl) {
+      bgEffectEl.addEventListener('change', function () {
+        current.bgEffect = this.value;
+        if (window.Animations) Animations.applyBgEffect(this.value);
+      });
+    }
+
+    const tabTransEl = document.getElementById('tabTransition');
+    if (tabTransEl) {
+      tabTransEl.addEventListener('change', function () {
+        current.tabTransition = this.value;
+      });
+    }
+
+    const uiAnimEl = document.getElementById('uiAnimations');
+    if (uiAnimEl) {
+      uiAnimEl.addEventListener('change', function () {
+        current.uiAnimations = this.checked;
+        document.body.classList.toggle('no-ui-animations', !this.checked);
       });
     }
   }

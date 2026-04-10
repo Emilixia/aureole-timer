@@ -52,64 +52,49 @@ function initParticles() {
 }
 
 function startParticles() {
+  // Delegate to Animations module if available; it handles all background effect modes
+  if (window.Animations) {
+    const mode = (window.AppSettings || {}).bgEffect || 'particles';
+    Animations.startBgEffect(mode);
+    return;
+  }
+  // ── Fallback (legacy, runs when animations.js not yet loaded) ───────────
   const canvas = document.getElementById('particleCanvas');
-  if (!canvas) return;
-  if (particleAnimId) return;
-
+  if (!canvas || particleAnimId) return;
   const ctx = canvas.getContext('2d');
-
   function animate() {
     if (!canvas.width) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     for (const p of particles) {
-      p.y -= p.speed;
-      p.x += p.drift;
-      p.alpha += p.alphaDelta;
-
-      if (p.alpha <= 0.05) p.alphaDelta = Math.abs(p.alphaDelta);
+      p.y -= p.speed; p.x += p.drift; p.alpha += p.alphaDelta;
+      if (p.alpha <= 0.05) p.alphaDelta =  Math.abs(p.alphaDelta);
       if (p.alpha >= 0.65) p.alphaDelta = -Math.abs(p.alphaDelta);
-
-      if (p.y < -10) {
-        p.y = canvas.height + 10;
-        p.x = Math.random() * canvas.width;
-      }
+      if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
       if (p.x < -10) p.x = canvas.width + 10;
       if (p.x > canvas.width + 10) p.x = -10;
-
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
       ctx.fillStyle = p.colorBase + p.alpha + ')';
       ctx.fill();
-
-      // Occasional sparkle cross
       if (p.r > 2 && p.alpha > 0.4) {
         ctx.strokeStyle = p.colorBase + (p.alpha * 0.6) + ')';
         ctx.lineWidth = 0.5;
         ctx.beginPath();
-        ctx.moveTo(p.x - p.r * 2, p.y);
-        ctx.lineTo(p.x + p.r * 2, p.y);
-        ctx.moveTo(p.x, p.y - p.r * 2);
-        ctx.lineTo(p.x, p.y + p.r * 2);
+        ctx.moveTo(p.x - p.r * 2, p.y); ctx.lineTo(p.x + p.r * 2, p.y);
+        ctx.moveTo(p.x, p.y - p.r * 2); ctx.lineTo(p.x, p.y + p.r * 2);
         ctx.stroke();
       }
     }
-
     particleAnimId = requestAnimationFrame(animate);
   }
   animate();
 }
 
 function stopParticles() {
-  if (particleAnimId) {
-    cancelAnimationFrame(particleAnimId);
-    particleAnimId = null;
-  }
+  if (window.Animations) { Animations.stopBgEffect(); return; }
+  if (particleAnimId) { cancelAnimationFrame(particleAnimId); particleAnimId = null; }
   const canvas = document.getElementById('particleCanvas');
-  if (canvas) {
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }
+  if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 }
 
 // ── Toast Notification System ────────────────────────────────
@@ -392,43 +377,41 @@ function initTabs() {
   navButtons.forEach(function (btn) {
     btn.addEventListener('click', function () {
       const target = btn.dataset.tab;
-      navButtons.forEach(function (b) { b.classList.remove('active'); });
-      panels.forEach(function (p) { p.classList.remove('active'); });
-      btn.classList.add('active');
-      const panel = document.getElementById('tab-' + target);
-      if (panel) panel.classList.add('active');
-      const contentEl = document.getElementById('content');
-      if (contentEl) contentEl.scrollTop = 0;
+      const currentPanel = document.querySelector('.tab-panel.active');
+      const newPanel = document.getElementById('tab-' + target);
+      if (!newPanel || newPanel === currentPanel) return;
 
-      // When returning to Journey, reset to mode-select unless timer is running
-      if (target === 'journey') {
-        const timerState = window.Timer ? window.Timer.getState() : null;
-        if (!timerState || !timerState.isRunning) {
-          const modeSelect = document.getElementById('journeyModeSelect');
-          const timerView = document.getElementById('journeyTimerView');
-          const pomPanel = document.getElementById('pomodoroPanel');
-          if (modeSelect) modeSelect.style.display = 'flex';
-          if (timerView) timerView.style.display = 'none';
-          if (pomPanel) pomPanel.style.display = 'none';
+      function applySwitch() {
+        navButtons.forEach(function (b) { b.classList.remove('active'); });
+        panels.forEach(function (p) { p.classList.remove('active'); });
+        btn.classList.add('active');
+        if (newPanel) newPanel.classList.add('active');
+        const contentEl = document.getElementById('content');
+        if (contentEl) contentEl.scrollTop = 0;
+
+        if (target === 'journey') {
+          const timerState = window.Timer ? window.Timer.getState() : null;
+          if (!timerState || !timerState.isRunning) {
+            const modeSelect = document.getElementById('journeyModeSelect');
+            const timerView = document.getElementById('journeyTimerView');
+            const pomPanel = document.getElementById('pomodoroPanel');
+            if (modeSelect) modeSelect.style.display = 'flex';
+            if (timerView) timerView.style.display = 'none';
+            if (pomPanel) pomPanel.style.display = 'none';
+          }
         }
+        if (target === 'chronicle' && window.Chronicle) window.Chronicle.renderChronicle();
+        if (target === 'profile'   && window.Profile)   window.Profile.updateProfileStats();
+        if (target === 'grimoire'  && window.Grimoire)  { window.Grimoire.renderBoards(); window.Grimoire.renderHabitList(); }
+        if (target === 'journal'   && window.Journal)   window.Journal.renderEntryList();
+        Storage.set('lastTab', target);
       }
 
-      // Refresh data-heavy tabs when opened
-      if (target === 'chronicle' && window.Chronicle) {
-        window.Chronicle.renderChronicle();
+      if (currentPanel && window.Animations) {
+        Animations.animateTabOut(currentPanel, applySwitch);
+      } else {
+        applySwitch();
       }
-      if (target === 'profile' && window.Profile) {
-        window.Profile.updateProfileStats();
-      }
-      if (target === 'grimoire' && window.Grimoire) {
-        window.Grimoire.renderBoards();
-        window.Grimoire.renderHabitList();
-      }
-      if (target === 'journal' && window.Journal) {
-        window.Journal.renderEntryList();
-      }
-
-      Storage.set('lastTab', target);
     });
   });
 }
@@ -880,10 +863,15 @@ async function initApp() {
   setInterval(updateClock, 1000);
   await initWorldClock();
 
-  // 4. Particle system
-  initParticles();
-  const settings = window.AppSettings || {};
-  if (settings.particleEffects !== false) {
+  // 4. Particle / background effect system
+  initParticles(); // sets up resize handler + legacy particle array
+  if (window.Animations) {
+    Animations.init();
+    const settings = window.AppSettings || {};
+    if (settings.particleEffects !== false) {
+      Animations.startBgEffect(settings.bgEffect || 'particles');
+    }
+  } else if ((window.AppSettings || {}).particleEffects !== false) {
     startParticles();
   }
 

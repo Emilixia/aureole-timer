@@ -4117,3 +4117,157 @@ body.focus-mode #tab-journey .journey-right {
 .prf-stat-rank {
   font-size: 0.7rem !important;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS — RIPPLE EFFECT
+   ══════════════════════════════════════════════════════════════════════════ */
+/* .ripple-host is added by JS when a button receives a ripple */
+.ripple-host {
+  position: relative;
+  overflow: hidden;
+}
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.20);
+  transform: scale(0);
+  animation: rippleExpand 0.55s linear forwards;
+  pointer-events: none;
+  z-index: 9;
+}
+@keyframes rippleExpand {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS — BUTTON PRESS FEEDBACK
+   ══════════════════════════════════════════════════════════════════════════ */
+button:active:not(:disabled),
+.btn:active:not(:disabled),
+.btn-primary:active:not(:disabled),
+.btn-secondary:active:not(:disabled),
+.btn-ghost:active:not(:disabled),
+.btn-danger:active:not(:disabled),
+.btn-begin-session:active:not(:disabled) {
+  transform: scale(0.97) !important;
+}
+.nav-tab:active  { transform: scale(0.94) !important; }
+.btn-icon:active { transform: scale(0.90) !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS — TAB PANEL IN/OUT
+   ══════════════════════════════════════════════════════════════════════════ */
+/* Override fadeInPanel with a more polished slide-in for active panels */
+.tab-panel.active {
+  animation: tabSlideIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes tabSlideIn {
+  from { opacity: 0; transform: translateX(24px) translateY(4px); }
+  to   { opacity: 1; transform: translateX(0)    translateY(0); }
+}
+/* Settings panels use a lighter fade */
+.settings-panel.active {
+  animation: settingsFadeIn 0.22s ease;
+}
+@keyframes settingsFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS — POP-IN (for newly added DOM elements)
+   ══════════════════════════════════════════════════════════════════════════ */
+.anim-pop-in {
+  animation: animPopIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes animPopIn {
+  from { opacity: 0; transform: scale(0.75); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS — TIMER START/STOP PULSE
+   ══════════════════════════════════════════════════════════════════════════ */
+.anim-timer-pulse {
+  animation: timerPulseRing 0.5s ease-out;
+}
+@keyframes timerPulseRing {
+  0%   { box-shadow: 0 0 0 0   rgba(124, 92, 191, 0.75); }
+  70%  { box-shadow: 0 0 0 22px rgba(124, 92, 191, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(124, 92, 191, 0); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS — CARD HOVER LIFT
+   ══════════════════════════════════════════════════════════════════════════ */
+.chronicle-session-item,
+.journal-entry-item,
+.reminder-item,
+.achievement-badge,
+.spell-card {
+  transition: var(--transition), transform 0.18s ease, box-shadow 0.18s ease;
+}
+.chronicle-session-item:hover,
+.journal-entry-item:hover,
+.reminder-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.30);
+}
+.spell-card:hover {
+  transform: translateY(-3px) scale(1.015);
+}
+.achievement-badge:not(.locked):hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 16px rgba(201, 162, 39, 0.4);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS — NAV TAB ACTIVE
+   ══════════════════════════════════════════════════════════════════════════ */
+.topnav-tabs .nav-tab {
+  transition: color 0.18s, transform 0.12s;
+}
+.topnav-tabs .nav-tab.active {
+  animation: navTabPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes navTabPop {
+  0%   { transform: scale(0.93); }
+  60%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS — AURORA BACKGROUND OVERLAY
+   ══════════════════════════════════════════════════════════════════════════ */
+#auroraOverlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(124, 92, 191, 0.18) 0%,
+    rgba(61, 139, 122, 0.14) 30%,
+    rgba(212, 168, 67,  0.10) 60%,
+    rgba(80,  40, 160, 0.18) 100%
+  );
+  background-size: 400% 400%;
+  animation: auroraShift 14s ease-in-out infinite;
+  mix-blend-mode: screen;
+}
+@keyframes auroraShift {
+  0%   { background-position:   0%  50%; }
+  50%  { background-position: 100%  50%; }
+  100% { background-position:   0%  50%; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS — NO-UI-ANIMATIONS OVERRIDE (when user disables)
+   ══════════════════════════════════════════════════════════════════════════ */
+body.no-ui-animations *,
+body.no-ui-animations *::before,
+body.no-ui-animations *::after {
+  animation-duration:   0.001ms !important;
+  transition-duration:  0.001ms !important;
+}
+body.no-ui-animations .ripple { display: none !important; }
