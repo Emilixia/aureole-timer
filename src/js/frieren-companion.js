@@ -18,7 +18,7 @@
   ];
 
   // Periodic idle animation sequence (cycles through these)
-  var IDLE_ACTIONS = ['wave', 'think', 'stretch', 'wave', 'nod'];
+  var IDLE_ACTIONS = ['wave', 'think', 'stretch', 'shrug', 'nod', 'bow', 'wave', 'think'];
 
   var speechTimer = null;
   var helpVisible = false;
@@ -37,7 +37,7 @@
     // ── Init 3D character ─────────────────────────────────
     var frieren3d = null;
     if (mount && typeof FrierenCharacter !== 'undefined') {
-      frieren3d = new FrierenCharacter(mount, { width: 200, height: 340 });
+      frieren3d = new FrierenCharacter(mount, { width: 260, height: 340 });
       frieren3d.init();
     }
 
