@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "mammoth": "^1.6.0",
-    "pdfjs-dist": "^4.2.67"
+    "pdfjs-dist": "^4.2.67",
+    "three": "^0.167.1"
   }
 }
