@@ -27,7 +27,7 @@ var Games = (function () {
     var mins = Math.floor(durationSeconds / 60);
     if (mins > 0) {
       addCurrency(mins);
-      if (window.showToast) window.showToast('💎 +" + mins + " Arcane Shards earned!', 'success');
+      if (window.showToast) window.showToast('💎 +' + mins + ' Arcane Shards earned!', 'success');
     }
     // Award Battle Pass XP (1 per 10 seconds of focus)
     addBattlePassXP(Math.floor(durationSeconds / 10));

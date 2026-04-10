@@ -4319,3 +4319,397 @@ body.no-ui-animations *::after {
   transition-duration:  0.001ms !important;
 }
 body.no-ui-animations .ripple { display: none !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   GAMES TAB
+   ══════════════════════════════════════════════════════════════════════════ */
+.games-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+  height: 100%;
+  overflow: hidden;
+}
+.games-panel.active { display: flex !important; }
+
+/* Currency bar */
+.games-currency-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(3,8,20,0.95);
+  border-bottom: 1px solid rgba(120,90,40,0.3);
+  flex-shrink: 0;
+}
+.games-currency-icon { font-size: 1.1rem; }
+.games-currency-label { font-size: 0.8rem; color: var(--text-muted); }
+.games-currency-val {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gold-light);
+  font-variant-numeric: tabular-nums;
+}
+.games-currency-hint { font-size: 0.72rem; color: var(--text-muted); margin-left: 4px; }
+
+/* Sub-tabs */
+.games-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 10px 16px 0;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(120,90,40,0.2);
+}
+.games-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: color 0.18s, border-color 0.18s;
+  letter-spacing: 0.5px;
+}
+.games-tab:hover { color: var(--text-primary); }
+.games-tab.active { color: var(--gold-light); border-bottom-color: var(--gold); }
+
+/* Sections */
+.games-section {
+  display: none;
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+.games-section.active { display: block; }
+
+/* ── GACHA ─────────────────────────────────────────────────────── */
+.gacha-layout { display: flex; flex-direction: column; gap: 20px; }
+
+.gacha-cases-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.gacha-case-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 20px;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  min-width: 120px;
+}
+.gacha-case-card:hover { border-color: var(--gold); background: rgba(200,170,110,0.06); }
+.gacha-case-card.active { border-color: var(--gold); background: rgba(200,170,110,0.12); }
+.gacha-case-img { font-size: 2.4rem; }
+.gacha-case-name { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); }
+.gacha-case-cost { font-size: 0.75rem; color: var(--gold); }
+
+.gacha-open-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Reel */
+.gacha-reel-wrap {
+  width: 100%;
+  max-width: 700px;
+  height: 110px;
+  overflow: hidden;
+  position: relative;
+  border: 2px solid rgba(200,170,110,0.3);
+  border-radius: var(--radius-lg);
+  background: rgba(3,8,20,0.95);
+}
+.gacha-reel-marker {
+  position: absolute;
+  left: 50%;
+  top: 0; bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--gold);
+  z-index: 2;
+  pointer-events: none;
+}
+.gacha-reel {
+  display: flex;
+  height: 100%;
+  will-change: transform;
+}
+.gacha-reel-item {
+  flex-shrink: 0;
+  width: 90px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-right: 1px solid rgba(120,90,40,0.2);
+  border: 2px solid transparent;
+  border-radius: 6px;
+  padding: 6px;
+}
+.gri-emoji { font-size: 1.8rem; }
+.gri-name { font-size: 0.6rem; color: var(--text-muted); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px; }
+.gri-rarity { font-size: 0.65rem; font-weight: 600; }
+
+.gacha-open-btn {
+  padding: 10px 36px;
+  background: linear-gradient(135deg, var(--gold), var(--accent));
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.gacha-open-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.gacha-open-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.gacha-result {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+.gacha-result-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px 32px;
+  border: 2px solid var(--gold);
+  border-radius: var(--radius-lg);
+  background: rgba(3,8,20,0.9);
+  animation: gachaResultPop 0.4s cubic-bezier(0.2,1.4,0.5,1) both;
+}
+@keyframes gachaResultPop {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+.gr-emoji { font-size: 2.6rem; }
+.gr-name { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+.gr-rarity { font-size: 0.82rem; font-weight: 600; }
+.gr-value { font-size: 0.78rem; color: var(--text-muted); }
+
+/* Inventory */
+.gacha-inventory { margin-top: 4px; }
+.gacha-inv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  color: var(--gold-light);
+}
+.gacha-inv-count { font-size: 0.75rem; color: var(--text-muted); }
+.gacha-inv-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gacha-inv-item {
+  width: 46px; height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  cursor: default;
+  transition: transform 0.12s;
+  font-size: 1.4rem;
+}
+.gacha-inv-item:hover { transform: scale(1.15); }
+.gii-emoji { pointer-events: none; }
+
+/* ── BATTLE PASS ────────────────────────────────────────────────── */
+.bp-header {
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+.bp-season-title {
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  color: var(--gold-light);
+  margin-bottom: 12px;
+}
+.bp-xp-bar-wrap { display: flex; flex-direction: column; gap: 6px; }
+.bp-xp-label { font-size: 0.8rem; color: var(--text-muted); }
+.bp-xp-track {
+  height: 8px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.bp-xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--accent));
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+.bp-level-badge {
+  font-size: 0.78rem;
+  color: var(--gold);
+  font-weight: 600;
+  align-self: flex-end;
+}
+
+.bp-track {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.bp-tier {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 6px;
+  min-width: 60px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  opacity: 0.5;
+  transition: opacity 0.2s, border-color 0.2s;
+}
+.bp-tier.unlocked { opacity: 1; }
+.bp-tier.current { border-color: var(--gold); }
+.bp-tier.claimed { background: rgba(200,170,110,0.08); }
+.bp-tier-num { font-size: 0.6rem; color: var(--text-muted); }
+.bp-tier-reward { font-size: 1.2rem; }
+.bp-tier-label { font-size: 0.6rem; color: var(--text-muted); text-align: center; }
+.bp-claim-btn {
+  margin-top: 2px;
+  padding: 2px 6px;
+  font-size: 0.6rem;
+  background: var(--gold);
+  border: none;
+  border-radius: 3px;
+  color: #000;
+  cursor: pointer;
+  font-weight: 700;
+  transition: opacity 0.15s;
+}
+.bp-claim-btn:hover { opacity: 0.8; }
+
+/* ── FIDGET ZONE ─────────────────────────────────────────────────── */
+.fidget-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-start;
+}
+.fidget-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 220px;
+}
+.fidget-title { font-size: 0.95rem; font-weight: 600; color: var(--gold-light); }
+.fidget-hint { font-size: 0.75rem; color: var(--text-muted); }
+
+/* Spinner */
+.fidget-spinner-wrap {
+  width: 160px; height: 160px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  user-select: none;
+}
+.fidget-spinner {
+  width: 140px; height: 140px;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.fidget-blade {
+  position: absolute;
+  width: 50px; height: 50px;
+  background: linear-gradient(135deg, var(--accent), var(--gold));
+  border-radius: 50% 10% 50% 10%;
+  transform-origin: 50% 50%;
+}
+.fidget-blade:nth-child(1) { transform: rotate(0deg)   translate(30px, 0); }
+.fidget-blade:nth-child(2) { transform: rotate(120deg) translate(30px, 0); }
+.fidget-blade:nth-child(3) { transform: rotate(240deg) translate(30px, 0); }
+.fidget-center {
+  width: 22px; height: 22px;
+  background: var(--bg-base);
+  border: 3px solid var(--gold);
+  border-radius: 50%;
+  z-index: 2;
+}
+.fidget-spinner-speed { font-size: 0.75rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+/* 3D Cube */
+.fidget-cube-scene {
+  width: 120px; height: 120px;
+  perspective: 400px;
+  cursor: grab;
+  user-select: none;
+}
+.fidget-cube-scene:active { cursor: grabbing; }
+.fidget-cube {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(-20deg) rotateY(30deg);
+}
+.fidget-face {
+  position: absolute;
+  width: 120px; height: 120px;
+  background: rgba(124,92,191,0.18);
+  border: 2px solid rgba(200,170,110,0.45);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem;
+  backface-visibility: hidden;
+}
+.fidget-face.front  { transform: translateZ(60px); }
+.fidget-face.back   { transform: rotateY(180deg) translateZ(60px); }
+.fidget-face.left   { transform: rotateY(-90deg) translateZ(60px); }
+.fidget-face.right  { transform: rotateY(90deg)  translateZ(60px); }
+.fidget-face.top    { transform: rotateX(90deg)  translateZ(60px); }
+.fidget-face.bottom { transform: rotateX(-90deg) translateZ(60px); }
+
+/* Bubble wrap */
+.fidget-bubble-card { min-width: 280px; }
+.fidget-bubble-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 300px;
+}
+.fidget-bubble {
+  width: 26px; height: 26px;
+  background: radial-gradient(circle at 35% 35%, rgba(124,92,191,0.7), rgba(61,139,122,0.4));
+  border: 1.5px solid rgba(200,170,110,0.35);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.08s, background 0.1s, box-shadow 0.1s;
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3), 0 0 4px rgba(124,92,191,0.3);
+}
+.fidget-bubble:hover:not(.popped) { transform: scale(1.12); }
+.fidget-bubble.popped {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(120,90,40,0.15);
+  box-shadow: none;
+  transform: scale(0.88);
+  cursor: default;
+}
