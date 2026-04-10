@@ -54,7 +54,17 @@ var FrierenCharacter = (function () {
     this._blinkTimer = 0;
     this._blinkGap   = lerp(3, 6, Math.random());
     this._blinkPhase = 0;       // 0=open 1=closing 2=opening
+    this._blinkScale = 1.0;     // current blink layer (multiplied with face layer)
     this._eyeBones   = [];      // eye scale targets
+
+    // Face / expression overlay (eye openness, idle expressions)
+    this._faceEyeOpen = 1.0;   // target eye openness (1=normal, 0=closed, 1.2=wide)
+    this._faceEyeCurr = 1.0;   // smoothed current value
+    this._exprTimer   = 0;
+    this._exprGap     = lerp(7, 14, Math.random());
+    this._exprPhase   = 0;     // 0=waiting, 1=running
+    this._exprTime    = 0;
+    this._exprType    = 'none';
 
     // Action override
     this._action      = null;
@@ -102,8 +112,8 @@ var FrierenCharacter = (function () {
     // Camera framed on upper torso + head; FOV=52° gives wider portrait crop
     // with enough horizontal room for arms/hands during wave animations.
     var camera = new T.PerspectiveCamera(52, this.W / this.H, 0.01, 50);
-    camera.position.set(0, 1.32, 1.3);
-    camera.lookAt(0, 1.22, 0);
+    camera.position.set(0, 1.05, 1.65);
+    camera.lookAt(0, 1.05, 0);
     this._camera = camera;
 
     // ── Lights ───────────────────────────────────────────────────────────
@@ -287,12 +297,13 @@ var FrierenCharacter = (function () {
       self2._baseRot[b.name] = { x: b.rotation.x, y: b.rotation.y, z: b.rotation.z };
     });
 
-    // Re-frame camera for upper-body-only portrait.
+    // Re-frame camera for a lower crop showing from knee level up.
     // Feet at y=0, head mesh top at ~TARGET_HEIGHT*1.12.
-    // We want to show from waist (~50 % of height) to just above head.
+    // Show from ~28 % of height (knee area) to just above head — character
+    // appears "lower" and more compact in the widget.
     var headTop  = TARGET_HEIGHT * 1.12;           // ≈ 1.68
-    var waistY   = TARGET_HEIGHT * 0.50;           // ≈ 0.75
-    var lookAtY  = (headTop + waistY) / 2;         // ≈ 1.215  (chest/shoulder area)
+    var waistY   = TARGET_HEIGHT * 0.28;           // ≈ 0.42  (knee area)
+    var lookAtY  = (headTop + waistY) / 2;         // ≈ 1.05  (chest area)
     var viewHalf = (headTop - waistY) / 2 * 1.30;  // half-extent + 30 % margin
     // FOV=52°  →  half-angle 26°  →  tan(26°)≈0.4877
     var camZ = viewHalf / Math.tan(26 * Math.PI / 180);
@@ -322,6 +333,7 @@ var FrierenCharacter = (function () {
     this._updateHairPhysics();
     this._updateSkirt();
     this._updateBlink(dt);
+    this._updateFace(dt);
     this._updateAction(dt);
     this._updateReturnBlend(dt);
   };
@@ -349,55 +361,58 @@ var FrierenCharacter = (function () {
       bone.rotation.z = br[name].z + dz;
     }
 
-    // Body sway (Z)
-    var sway   = Math.sin(t * 0.75) * 0.022;
-    // Breathing (Y scale / X rotation on spine)
-    var breath = Math.sin(t * 1.15) * 0.008;
+    // Multi-frequency sway for organic feel
+    var sway   = Math.sin(t * 0.68) * 0.022 + Math.sin(t * 1.35) * 0.006;
+    // Two-frequency breathing
+    var breath = Math.sin(t * 1.12) * 0.010 + Math.sin(t * 2.18) * 0.002;
+    var micro  = Math.sin(t * 2.40) * 0.003;
 
-    rot('pelvis_02',   breath * 0.3, 0, sway * 0.4);
-    rot('spine_01_03', breath * 0.5, 0, sway * 0.6);
-    rot('spine_02_04', breath,       0, sway * 0.5);
-    rot('spine_03_05', breath * 0.6, 0, sway * 0.4);
-    rot('neck_01_044', 0, 0, sway * 0.3);
+    rot('pelvis_02',   breath * 0.25 + micro, 0, sway * 0.35);
+    rot('spine_01_03', breath * 0.55,         0, sway * 0.65 + micro);
+    rot('spine_02_04', breath + micro,        0, sway * 0.50);
+    rot('spine_03_05', breath * 0.70,         0, sway * 0.35);
+    rot('neck_01_044', 0,                     0, sway * 0.25);
 
-    // Head gentle nod/tilt
-    var headZ = Math.sin(t * 0.50) * 0.018;
-    var headX = Math.sin(t * 0.65) * 0.010;
-    rot('head_045', headX, 0, headZ);
+    // Head gentle nod/tilt (multi-frequency, more alive)
+    var headZ = Math.sin(t * 0.48) * 0.020 + Math.sin(t * 1.02) * 0.006;
+    var headX = Math.sin(t * 0.62) * 0.012 + Math.sin(t * 1.55) * 0.004;
 
-    // Shoulder micro-movement
-    rot('clavicle_r_025', Math.sin(t * 0.55) * 0.012, 0, 0);
-    rot('clavicle_l_06',  Math.sin(t * 0.55 + 1.0) * 0.012, 0, 0);
-
-    // Slight arm drift
-    rot('upperarm_r_026', 0, 0, Math.sin(t * 0.48) * 0.015);
-    rot('upperarm_l_07',  0, 0, Math.sin(t * 0.52 + 0.8) * 0.015);
-
-    // Subtle weight shift on hips
-    rot('thigh_r_00',  0, 0, Math.sin(t * 0.75) * 0.008);
-    rot('thigh_l_046', 0, 0, Math.sin(t * 0.75 + Math.PI) * 0.008);
-
-    // Occasional slow head glance — looks left/right every ~18 s
-    var glanceCycle = 18.0;
-    var glanceT     = (t % glanceCycle) / glanceCycle;  // 0→1 over 18 s
+    // Periodic glance — looks left/right every ~16 s
+    var glanceCycle = 16.0;
+    var glanceT     = (t % glanceCycle) / glanceCycle;
     var glanceY     = 0;
-    if (glanceT < 0.12) {
-      glanceY = easeOut(glanceT / 0.12) * 0.18;
+    if (glanceT < 0.10) {
+      glanceY = easeOut(glanceT / 0.10) * 0.20;
     } else if (glanceT < 0.22) {
-      glanceY = 0.18;
-    } else if (glanceT < 0.34) {
-      glanceY = lerp(0.18, 0, (glanceT - 0.22) / 0.12);
-    } else if (glanceT < 0.46) {
-      glanceY = -easeOut((glanceT - 0.34) / 0.12) * 0.18;
-    } else if (glanceT < 0.56) {
-      glanceY = -0.18;
-    } else if (glanceT < 0.68) {
-      glanceY = lerp(-0.18, 0, (glanceT - 0.56) / 0.12);
+      glanceY = 0.20;
+    } else if (glanceT < 0.32) {
+      glanceY = lerp(0.20, 0, (glanceT - 0.22) / 0.10);
+    } else if (glanceT < 0.42) {
+      glanceY = -easeOut((glanceT - 0.32) / 0.10) * 0.20;
+    } else if (glanceT < 0.54) {
+      glanceY = -0.20;
+    } else if (glanceT < 0.64) {
+      glanceY = lerp(-0.20, 0, (glanceT - 0.54) / 0.10);
     }
     var headBone = b['head_045'];
     if (headBone && br['head_045']) {
+      headBone.rotation.x = br['head_045'].x + headX;
       headBone.rotation.y = br['head_045'].y + glanceY;
+      headBone.rotation.z = br['head_045'].z + headZ;
     }
+
+    // Shoulder micro-movement (counterpoint to spine)
+    rot('clavicle_r_025', Math.sin(t * 0.52) * 0.014, 0, 0);
+    rot('clavicle_l_06',  Math.sin(t * 0.52 + 1.1) * 0.014, 0, 0);
+
+    // Arm drift (two frequencies)
+    rot('upperarm_r_026', 0, 0, Math.sin(t * 0.45) * 0.018 + Math.sin(t * 1.00) * 0.005);
+    rot('upperarm_l_07',  0, 0, Math.sin(t * 0.50 + 0.8) * 0.018 + Math.sin(t * 0.90) * 0.005);
+
+    // Subtle weight shift (very slow — like real weight transfer)
+    var weightShift = Math.sin(t * 0.28) * 0.012;
+    rot('thigh_r_00',  0, 0, Math.sin(t * 0.68) * 0.010 + weightShift);
+    rot('thigh_l_046', 0, 0, Math.sin(t * 0.68 + Math.PI) * 0.010 - weightShift);
   };
 
   FrierenCharacter.prototype._updateHairPhysics = function () {
@@ -469,9 +484,94 @@ var FrierenCharacter = (function () {
     } else {
       sy = 1;
     }
-    this._eyeBones.forEach(function (bone) {
-      bone.scale.y = sy;
-    });
+    // Store blink scale — _updateFace multiplies this with the face expression layer
+    this._blinkScale = sy;
+  };
+
+  // ── Face expression system ────────────────────────────────────────────────
+  FrierenCharacter.prototype._updateFace = function (dt) {
+    // Smooth eye openness toward target
+    this._faceEyeCurr = lerp(this._faceEyeCurr, this._faceEyeOpen, Math.min(dt * 5.5, 1));
+
+    // Apply combined scale: expression layer × blink layer
+    var finalEye = clamp(this._faceEyeCurr * this._blinkScale, 0.02, 1.25);
+    this._eyeBones.forEach(function (bone) { bone.scale.y = finalEye; });
+
+    // Periodic idle micro-expressions — skip when an action is running
+    if (this._action) return;
+
+    this._exprTimer += dt;
+    if (this._exprPhase === 0 && this._exprTimer >= this._exprGap) {
+      var exprs = ['squint', 'halfLid', 'wideEyes', 'slowBlink', 'lookSideL', 'lookSideR'];
+      this._exprType  = exprs[Math.floor(Math.random() * exprs.length)];
+      this._exprPhase = 1;
+      this._exprTime  = 0;
+      this._exprTimer = 0;
+      this._exprGap   = lerp(6, 13, Math.random());
+    }
+
+    if (this._exprPhase === 1) {
+      this._exprTime += dt;
+      var done = this._stepExpr(this._exprType, this._exprTime);
+      if (done) {
+        this._exprPhase = 0;
+        this._faceEyeOpen = 1.0;
+      }
+    }
+  };
+
+  FrierenCharacter.prototype._stepExpr = function (type, t) {
+    var b  = this._bones;
+    var br = this._baseRot;
+    var head = b['head_045'];
+
+    if (type === 'squint') {
+      // Happy squint: eyes narrow, hold, open
+      if (t < 0.30) { this._faceEyeOpen = lerp(1.0, 0.52, t / 0.30); return false; }
+      if (t < 1.40) { this._faceEyeOpen = 0.52; return false; }
+      if (t < 2.00) { this._faceEyeOpen = lerp(0.52, 1.0, (t - 1.40) / 0.60); return false; }
+      return true;
+    }
+
+    if (type === 'halfLid') {
+      // Dreamy heavy-lid
+      if (t < 0.50) { this._faceEyeOpen = lerp(1.0, 0.60, t / 0.50); return false; }
+      if (t < 2.60) { this._faceEyeOpen = 0.60; return false; }
+      if (t < 3.10) { this._faceEyeOpen = lerp(0.60, 1.0, (t - 2.60) / 0.50); return false; }
+      return true;
+    }
+
+    if (type === 'wideEyes') {
+      // Momentary wide eyes (surprised/curious)
+      if (t < 0.15) { this._faceEyeOpen = lerp(1.0, 1.22, t / 0.15); return false; }
+      if (t < 0.85) { this._faceEyeOpen = 1.22; return false; }
+      if (t < 1.50) { this._faceEyeOpen = lerp(1.22, 1.0, (t - 0.85) / 0.65); return false; }
+      return true;
+    }
+
+    if (type === 'slowBlink') {
+      // Slow peaceful close + pause + open
+      if (t < 0.55) { this._faceEyeOpen = lerp(1.0, 0.04, t / 0.55); return false; }
+      if (t < 1.10) { this._faceEyeOpen = 0.04; return false; }
+      if (t < 1.90) { this._faceEyeOpen = lerp(0.04, 1.0, (t - 1.10) / 0.80); return false; }
+      return true;
+    }
+
+    if (type === 'lookSideL' || type === 'lookSideR') {
+      var dir = (type === 'lookSideR') ? 1 : -1;
+      var dur = 2.6;
+      if (head && br['head_045']) {
+        var env;
+        if      (t < 0.35) env = easeOut(t / 0.35);
+        else if (t < 1.90) env = 1;
+        else if (t < dur)  env = easeOut(1 - (t - 1.90) / 0.70);
+        else               env = 0;
+        head.rotation.y = br['head_045'].y + 0.24 * env * dir;
+      }
+      return (t >= dur);
+    }
+
+    return true; // unknown type, finish immediately
   };
 
   FrierenCharacter.prototype._updateAction = function (dt) {
@@ -506,6 +606,8 @@ var FrierenCharacter = (function () {
       }
     });
     this._returnBlend = { timer: 0, duration: 0.50, bones: captured };
+    // Always reset eye expression state when an action ends
+    this._faceEyeOpen = 1.0;
   };
 
   FrierenCharacter.prototype._updateReturnBlend = function (dt) {
@@ -612,18 +714,27 @@ var FrierenCharacter = (function () {
     this._returnBlend = null;
 
     this._action = {
-      duration: 0.9,
-      returnBones: ['head_045'],
+      duration: 1.2,
+      returnBones: ['head_045', 'neck_01_044'],
       update: function (t) {
-        var bounce = Math.abs(Math.sin(t * Math.PI * 3.5)) * 0.14;
+        var env    = 1 - easeOut(Math.max(0, (t - 0.75) / 0.25));
+        var bounce = Math.abs(Math.sin(t * Math.PI * 4.0)) * 0.14 * env;
         self._modelRoot.position.y =
           -self.HIDE_OFFSET * (1 - easeOut(self._peekProgress)) + bounce;
         var head = b['head_045'];
+        var neck = b['neck_01_044'];
         if (head && br['head_045']) {
-          head.rotation.z = br['head_045'].z + Math.sin(t * Math.PI * 4) * 0.10;
+          head.rotation.z = br['head_045'].z + Math.sin(t * Math.PI * 5.0) * 0.10 * env;
+          head.rotation.x = br['head_045'].x - 0.06 * env;
         }
+        if (neck && br['neck_01_044']) {
+          neck.rotation.z = br['neck_01_044'].z + Math.sin(t * Math.PI * 5.0) * 0.05 * env;
+        }
+        // Wide eyes during excitement
+        self._faceEyeOpen = lerp(1.0, 1.20, env);
       },
       onEnd: function () {
+        self._faceEyeOpen = 1.0;
         self._applyPeek();
       },
     };
@@ -719,8 +830,13 @@ var FrierenCharacter = (function () {
           head.rotation.z = br['head_045'].z + 0.10 * lift;
           head.rotation.x = br['head_045'].x + Math.sin(t * Math.PI * 1.5) * 0.04 * lift;
         }
+
+        // Eyes: half-lid during contemplation
+        self._faceEyeOpen = lerp(1.0, 0.58, lift);
       },
-      onEnd: function () {},
+      onEnd: function () {
+        self._faceEyeOpen = 1.0;
+      },
     };
     this._actionTimer = 0;
   };
@@ -776,6 +892,14 @@ var FrierenCharacter = (function () {
         var yawn = (t > 0.38 && t < 0.62) ? Math.sin((t - 0.38) / 0.24 * Math.PI) * 0.18 : 0;
         if (head && br['head_045']) head.rotation.x = br['head_045'].x - 0.08 * phase + yawn;
 
+        // Eyes close during yawn phase (0.35–0.65), open back with arms
+        if (t > 0.32 && t < 0.68) {
+          var yawnEye = Math.sin((t - 0.32) / 0.36 * Math.PI);
+          self._faceEyeOpen = lerp(1.0, 0.04, yawnEye);
+        } else {
+          self._faceEyeOpen = 1.0;
+        }
+
         // Fingers spread wide (splay) on both hands
         var spreadR = [
           ['index_01_r_029', -0.12], ['middle_01_r_032', -0.04],
@@ -799,7 +923,9 @@ var FrierenCharacter = (function () {
           if (bone && base) bone.rotation.x = base.x - 0.10 * phase;
         });
       },
-      onEnd: function () {},
+      onEnd: function () {
+        self._faceEyeOpen = 1.0;
+      },
     };
     this._actionTimer = 0;
   };
@@ -861,7 +987,11 @@ var FrierenCharacter = (function () {
 
         if (head && br['head_045']) {
           head.rotation.z = br['head_045'].z + Math.sin(t * Math.PI * 5.5) * 0.06 * env;
+          head.rotation.x = br['head_045'].x - 0.04 * env;
         }
+
+        // Happy squint eyes during clap
+        self._faceEyeOpen = lerp(1.0, 0.50, env);
 
         // Fingers: straight and close together on both hands
         var straightR = [
@@ -894,6 +1024,7 @@ var FrierenCharacter = (function () {
           Math.abs(Math.sin(t * Math.PI * 5.5)) * 0.04 * env;
       },
       onEnd: function () {
+        self._faceEyeOpen = 1.0;
         self._applyPeek();
       },
     };
@@ -1011,6 +1142,228 @@ var FrierenCharacter = (function () {
         if (lArm && br['upperarm_l_07'])    lArm.rotation.z   = br['upperarm_l_07'].z  - 0.12 * env;
       },
       onEnd: function () {},
+    };
+    this._actionTimer = 0;
+  };
+
+  // ── sneeze ─────────────────────────────────────────────────────────────────
+  FrierenCharacter.prototype.sneeze = function () {
+    var self = this;
+    var b    = this._bones;
+    var br   = this._baseRot;
+    this._returnBlend = null;
+
+    this._action = {
+      duration: 2.0,
+      returnBones: [
+        'head_045', 'neck_01_044', 'spine_01_03', 'spine_02_04', 'spine_03_05',
+      ],
+      update: function (t) {
+        var head  = b['head_045'];
+        var neck  = b['neck_01_044'];
+        var spine = b['spine_01_03'];
+        var chest = b['spine_02_04'];
+
+        if (t < 0.35) {
+          // Windup: head tilts back, eyes squeeze closed
+          var w = easeInOut(t / 0.35);
+          self._faceEyeOpen = lerp(1.0, 0.04, w);
+          if (head  && br['head_045'])    head.rotation.x  = br['head_045'].x    - 0.22 * w;
+          if (neck  && br['neck_01_044']) neck.rotation.x  = br['neck_01_044'].x - 0.12 * w;
+          if (spine && br['spine_01_03']) spine.rotation.x = br['spine_01_03'].x - 0.06 * w;
+        } else if (t < 0.52) {
+          // ACHOO: snap forward violently
+          var s = easeOut((t - 0.35) / 0.17);
+          self._faceEyeOpen = 0.04;
+          if (head  && br['head_045'])    head.rotation.x  = br['head_045'].x    + 0.40 * s;
+          if (neck  && br['neck_01_044']) neck.rotation.x  = br['neck_01_044'].x + 0.28 * s;
+          if (spine && br['spine_01_03']) spine.rotation.x = br['spine_01_03'].x + 0.20 * s;
+          if (chest && br['spine_02_04']) chest.rotation.x = br['spine_02_04'].x + 0.14 * s;
+        } else if (t < 0.80) {
+          // Recoil: spring back, wide eyes
+          var r = easeInOut((t - 0.52) / 0.28);
+          self._faceEyeOpen = lerp(0.04, 1.22, r);
+          if (head  && br['head_045'])    head.rotation.x  = lerp(br['head_045'].x  + 0.40, br['head_045'].x  - 0.06, r);
+          if (neck  && br['neck_01_044']) neck.rotation.x  = lerp(br['neck_01_044'].x + 0.28, br['neck_01_044'].x, r);
+          if (spine && br['spine_01_03']) spine.rotation.x = lerp(br['spine_01_03'].x + 0.20, br['spine_01_03'].x, r);
+        } else {
+          // Settle: wide eyes ease back to normal
+          var settle = easeOut((t - 0.80) / 0.20);
+          self._faceEyeOpen = lerp(1.22, 1.0, settle);
+          if (head && br['head_045']) head.rotation.x = lerp(br['head_045'].x - 0.06, br['head_045'].x, settle);
+        }
+      },
+      onEnd: function () {
+        self._faceEyeOpen = 1.0;
+      },
+    };
+    this._actionTimer = 0;
+  };
+
+  // ── cheer ──────────────────────────────────────────────────────────────────
+  FrierenCharacter.prototype.cheer = function () {
+    var self = this;
+    var b    = this._bones;
+    var br   = this._baseRot;
+    this._returnBlend = null;
+
+    this._action = {
+      duration: 2.6,
+      returnBones: [
+        'clavicle_r_025', 'clavicle_l_06',
+        'upperarm_r_026', 'upperarm_l_07',
+        'lowerarm_r_027', 'lowerarm_l_08',
+        'hand_r_028', 'hand_l_09',
+        'head_045', 'neck_01_044',
+        'spine_01_03', 'spine_02_04',
+        'index_01_r_029', 'middle_01_r_032', 'ring_01_r_038', 'pinky_01_r_035',
+        'index_01_l_010', 'middle_01_l_013', 'ring_01_l_019', 'pinky_01_l_016',
+        'thumb_01_r_041', 'thumb_01_l_022',
+      ],
+      update: function (t) {
+        var rise = easeOut(Math.min(t / 0.28, 1));
+        var fall = easeOut(Math.max(0, (t - 0.80) / 0.20));
+        var env  = rise * (1 - fall);
+
+        var bounce = Math.abs(Math.sin(t * Math.PI * 3.5)) * 0.10 * env;
+        self._modelRoot.position.y =
+          -self.HIDE_OFFSET * (1 - easeOut(self._peekProgress)) + bounce;
+
+        self._faceEyeOpen = lerp(1.0, 1.20, env);
+
+        var rShldr = b['clavicle_r_025']; var lShldr = b['clavicle_l_06'];
+        var rArm   = b['upperarm_r_026']; var lArm   = b['upperarm_l_07'];
+        var rElbow = b['lowerarm_r_027']; var lElbow = b['lowerarm_l_08'];
+        var rWrist = b['hand_r_028'];     var lWrist = b['hand_l_09'];
+        var head   = b['head_045'];       var neck   = b['neck_01_044'];
+        var spine  = b['spine_01_03'];    var chest  = b['spine_02_04'];
+
+        // Both arms raised in V
+        if (rShldr && br['clavicle_r_025']) {
+          rShldr.rotation.x = br['clavicle_r_025'].x - 1.10 * env;
+          rShldr.rotation.z = br['clavicle_r_025'].z + 0.10 * env;
+        }
+        if (lShldr && br['clavicle_l_06']) {
+          lShldr.rotation.x = br['clavicle_l_06'].x - 1.10 * env;
+          lShldr.rotation.z = br['clavicle_l_06'].z - 0.10 * env;
+        }
+        if (rArm && br['upperarm_r_026']) rArm.rotation.z = br['upperarm_r_026'].z + 0.42 * env;
+        if (lArm && br['upperarm_l_07'])  lArm.rotation.z = br['upperarm_l_07'].z  - 0.42 * env;
+        if (rElbow && br['lowerarm_r_027']) rElbow.rotation.z = br['lowerarm_r_027'].z - 0.10 * env;
+        if (lElbow && br['lowerarm_l_08'])  lElbow.rotation.z = br['lowerarm_l_08'].z  + 0.10 * env;
+        if (rWrist && br['hand_r_028']) rWrist.rotation.x = br['hand_r_028'].x - 0.12 * env;
+        if (lWrist && br['hand_l_09'])  lWrist.rotation.x = br['hand_l_09'].x  - 0.12 * env;
+
+        if (spine && br['spine_01_03']) spine.rotation.x = br['spine_01_03'].x - 0.08 * env;
+        if (chest && br['spine_02_04']) chest.rotation.x = br['spine_02_04'].x - 0.10 * env;
+
+        if (head && br['head_045']) {
+          head.rotation.z = br['head_045'].z + Math.sin(t * Math.PI * 3.0) * 0.10 * env;
+          head.rotation.x = br['head_045'].x - 0.05 * env;
+        }
+        if (neck && br['neck_01_044']) {
+          neck.rotation.z = br['neck_01_044'].z + Math.sin(t * Math.PI * 3.0) * 0.05 * env;
+        }
+
+        // Fingers spread (open palms)
+        var spreadAll = [
+          ['index_01_r_029', -0.10], ['middle_01_r_032', -0.03],
+          ['ring_01_r_038',   0.03], ['pinky_01_r_035',   0.10],
+          ['index_01_l_010', -0.10], ['middle_01_l_013', -0.03],
+          ['ring_01_l_019',   0.03], ['pinky_01_l_016',   0.10],
+        ];
+        spreadAll.forEach(function (fd) {
+          var bone = b[fd[0]]; var base = br[fd[0]];
+          if (bone && base) bone.rotation.z = base.z + fd[1] * env;
+        });
+        ['thumb_01_r_041', 'thumb_01_l_022'].forEach(function (name) {
+          var bone = b[name]; var base = br[name];
+          if (bone && base) bone.rotation.z = base.z + 0.15 * env;
+        });
+      },
+      onEnd: function () {
+        self._faceEyeOpen = 1.0;
+        self._applyPeek();
+      },
+    };
+    this._actionTimer = 0;
+  };
+
+  // ── ponder ─────────────────────────────────────────────────────────────────
+  FrierenCharacter.prototype.ponder = function () {
+    var self = this;
+    var b    = this._bones;
+    var br   = this._baseRot;
+    this._returnBlend = null;
+
+    this._action = {
+      duration: 4.0,
+      returnBones: [
+        'head_045', 'neck_01_044', 'spine_01_03',
+        'clavicle_r_025', 'upperarm_r_026', 'lowerarm_r_027', 'hand_r_028',
+        'index_01_r_029', 'middle_01_r_032', 'ring_01_r_038', 'pinky_01_r_035',
+        'ring_02_r_039', 'pinky_02_r_036', 'thumb_01_r_041',
+      ],
+      update: function (t) {
+        var raise = easeOut(Math.min(t / 0.22, 1));
+        var lower = easeOut(Math.max(0, (t - 0.82) / 0.18));
+        var env   = raise * (1 - lower);
+
+        self._faceEyeOpen = lerp(1.0, 0.58, env);
+
+        var rShldr = b['clavicle_r_025'];
+        var rArm   = b['upperarm_r_026'];
+        var rElbow = b['lowerarm_r_027'];
+        var rWrist = b['hand_r_028'];
+        var head   = b['head_045'];
+        var neck   = b['neck_01_044'];
+        var spine  = b['spine_01_03'];
+
+        // Arm raised to chin-touch pose
+        if (rShldr && br['clavicle_r_025']) {
+          rShldr.rotation.x = br['clavicle_r_025'].x - 0.44 * env;
+          rShldr.rotation.z = br['clavicle_r_025'].z + 0.10 * env;
+        }
+        if (rArm && br['upperarm_r_026']) {
+          rArm.rotation.x = br['upperarm_r_026'].x + 0.32 * env;
+          rArm.rotation.z = br['upperarm_r_026'].z + 0.14 * env;
+        }
+        if (rElbow && br['lowerarm_r_027']) {
+          rElbow.rotation.z = br['lowerarm_r_027'].z - 0.58 * env;
+        }
+        if (rWrist && br['hand_r_028']) {
+          rWrist.rotation.x = br['hand_r_028'].x + 0.18 * env;
+        }
+
+        // Index + middle lightly extended, ring + pinky gently curled
+        ['index_01_r_029', 'middle_01_r_032'].forEach(function (n) {
+          var bone = b[n]; var base = br[n];
+          if (bone && base) bone.rotation.x = base.x - 0.05 * env;
+        });
+        ['ring_01_r_038', 'ring_02_r_039', 'pinky_01_r_035', 'pinky_02_r_036'].forEach(function (n) {
+          var bone = b[n]; var base = br[n];
+          if (bone && base) bone.rotation.x = base.x + 0.25 * env;
+        });
+        if (b['thumb_01_r_041'] && br['thumb_01_r_041']) {
+          b['thumb_01_r_041'].rotation.z = br['thumb_01_r_041'].z + 0.14 * env;
+        }
+
+        // Head: slight upward look + slow contemplative sway
+        var ponderSway = Math.sin(t * Math.PI * 1.1) * 0.06;
+        if (head && br['head_045']) {
+          head.rotation.z = br['head_045'].z + (0.12 + ponderSway) * env;
+          head.rotation.x = br['head_045'].x - 0.08 * env;
+        }
+        if (neck && br['neck_01_044']) {
+          neck.rotation.z = br['neck_01_044'].z + 0.06 * env;
+        }
+        if (spine && br['spine_01_03']) {
+          spine.rotation.z = br['spine_01_03'].z + 0.04 * env;
+        }
+      },
+      onEnd: function () {
+        self._faceEyeOpen = 1.0;
+      },
     };
     this._actionTimer = 0;
   };

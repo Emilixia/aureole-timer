@@ -18,7 +18,7 @@
   ];
 
   // Periodic idle animation sequence (cycles through these)
-  var IDLE_ACTIONS = ['wave', 'think', 'stretch', 'shrug', 'nod', 'bow', 'wave', 'think'];
+  var IDLE_ACTIONS = ['wave', 'think', 'stretch', 'ponder', 'shrug', 'nod', 'sneeze', 'bow', 'cheer', 'wave', 'think', 'ponder'];
 
   var speechTimer = null;
   var helpVisible = false;
@@ -139,7 +139,7 @@
       if (frieren3d) frieren3d.nod();
     });
     document.addEventListener('frieren:timerComplete', function () {
-      if (frieren3d) frieren3d.clap();
+      if (frieren3d) frieren3d.cheer();
       showSpeech('✨ Amazing work! Session complete!');
       setTimeout(function () { if (!helpVisible) hideSpeech(); }, 4500);
     });
