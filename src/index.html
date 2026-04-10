@@ -1349,18 +1349,16 @@
   <script src="js/reader.js"></script>
   <script src="js/animations.js"></script>
   <script src="js/app.js"></script>
+  <script src="vendor/three.min.js"></script>
+  <script src="js/frieren-3d.js"></script>
   <script src="js/frieren-companion.js"></script>
 
   <!-- ── Frieren Companion Character ─────────────────────────── -->
   <div id="frierenCompanion" class="frieren-companion" title="Ask Frieren for help!">
-    <div class="frieren-3d-card">
-      <div class="frieren-3d-inner">
-        <img class="frieren-sprite" src="../assets/frieren-default.gif" alt="Frieren" draggable="false">
-        <div class="frieren-sparkle"></div>
-      </div>
-      <div class="frieren-speech" id="frierenSpeech" style="display:none;">
-        <span id="frierenSpeechText">Hello, adventurer!</span>
-      </div>
+    <!-- Three.js canvas rendered here by frieren-companion.js -->
+    <div id="frieren3dMount" class="frieren-3d-mount"></div>
+    <div class="frieren-speech" id="frierenSpeech" style="display:none;">
+      <span id="frierenSpeechText">Hello, adventurer!</span>
     </div>
   </div>
 
