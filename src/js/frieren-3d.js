@@ -145,20 +145,54 @@ var FrierenCharacter = (function () {
     this._model = model;
     this._modelRoot.add(model);
 
-    // ── Scale & center ────────────────────────────────────────────────────
-    // VRChat models are typically 1-unit tall in avatar space; compute bbox
-    var box = new T.Box3().setFromObject(model);
+    // ── Reset skeleton to bind pose ───────────────────────────────────────
+    // VRChat SkinnedMesh geometry is stored in bind-pose space; resetting
+    // ensures the rendered pose matches the stored vertex positions.
+    model.traverse(function (node) {
+      if (node.isSkinnedMesh && node.skeleton) {
+        node.skeleton.pose();
+      }
+    });
+
+    // ── Scale & center using BONE positions ──────────────────────────────
+    // Box3.setFromObject() measures raw skinned-mesh geometry (bind pose),
+    // not the actual rendered positions, so it produces a wrong scale when
+    // the model's bones are not in bind pose.  Use bone world-positions
+    // instead, which are always reliable for a well-formed GLB.
+    var boneBox   = new T.Box3();
+    var boneCount = 0;
+    model.traverse(function (node) {
+      if (node.isBone || node.type === 'Bone') {
+        var wp = new T.Vector3();
+        node.getWorldPosition(wp);
+        boneBox.expandByPoint(wp);
+        boneCount++;
+      }
+    });
+
+    var box;
+    if (boneCount >= 3) {
+      box = boneBox;
+    } else {
+      // Fallback: full-object bbox (non-rigged or very simple model)
+      box = new T.Box3().setFromObject(model);
+    }
+
     var size   = new T.Vector3(); box.getSize(size);
     var center = new T.Vector3(); box.getCenter(center);
 
     // Normalise to ~1.8 world-units tall (standard character height)
-    var scale = 1.8 / size.y;
+    var heightY = Math.max(size.y, 0.01);
+    var scale   = 1.8 / heightY;
     model.scale.setScalar(scale);
-    // Re-compute box after scale
-    box.setFromObject(model);
-    box.getCenter(center);
-    // Translate so feet sit at y=0
-    model.position.set(-center.x, -box.min.y, -center.z);
+
+    // Recompute center/min after applying scale
+    var scaledCx  = center.x * scale;
+    var scaledMinY = box.min.y * scale;
+    var scaledCz  = center.z * scale;
+
+    // Translate so feet sit at y=0, horizontally centred
+    model.position.set(-scaledCx, -scaledMinY, -scaledCz);
 
     // ── Apply toon shading ────────────────────────────────────────────────
     model.traverse(function (node) {
