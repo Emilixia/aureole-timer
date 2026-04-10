@@ -449,6 +449,7 @@ const Timer = (function () {
 
     if (window.Chronicle) window.Chronicle.renderChronicle();
     if (window.Profile) window.Profile.updateProfileStats();
+    if (window.Games) window.Games.awardSessionShards(duration);
 
     const settings = window.AppSettings || {};
     if (settings.autoSaveSessions !== false) {

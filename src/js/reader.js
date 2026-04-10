@@ -362,6 +362,16 @@ var Reader = (function () {
     _annotsDirty = true;
   }
 
+  // ── Pen style helpers ──────────────────────────────────────────────────────
+  function _penLineWidth(style, scale) {
+    if (style === 'marker') return Math.max(4, 6 / scale);
+    if (style === 'brush')  return Math.max(3, 5 / scale);
+    return Math.max(1.5, 2 / scale); // pen
+  }
+  function _penLineCap(style) {
+    return style === 'brush' ? 'round' : 'round';
+  }
+
   // ── Custom text input popup ─────────────────────────────────────────────────
   function showTextPopup(screenX, screenY, onConfirm) {
     var popup = el('readerTextPopup');
@@ -676,6 +686,34 @@ var Reader = (function () {
         setTool(_tool === t ? 'none' : t);
       });
     });
+
+    // Pen style selector
+    var penStyleSel = el('readerPenStyle');
+    if (penStyleSel) penStyleSel.addEventListener('change', function () {
+      _penStyle = this.value;
+    });
+
+    // Draw/text color
+    var drawColorIn = el('readerDrawColor');
+    if (drawColorIn) drawColorIn.addEventListener('input', function () {
+      _drawColor = this.value;
+    });
+
+    // Highlight color
+    var hlColorIn = el('readerHighlightColor');
+    if (hlColorIn) hlColorIn.addEventListener('input', function () {
+      _highlightColor = this.value;
+    });
+
+    // Highlight opacity slider
+    var hlOpacIn  = el('readerHighlightOpacity');
+    var hlOpacLbl = el('readerHighlightOpacityLabel');
+    if (hlOpacIn) {
+      hlOpacIn.addEventListener('input', function () {
+        _highlightOpacity = parseInt(this.value, 10) / 100;
+        if (hlOpacLbl) hlOpacLbl.textContent = this.value + '%';
+      });
+    }
 
     // Clear page annotations
     var clearAnnot = el('readerClearAnnot');
