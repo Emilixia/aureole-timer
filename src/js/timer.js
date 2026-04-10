@@ -296,6 +296,7 @@ const Timer = (function () {
 
     updateButtonStates();
     if (window.App) window.App.startEncouragement();
+    document.dispatchEvent(new CustomEvent('frieren:timerStart'));
   }
 
   function pauseTimer() {
@@ -474,6 +475,7 @@ const Timer = (function () {
       if (window.aureole && settings.desktopNotifications) {
         window.aureole.showNotification('Break Time! 🌿', 'You\'ve been working hard. Time for a short break!');
       }
+      document.dispatchEvent(new CustomEvent('frieren:breakStart'));
     }
   }
 
@@ -552,6 +554,7 @@ const Timer = (function () {
     if (window.App) window.App.stopEncouragement();
     if (window.SoundSystem) window.SoundSystem.play('timer');
     if (window.showToast) window.showToast('✨ Session complete! Amazing work!', 'success');
+    document.dispatchEvent(new CustomEvent('frieren:timerComplete'));
 
     showBellOverlay();
   }
@@ -740,6 +743,7 @@ const Timer = (function () {
       pomodoro.sessions++;
       if (window.showToast) window.showToast('🍅 Work session done! Time for a break!', 'success');
       if (window.aureole) window.aureole.showNotification('Pomodoro Done!', 'Work session complete. Take a break!');
+      document.dispatchEvent(new CustomEvent('frieren:breakStart'));
 
       // After 4 sessions, long break
       const isLongBreak = pomodoro.sessions % 4 === 0;

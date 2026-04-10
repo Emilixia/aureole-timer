@@ -1,7 +1,8 @@
 /**
  * FrierenCharacter — loads vrchat_frieren.glb via GLTFLoader.
  * Applies MeshToonMaterial (cel/anime shading) to all meshes and drives the real
- * armature bones procedurally: idle sway, hair physics, blink, peek, wave, excited.
+ * armature bones procedurally: idle sway, hair physics, blink, peek, wave, excited,
+ * nod, think, stretch, clap.
  *
  * Bone map (from the embedded 156-joint skeleton):
  *   _rootJoint, Hips_02, Spine_03, Chest_04, Neck_05, Head_06
@@ -350,6 +351,34 @@ var FrierenCharacter = (function () {
     // Subtle weight shift on hips
     rot('Right leg_066', 0, 0, Math.sin(t * 0.75) * 0.008);
     rot('Left leg_069',  0, 0, Math.sin(t * 0.75 + Math.PI) * 0.008);
+
+    // Occasional slow head glance — looks left/right every ~18 s
+    var glanceCycle = 18.0;
+    var glanceT     = (t % glanceCycle) / glanceCycle;  // 0→1 over 18 s
+    var glanceY     = 0;
+    if (glanceT < 0.12) {
+      // ease out to the right over ~2 s
+      glanceY = easeOut(glanceT / 0.12) * 0.18;
+    } else if (glanceT < 0.22) {
+      // hold right
+      glanceY = 0.18;
+    } else if (glanceT < 0.34) {
+      // return to centre
+      glanceY = lerp(0.18, 0, (glanceT - 0.22) / 0.12);
+    } else if (glanceT < 0.46) {
+      // ease out to the left
+      glanceY = -easeOut((glanceT - 0.34) / 0.12) * 0.18;
+    } else if (glanceT < 0.56) {
+      // hold left
+      glanceY = -0.18;
+    } else if (glanceT < 0.68) {
+      // return to centre
+      glanceY = lerp(-0.18, 0, (glanceT - 0.56) / 0.12);
+    }
+    var headBone = b['Head_06'];
+    if (headBone && br['Head_06']) {
+      headBone.rotation.y = br['Head_06'].y + glanceY;
+    }
   };
 
   FrierenCharacter.prototype._updateHairPhysics = function () {
@@ -472,6 +501,218 @@ var FrierenCharacter = (function () {
       onEnd: function () {
         self._applyPeek();
         if (head && br['Head_06']) head.rotation.z = br['Head_06'].z;
+      },
+    };
+    this._actionTimer = 0;
+  };
+
+  FrierenCharacter.prototype.nod = function () {
+    var head = this._bones['Head_06'];
+    var neck = this._bones['Neck_05'];
+    var br   = this._baseRot;
+    this._action = {
+      duration: 1.6,
+      update: function (t) {
+        // Two smooth nods: dip forward then return, twice
+        var nodX = Math.sin(t * Math.PI * 2.5) * 0.18 * Math.pow(1 - t, 0.7);
+        if (head && br['Head_06']) head.rotation.x = br['Head_06'].x + nodX;
+        if (neck && br['Neck_05']) neck.rotation.x = br['Neck_05'].x + nodX * 0.4;
+      },
+      onEnd: function () {
+        if (head && br['Head_06']) head.rotation.x = br['Head_06'].x;
+        if (neck && br['Neck_05']) neck.rotation.x = br['Neck_05'].x;
+      },
+    };
+    this._actionTimer = 0;
+  };
+
+  FrierenCharacter.prototype.think = function () {
+    var self   = this;
+    var b      = this._bones;
+    var br     = this._baseRot;
+    var rShldr = b['Right shoulder_026'];
+    var rArm   = b['Right arm_027'];
+    var rElbow = b['Right elbow_028'];
+    var rWrist = b['Right wrist_029'];
+    var head   = b['Head_06'];
+    this._action = {
+      duration: 3.5,
+      update: function (t) {
+        // Phase 1 (0–0.18): raise hand to chin
+        var raise = easeOut(Math.min(t / 0.18, 1));
+        // Phase 2 (0.82–1.0): lower hand back
+        var lower = easeOut(Math.max(0, (t - 0.82) / 0.18));
+        var lift  = raise - lower;
+
+        if (rShldr && br['Right shoulder_026']) {
+          rShldr.rotation.x = br['Right shoulder_026'].x - 0.48 * lift;
+          rShldr.rotation.z = br['Right shoulder_026'].z + 0.08 * lift;
+        }
+        if (rArm && br['Right arm_027']) {
+          rArm.rotation.x = br['Right arm_027'].x + 0.35 * lift;
+          rArm.rotation.z = br['Right arm_027'].z + 0.12 * lift;
+        }
+        if (rElbow && br['Right elbow_028']) {
+          rElbow.rotation.z = br['Right elbow_028'].z - 0.60 * lift;
+        }
+        if (rWrist && br['Right wrist_029']) {
+          rWrist.rotation.x = br['Right wrist_029'].x + 0.15 * lift;
+        }
+        // Head tilts slightly left as if pondering
+        if (head && br['Head_06']) {
+          head.rotation.z = br['Head_06'].z + 0.10 * lift;
+          // slow small nod oscillation while hand is up
+          head.rotation.x = br['Head_06'].x + Math.sin(t * Math.PI * 1.5) * 0.04 * lift;
+        }
+      },
+      onEnd: function () {
+        if (rShldr && br['Right shoulder_026']) {
+          rShldr.rotation.x = br['Right shoulder_026'].x;
+          rShldr.rotation.z = br['Right shoulder_026'].z;
+        }
+        if (rArm   && br['Right arm_027']) {
+          rArm.rotation.x = br['Right arm_027'].x;
+          rArm.rotation.z = br['Right arm_027'].z;
+        }
+        if (rElbow && br['Right elbow_028']) rElbow.rotation.z = br['Right elbow_028'].z;
+        if (rWrist && br['Right wrist_029']) rWrist.rotation.x = br['Right wrist_029'].x;
+        if (head   && br['Head_06']) {
+          head.rotation.x = br['Head_06'].x;
+          head.rotation.z = br['Head_06'].z;
+        }
+      },
+    };
+    this._actionTimer = 0;
+  };
+
+  FrierenCharacter.prototype.stretch = function () {
+    var self   = this;
+    var b      = this._bones;
+    var br     = this._baseRot;
+    var rShldr = b['Right shoulder_026'];
+    var lShldr = b['Left shoulder_045'];
+    var rArm   = b['Right arm_027'];
+    var lArm   = b['Left arm_046'];
+    var rElbow = b['Right elbow_028'];
+    var lElbow = b['Left elbow_047'];
+    var spine  = b['Spine_03'];
+    var chest  = b['Chest_04'];
+    var head   = b['Head_06'];
+    this._action = {
+      duration: 2.8,
+      update: function (t) {
+        // Rise (0–0.35), hold (0.35–0.65), lower (0.65–1)
+        var phase;
+        if      (t < 0.35) phase = easeOut(t / 0.35);
+        else if (t < 0.65) phase = 1;
+        else               phase = easeOut(1 - (t - 0.65) / 0.35);
+
+        // Arms raise high overhead
+        if (rShldr && br['Right shoulder_026']) {
+          rShldr.rotation.x = br['Right shoulder_026'].x - 1.30 * phase;
+          rShldr.rotation.z = br['Right shoulder_026'].z + 0.10 * phase;
+        }
+        if (lShldr && br['Left shoulder_045']) {
+          lShldr.rotation.x = br['Left shoulder_045'].x - 1.30 * phase;
+          lShldr.rotation.z = br['Left shoulder_045'].z - 0.10 * phase;
+        }
+        if (rArm && br['Right arm_027']) rArm.rotation.z = br['Right arm_027'].z + 0.20 * phase;
+        if (lArm && br['Left arm_046'])  lArm.rotation.z = br['Left arm_046'].z  - 0.20 * phase;
+        if (rElbow && br['Right elbow_028']) rElbow.rotation.z = br['Right elbow_028'].z - 0.15 * phase;
+        if (lElbow && br['Left elbow_047'])  lElbow.rotation.z = br['Left elbow_047'].z  + 0.15 * phase;
+
+        // Spine arches back slightly
+        if (spine && br['Spine_03']) spine.rotation.x = br['Spine_03'].x - 0.06 * phase;
+        if (chest && br['Chest_04']) chest.rotation.x = br['Chest_04'].x - 0.10 * phase;
+
+        // Head tilts back then returns with a small yawn wobble at peak
+        var yawn = (t > 0.38 && t < 0.62) ? Math.sin((t - 0.38) / 0.24 * Math.PI) * 0.18 : 0;
+        if (head && br['Head_06']) head.rotation.x = br['Head_06'].x - 0.08 * phase + yawn;
+      },
+      onEnd: function () {
+        [
+          [rShldr, 'Right shoulder_026', ['x','z']],
+          [lShldr, 'Left shoulder_045',  ['x','z']],
+          [rArm,   'Right arm_027',      ['z']],
+          [lArm,   'Left arm_046',       ['z']],
+          [rElbow, 'Right elbow_028',    ['z']],
+          [lElbow, 'Left elbow_047',     ['z']],
+          [spine,  'Spine_03',           ['x']],
+          [chest,  'Chest_04',           ['x']],
+          [head,   'Head_06',            ['x']],
+        ].forEach(function (entry) {
+          var bone = entry[0], name = entry[1], axes = entry[2];
+          if (bone && br[name]) axes.forEach(function (ax) { bone.rotation[ax] = br[name][ax]; });
+        });
+      },
+    };
+    this._actionTimer = 0;
+  };
+
+  FrierenCharacter.prototype.clap = function () {
+    var self   = this;
+    var b      = this._bones;
+    var br     = this._baseRot;
+    var rShldr = b['Right shoulder_026'];
+    var lShldr = b['Left shoulder_045'];
+    var rArm   = b['Right arm_027'];
+    var lArm   = b['Left arm_046'];
+    var rElbow = b['Right elbow_028'];
+    var lElbow = b['Left elbow_047'];
+    var rWrist = b['Right wrist_029'];
+    var lWrist = b['Left wrist_048'];
+    var head   = b['Head_06'];
+    this._action = {
+      duration: 2.2,
+      update: function (t) {
+        // Arms come up in front; clap cycle 4× then lower
+        var envRise = easeOut(Math.min(t / 0.20, 1));
+        var envFall = 1 - easeOut(Math.max(0, (t - 0.80) / 0.20));
+        var env     = envRise * envFall;
+
+        // 4 claps in the middle section
+        var clap = Math.pow(Math.max(0, Math.sin(t * Math.PI * 5.5)), 2) * 0.20;
+
+        if (rShldr && br['Right shoulder_026']) {
+          rShldr.rotation.x = br['Right shoulder_026'].x - 0.60 * env;
+          rShldr.rotation.z = br['Right shoulder_026'].z - 0.10 * env;
+        }
+        if (lShldr && br['Left shoulder_045']) {
+          lShldr.rotation.x = br['Left shoulder_045'].x - 0.60 * env;
+          lShldr.rotation.z = br['Left shoulder_045'].z + 0.10 * env;
+        }
+        if (rArm && br['Right arm_027']) rArm.rotation.z = br['Right arm_027'].z - (0.35 + clap) * env;
+        if (lArm && br['Left arm_046'])  lArm.rotation.z = br['Left arm_046'].z  + (0.35 + clap) * env;
+        if (rElbow && br['Right elbow_028']) rElbow.rotation.z = br['Right elbow_028'].z - 0.45 * env;
+        if (lElbow && br['Left elbow_047'])  lElbow.rotation.z = br['Left elbow_047'].z  + 0.45 * env;
+        if (rWrist && br['Right wrist_029']) rWrist.rotation.y = br['Right wrist_029'].y - 0.20 * env;
+        if (lWrist && br['Left wrist_048'])  lWrist.rotation.y = br['Left wrist_048'].y  + 0.20 * env;
+
+        // Small happy head bounce
+        if (head && br['Head_06']) {
+          head.rotation.z = br['Head_06'].z + Math.sin(t * Math.PI * 5.5) * 0.06 * env;
+        }
+        // Slight model bounce
+        self._modelRoot.position.y =
+          -self.HIDE_OFFSET * (1 - easeOut(self._peekProgress)) +
+          Math.abs(Math.sin(t * Math.PI * 5.5)) * 0.04 * env;
+      },
+      onEnd: function () {
+        self._applyPeek();
+        [
+          [rShldr, 'Right shoulder_026', ['x','z']],
+          [lShldr, 'Left shoulder_045',  ['x','z']],
+          [rArm,   'Right arm_027',      ['z']],
+          [lArm,   'Left arm_046',       ['z']],
+          [rElbow, 'Right elbow_028',    ['z']],
+          [lElbow, 'Left elbow_047',     ['z']],
+          [rWrist, 'Right wrist_029',    ['y']],
+          [lWrist, 'Left wrist_048',     ['y']],
+          [head,   'Head_06',            ['z']],
+        ].forEach(function (entry) {
+          var bone = entry[0], name = entry[1], axes = entry[2];
+          if (bone && br[name]) axes.forEach(function (ax) { bone.rotation[ax] = br[name][ax]; });
+        });
       },
     };
     this._actionTimer = 0;

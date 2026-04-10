@@ -17,8 +17,12 @@
     'Focus mode engaged. Nothing can distract you now.',
   ];
 
+  // Periodic idle animation sequence (cycles through these)
+  var IDLE_ACTIONS = ['wave', 'think', 'stretch', 'wave', 'nod'];
+
   var speechTimer = null;
   var helpVisible = false;
+  var idleActionIdx = 0;
 
   function init() {
     var companion  = document.getElementById('frierenCompanion');
@@ -118,15 +122,32 @@
       return msg;
     }
 
-    // ── Periodic auto-wave every 90 s ────────────────────
+    // ── Periodic idle animation every 90 s ───────────────
     var waveInterval = setInterval(function () {
       if (helpVisible) return;
-      if (frieren3d) frieren3d.wave();
+      var action = IDLE_ACTIONS[idleActionIdx % IDLE_ACTIONS.length];
+      idleActionIdx++;
+      if (frieren3d && typeof frieren3d[action] === 'function') frieren3d[action]();
       showSpeech(pickSpeech());
       setTimeout(function () {
         if (!helpVisible) hideSpeech();
       }, 4200);
     }, 90000);
+
+    // ── Timer event hooks ─────────────────────────────────
+    document.addEventListener('frieren:timerStart', function () {
+      if (frieren3d) frieren3d.nod();
+    });
+    document.addEventListener('frieren:timerComplete', function () {
+      if (frieren3d) frieren3d.clap();
+      showSpeech('✨ Amazing work! Session complete!');
+      setTimeout(function () { if (!helpVisible) hideSpeech(); }, 4500);
+    });
+    document.addEventListener('frieren:breakStart', function () {
+      if (frieren3d) frieren3d.stretch();
+      showSpeech('Time to recharge your mana! ☕');
+      setTimeout(function () { if (!helpVisible) hideSpeech(); }, 4000);
+    });
 
     window.addEventListener('beforeunload', function () {
       clearInterval(waveInterval);
