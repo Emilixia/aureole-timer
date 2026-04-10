@@ -38,7 +38,7 @@ const DEFAULT_SETTINGS = {
 
 // Companion (3D character) settings stored separately for clarity
 const DEFAULT_COMPANION = {
-  model: 'model1',           // 'model1' | 'model2'
+  model: 'model1',
   visible: false,
   waistFraction: 0.68,       // camera frame bottom (fraction of skeleton height)
   headFraction: 1.12,        // camera frame top
@@ -510,7 +510,7 @@ const Settings = (function () {
       if (el.type === 'checkbox') el.checked = !!val;
       else el.value = val;
     };
-    set('companionModel', cs.model || 'model1');
+    set('companionModel', 'model1');
     set('companionVisible', cs.visible !== false);
     set('companionHeadFraction', cs.headFraction);
     set('companionWaistFraction', cs.waistFraction);
@@ -545,7 +545,7 @@ const Settings = (function () {
     const get = function (id) { const el = document.getElementById(id); return el ? el.value : null; };
     const chk = function (id) { const el = document.getElementById(id); return el ? el.checked : true; };
     return {
-      model:         get('companionModel') || 'model1',
+      model:         'model1',
       visible:       chk('companionVisible'),
       headFraction:  parseFloat(get('companionHeadFraction')) || DEFAULT_COMPANION.headFraction,
       waistFraction: parseFloat(get('companionWaistFraction')) || DEFAULT_COMPANION.waistFraction,
@@ -575,10 +575,8 @@ const Settings = (function () {
     companion.style.width  = w + 'px';
     companion.style.height = h + 'px';
 
-    // Model path
-    const glbPath = cs.model === 'model2'
-      ? '../assets/vrchat_frieren_2.glb'
-      : '../assets/vrchat_frieren.glb';
+    // Model path — model2 has been removed; always use model1
+    const glbPath = '../assets/vrchat_frieren.glb';
 
     // Apply to 3D character
     if (window.FrierenCompanion && window.FrierenCompanion.reconfigure) {
