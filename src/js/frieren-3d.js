@@ -35,10 +35,10 @@ var FrierenCharacter = (function () {
     this.W          = opts.width  || 200;
     this.H          = opts.height || 340;
 
-    // Peek state (0=hidden below canvas, 1=fully shown)
-    this._peekTarget   = 0.18;
-    this._peekProgress = 0.18;
-    this.HIDE_OFFSET   = 2.8;   // world-units to translate down when fully hidden
+    // Peek state — always fully visible (fixed bottom-right, no hiding)
+    this._peekTarget   = 1;
+    this._peekProgress = 1;
+    this.HIDE_OFFSET   = 2.8;
 
     // Animation
     this._animTime  = 0;
@@ -92,11 +92,11 @@ var FrierenCharacter = (function () {
     var scene  = new T.Scene();
     this._scene = scene;
 
-    // Camera framed to show head+upper body; adjusted after model loads
-    // Pre-load position matches what _onLoad will compute for TARGET_HEIGHT=1.5
-    var camera = new T.PerspectiveCamera(28, this.W / this.H, 0.01, 50);
-    camera.position.set(0, 1.12, 2.5);
-    camera.lookAt(0, 1.05, 0);
+    // Camera framed on upper torso + head; FOV=38° gives tight portrait crop.
+    // Pre-load values match what _onLoad computes for TARGET_HEIGHT=1.5.
+    var camera = new T.PerspectiveCamera(38, this.W / this.H, 0.01, 50);
+    camera.position.set(0, 1.32, 1.5);
+    camera.lookAt(0, 1.22, 0);
     this._camera = camera;
 
     // ── Lights ───────────────────────────────────────────────────────────
@@ -277,13 +277,18 @@ var FrierenCharacter = (function () {
       self2._baseRot[b.name] = { x: b.rotation.x, y: b.rotation.y, z: b.rotation.z };
     });
 
-    // Re-frame camera based on actual character dimensions.
-    // TARGET_HEIGHT = 1.5 → feet at y=0, top of head ~y=1.68.
-    // We aim at 70 % of TARGET_HEIGHT (chest/neck) and pull back so the
-    // upper body fills the portrait canvas comfortably.
-    var lookAtY = TARGET_HEIGHT * 0.70;   // ≈ 1.05  (chest / neck area)
-    var camZ    = TARGET_HEIGHT * 1.65;   // ≈ 2.475 (pull-back distance)
-    this._camera.position.set(0, lookAtY + 0.07, camZ);
+    // Re-frame camera for upper-body-only portrait.
+    // Feet at y=0, head mesh top at ~TARGET_HEIGHT*1.12.
+    // We want to show from waist (~50 % of height) to just above head.
+    var headTop  = TARGET_HEIGHT * 1.12;           // ≈ 1.68
+    var waistY   = TARGET_HEIGHT * 0.50;           // ≈ 0.75
+    var lookAtY  = (headTop + waistY) / 2;         // ≈ 1.215  (chest/shoulder area)
+    var viewHalf = (headTop - waistY) / 2 * 1.15;  // half-extent + 15 % margin
+    // FOV=38°  →  half-angle 19°  →  tan(19°)≈0.3443
+    var camZ = viewHalf / Math.tan(19 * Math.PI / 180);
+    this._camera.fov = 38;
+    this._camera.updateProjectionMatrix();
+    this._camera.position.set(0, lookAtY + 0.08, camZ);
     this._camera.lookAt(0, lookAtY, 0);
 
     console.log('[Frieren3D] Model loaded. Bones found:', Object.keys(this._bones).length,

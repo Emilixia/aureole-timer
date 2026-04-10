@@ -1,4 +1,4 @@
-// Frieren Companion — draggable 3D peek character + help panel
+// Frieren Companion — fixed 3D character (bottom-right) + help panel
 (function () {
   'use strict';
 
@@ -35,100 +35,20 @@
     if (mount && typeof FrierenCharacter !== 'undefined') {
       frieren3d = new FrierenCharacter(mount, { width: 200, height: 340 });
       frieren3d.init();
-      // Default: only head peeking (progress 0.18 → head at bottom edge)
-      frieren3d._peekTarget   = 0.18;
-      frieren3d._peekProgress = 0.18;
-      frieren3d._applyPeek();
     }
 
-    // ── Drag ──────────────────────────────────────────────
-    var dragging = false;
-    var dragOffX = 0, dragOffY = 0;
-    var dragTotalMove = 0;
-    var posX = null, posY = null;
-
-    function applyPos() {
-      if (posX !== null && posY !== null) {
-        companion.style.right  = 'auto';
-        companion.style.bottom = 'auto';
-        companion.style.left   = posX + 'px';
-        companion.style.top    = posY + 'px';
-        companion.style.transform = 'none';
-      }
-    }
-
-    companion.addEventListener('mousedown', function (e) {
-      if (e.button !== 0) return;
-      dragging = true;
-      dragTotalMove = 0;
-      companion.classList.add('dragging');
-
-      var rect = companion.getBoundingClientRect();
-      dragOffX = e.clientX - rect.left;
-      dragOffY = e.clientY - rect.top;
-      if (posX === null) { posX = rect.left; posY = rect.top; }
-
-      // Slide fully in when grabbed
-      if (frieren3d) frieren3d.peek(true);
-      e.preventDefault();
+    // ── Click — toggle help ───────────────────────────────
+    companion.addEventListener('click', function () {
+      toggleHelp();
     });
 
-    document.addEventListener('mousemove', function (e) {
-      if (!dragging) return;
-      dragTotalMove += Math.abs(e.movementX) + Math.abs(e.movementY);
-      posX = e.clientX - dragOffX;
-      posY = e.clientY - dragOffY;
-      applyPos();
-    });
-
-    document.addEventListener('mouseup', function () {
-      if (!dragging) return;
-      dragging = false;
-      companion.classList.remove('dragging');
-
-      if (dragTotalMove < 5) {
-        // Click — toggle help
-        toggleHelp();
-      } else {
-        // After drag — stay full-out only if help open, else return to peek
-        if (!helpVisible) {
-          if (frieren3d) frieren3d.peek(false); // back to peek
-        }
-      }
-    });
-
-    // ── Touch drag ────────────────────────────────────────
-    var touchStartX, touchStartY, touchMoved;
-    companion.addEventListener('touchstart', function (e) {
-      var t = e.touches[0];
-      touchStartX = t.clientX; touchStartY = t.clientY; touchMoved = false;
-      var rect = companion.getBoundingClientRect();
-      dragOffX = t.clientX - rect.left; dragOffY = t.clientY - rect.top;
-      if (posX === null) { posX = rect.left; posY = rect.top; }
-      if (frieren3d) frieren3d.peek(true);
-      e.preventDefault();
-    }, { passive: false });
-    companion.addEventListener('touchmove', function (e) {
-      var t = e.touches[0];
-      if (Math.abs(t.clientX - touchStartX) > 4 || Math.abs(t.clientY - touchStartY) > 4) touchMoved = true;
-      posX = t.clientX - dragOffX; posY = t.clientY - dragOffY;
-      applyPos(); e.preventDefault();
-    }, { passive: false });
-    companion.addEventListener('touchend', function () {
-      if (!touchMoved) { toggleHelp(); }
-      else if (!helpVisible) { if (frieren3d) frieren3d.peek(false); }
-    });
-
-    // ── Hover — slide fully out & wave ────────────────────
+    // ── Hover — wave ──────────────────────────────────────
     companion.addEventListener('mouseenter', function () {
-      if (dragging) return;
-      if (frieren3d) { frieren3d.peek(true); frieren3d.wave(); }
+      if (frieren3d) frieren3d.wave();
       if (!helpVisible) showSpeech(pickSpeech());
     });
     companion.addEventListener('mouseleave', function () {
-      if (dragging || helpVisible) return;
-      hideSpeech();
-      if (frieren3d) frieren3d.peek(false);
+      if (!helpVisible) hideSpeech();
     });
 
     // ── Help panel toggle ─────────────────────────────────
@@ -136,22 +56,21 @@
       helpVisible = !helpVisible;
       if (helpVisible) {
         hideSpeech();
-        if (frieren3d) { frieren3d.peek(true); frieren3d.excited(); }
+        if (frieren3d) frieren3d.excited();
         if (helpPanel) {
           helpPanel.style.display = 'flex';
           positionHelpPanel();
         }
       } else {
         if (helpPanel) helpPanel.style.display = 'none';
-        if (frieren3d) frieren3d.peek(false);
       }
     }
 
     if (helpClose) {
-      helpClose.addEventListener('click', function () {
+      helpClose.addEventListener('click', function (e) {
+        e.stopPropagation();
         helpVisible = false;
         if (helpPanel) helpPanel.style.display = 'none';
-        if (frieren3d) frieren3d.peek(false);
       });
     }
 
@@ -199,21 +118,18 @@
       return msg;
     }
 
-    // ── Periodic auto-peek every 90 s ────────────────────
-    var peekInterval = setInterval(function () {
-      if (helpVisible || dragging) return;
-      if (frieren3d) { frieren3d.peek(true); frieren3d.wave(); }
+    // ── Periodic auto-wave every 90 s ────────────────────
+    var waveInterval = setInterval(function () {
+      if (helpVisible) return;
+      if (frieren3d) frieren3d.wave();
       showSpeech(pickSpeech());
       setTimeout(function () {
-        if (!helpVisible) {
-          hideSpeech();
-          if (frieren3d) frieren3d.peek(false);
-        }
+        if (!helpVisible) hideSpeech();
       }, 4200);
     }, 90000);
 
     window.addEventListener('beforeunload', function () {
-      clearInterval(peekInterval);
+      clearInterval(waveInterval);
       if (frieren3d) frieren3d.dispose();
     });
   }

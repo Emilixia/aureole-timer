@@ -4924,15 +4924,11 @@ body.no-ui-animations .ripple { display: none !important; }
   bottom: 0;
   right: 28px;
   z-index: 9000;
-  cursor: grab;
+  cursor: default;
   user-select: none;
   width: 200px;
   height: 340px;
   filter: drop-shadow(0 -4px 20px rgba(100,200,255,0.28));
-}
-.frieren-companion.dragging {
-  cursor: grabbing;
-  transition: none;
 }
 
 /* Three.js mount container — full size, transparent background */
