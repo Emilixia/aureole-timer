@@ -35,10 +35,12 @@
 
   <!-- Top Navigation Bar -->
   <nav id="topNav">
-    <!-- Logo (left anchor) -->
-    <div class="topnav-logo">
+    <!-- Logo (left anchor) — click to go home -->
+    <div class="topnav-logo" id="topNavLogo" style="cursor:pointer;" title="Home">
       <img class="logo-img" src="https://github.com/user-attachments/assets/fff765b4-a84b-4829-abff-75c77ec4307c" alt="Frieren Chronomark logo">
     </div>
+    <!-- Hidden home tab button (keeps tab-switching logic working) -->
+    <button class="nav-tab" data-tab="home" id="homeTabBtn" style="display:none;"></button>
 
     <!-- Journey PLAY button — styled like the LoL PLAY button -->
     <button class="nav-journey-play nav-tab active" data-tab="journey">
@@ -99,6 +101,113 @@
 
     <!-- Content panels -->
     <main id="content">
+
+      <!-- ═══════════════════════════════════════════════════
+           HOME SCREEN TAB
+           ═══════════════════════════════════════════════════ -->
+      <div id="tab-home" class="tab-panel">
+
+        <!-- ── Hero: Frieren + Chat ────────────────────────── -->
+        <div class="home-hero">
+
+          <!-- Left: Frieren 3D -->
+          <div class="home-frieren-col">
+            <div class="home-frieren-greeting">
+              <div class="home-greeting-top">✨ Welcome back, Adventurer</div>
+              <div class="home-greeting-date" id="homeGreetDate"></div>
+            </div>
+            <div id="home3dMount" class="home-3d-mount"></div>
+          </div>
+
+          <!-- Right: AI Chat -->
+          <div class="home-chat-col">
+            <div class="home-chat-header">
+              <div class="home-chat-title">💬 What's on your mind today?</div>
+              <div class="home-chat-sub">Ask Frieren anything — she's been wandering for a thousand years and has seen much.</div>
+            </div>
+            <div class="home-chat-messages" id="homeChatMessages"></div>
+            <div class="home-thinking" id="homeChatThinking">Frieren is pondering…</div>
+            <div class="home-chat-nokey" id="homeChatNoKey">
+              🔑 Add your API key in <strong>Settings → Companion → AI Chat</strong> to chat with Frieren here.
+            </div>
+            <div class="home-chat-input-row" id="homeChatInputRow">
+              <textarea class="home-chat-input" id="homeChatInput" rows="1" placeholder="Ask Frieren anything…"></textarea>
+              <button class="frieren-chat-send" id="homeChatSend" title="Send">➤</button>
+            </div>
+          </div>
+
+        </div><!-- /.home-hero -->
+
+        <!-- ── Productivity Widgets ─────────────────────────── -->
+        <div class="home-widgets">
+
+          <!-- Today's Journey (focus stats) -->
+          <div class="home-widget">
+            <div class="home-widget-header">
+              <span class="home-widget-icon">⚔️</span>
+              <span>Today's Journey</span>
+            </div>
+            <div class="home-widget-body">
+              <div class="home-focus-stats">
+                <div class="home-focus-stat">
+                  <div class="home-focus-val" id="homeTodaySessions">0</div>
+                  <div class="home-focus-label">Sessions</div>
+                </div>
+                <div class="home-focus-stat">
+                  <div class="home-focus-val" id="homeTodayTime">0h 0m</div>
+                  <div class="home-focus-label">Focus Time</div>
+                </div>
+                <div class="home-focus-stat">
+                  <div class="home-focus-val" id="homeStreak">0🔥</div>
+                  <div class="home-focus-label">Day Streak</div>
+                </div>
+              </div>
+              <button class="btn-begin-session home-start-btn" id="homeStartSession">⚔ Begin Session</button>
+            </div>
+          </div>
+
+          <!-- Quick Tasks -->
+          <div class="home-widget">
+            <div class="home-widget-header">
+              <span class="home-widget-icon">✅</span>
+              <span>Quick Tasks</span>
+            </div>
+            <div class="home-widget-body">
+              <div class="home-tasks-add">
+                <input type="text" id="homeTaskInput" placeholder="Add a task…" maxlength="120">
+                <button id="homeTaskAdd" class="btn-primary btn-sm">+</button>
+              </div>
+              <div id="homeTaskList" class="home-task-list"></div>
+            </div>
+          </div>
+
+          <!-- Today's Rituals (habits) -->
+          <div class="home-widget">
+            <div class="home-widget-header">
+              <span class="home-widget-icon">🌱</span>
+              <span>Today's Rituals</span>
+            </div>
+            <div class="home-widget-body" id="homeHabitList">
+              <div class="home-habit-empty">No rituals yet — add some in Grimoire! 🌿</div>
+            </div>
+          </div>
+
+          <!-- Quick Note -->
+          <div class="home-widget">
+            <div class="home-widget-header">
+              <span class="home-widget-icon">📝</span>
+              <span>Quick Note</span>
+            </div>
+            <div class="home-widget-body">
+              <textarea id="homeNoteArea" class="home-note-area" placeholder="Brain dump… thoughts, ideas, reminders…"></textarea>
+              <button id="homeNoteSave" class="btn-primary btn-sm">💾 Save</button>
+            </div>
+          </div>
+
+        </div><!-- /.home-widgets -->
+
+      </div><!-- /#tab-home -->
+
 
       <!-- ═══════════════════════════════════════════════════
            JOURNEY TAB

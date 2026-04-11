@@ -26,7 +26,9 @@
 
   // ── AI Chat state ─────────────────────────────────────────
   var chatHistory = []; // { role: 'user'|'assistant', content: string }
+  var homeChatHistory = []; // separate history for home screen chat
   var aiSettings = { provider: 'gemini', key: '' };
+  var homeCharacter = null; // FrierenCharacter instance for home screen
 
   var FRIEREN_SYSTEM_PROMPT =
     'You are Frieren, an elven mage who has lived for over a thousand years. ' +
@@ -35,7 +37,18 @@
     'You are the companion inside Aureole Timer, a focus and productivity app. ' +
     'Help the user with their work sessions, study habits, Pomodoro technique, and general productivity. ' +
     'Keep your replies concise (2–4 sentences unless more depth is clearly needed). ' +
-    'Stay in character — speak as Frieren would. Do not break character.';
+    'Stay in character — speak as Frieren would. Do not break character.\n\n' +
+    'IMPORTANT — When the user asks you to set, start, pause, stop, or reset a timer, ' +
+    'you MUST include a command token at the END of your reply (after your in-character text). ' +
+    'Use EXACTLY this format (on its own line, nothing else after it):\n' +
+    '[CMD:timer:SET:minutes] — to set and start a countdown timer (replace "minutes" with the number)\n' +
+    '[CMD:timer:POMODORO] — to start a Pomodoro session\n' +
+    '[CMD:timer:PAUSE] — to pause the running timer\n' +
+    '[CMD:timer:STOP] — to stop the timer\n' +
+    '[CMD:timer:RESET] — to reset the timer\n' +
+    'When the user asks to open a tab or switch to a section (journal, grimoire, chronicle, settings, profile, reader), ' +
+    'include at the end: [CMD:tab:TABNAME] (e.g. [CMD:tab:journal]).\n' +
+    'Only include one command token per reply. Do not mention the token in your in-character text.';
 
   function getTimerContext() {
     var lines = [];
@@ -51,6 +64,90 @@
       }
     } catch (e) { /* ignore */ }
     return lines.length ? '\n\n[Timer context: ' + lines.join('; ') + ']' : '';
+  }
+
+  // ── Timer / Tab command execution ─────────────────────────
+  function parseAndExecuteCommand(reply) {
+    // Extract last [CMD:...] token from reply
+    var cmdMatch = reply.match(/\[CMD:([^\]]+)\]\s*$/m);
+    if (!cmdMatch) return reply;
+
+    var parts = cmdMatch[1].split(':');
+    var category = parts[0]; // 'timer' or 'tab'
+
+    if (category === 'timer') {
+      var action = parts[1];
+      if (action === 'SET' && parts[2]) {
+        var mins = parseInt(parts[2], 10);
+        if (mins > 0) executeSetTimer(mins);
+      } else if (action === 'POMODORO') {
+        executePomodoro();
+      } else if (action === 'PAUSE') {
+        if (window.Timer) window.Timer.pause();
+      } else if (action === 'STOP') {
+        if (window.Timer) window.Timer.stop();
+      } else if (action === 'RESET') {
+        if (window.Timer) window.Timer.reset();
+      }
+    } else if (category === 'tab') {
+      var tabName = (parts[1] || '').toLowerCase();
+      var validTabs = ['journey', 'journal', 'grimoire', 'chronicle', 'reader', 'settings', 'profile'];
+      if (validTabs.indexOf(tabName) !== -1) {
+        var btn = document.querySelector('.nav-tab[data-tab="' + tabName + '"]');
+        if (btn) btn.click();
+      }
+    }
+
+    // Strip command token from displayed reply
+    return reply.replace(/\n?\[CMD:[^\]]+\]\s*$/, '').trim();
+  }
+
+  function executeSetTimer(minutes) {
+    // 1. Switch to journey tab
+    var journeyBtn = document.querySelector('.nav-tab[data-tab="journey"]');
+    if (journeyBtn) journeyBtn.click();
+
+    setTimeout(function () {
+      // 2. If mode select is visible, dismiss it and show timer view
+      var modeSelect = document.getElementById('journeyModeSelect');
+      var timerView  = document.getElementById('journeyTimerView');
+      var pomView    = document.getElementById('journeyPomodoroView');
+      if (modeSelect && modeSelect.style.display !== 'none') {
+        modeSelect.style.display = 'none';
+        if (timerView)  timerView.style.display  = 'flex';
+        if (pomView)    pomView.style.display     = 'none';
+      }
+
+      // 3. Set duration via inputs
+      var hours   = Math.floor(minutes / 60);
+      var mins    = minutes % 60;
+      var hInput  = document.getElementById('durationHours');
+      var mInput  = document.getElementById('durationMinutes');
+      if (hInput) hInput.value = hours;
+      if (mInput) mInput.value = mins;
+      var setBtn = document.getElementById('setDurationBtn');
+      if (setBtn) setBtn.click();
+
+      // 4. Start timer
+      setTimeout(function () {
+        if (window.Timer) window.Timer.start();
+      }, 120);
+    }, 150);
+  }
+
+  function executePomodoro() {
+    var journeyBtn = document.querySelector('.nav-tab[data-tab="journey"]');
+    if (journeyBtn) journeyBtn.click();
+
+    setTimeout(function () {
+      var modeSelect  = document.getElementById('journeyModeSelect');
+      var timerView   = document.getElementById('journeyTimerView');
+      var pomView     = document.getElementById('journeyPomodoroView');
+      if (modeSelect) modeSelect.style.display  = 'none';
+      if (timerView)  timerView.style.display   = 'none';
+      if (pomView)    pomView.style.display      = 'flex';
+      if (window.Timer) window.Timer.resetPomodoro();
+    }, 150);
   }
 
   function loadAiSettings() {
@@ -71,10 +168,16 @@
     if (msgList)  msgList.style.display  = hasKey ? ''      : 'none';
     if (inputRow) inputRow.style.display = hasKey ? ''      : 'none';
     if (thinking) thinking.style.display = 'none';
+
+    // Also update home chat UI
+    var homeNoKey   = document.getElementById('homeChatNoKey');
+    var homeInput   = document.getElementById('homeChatInputRow');
+    if (homeNoKey)  homeNoKey.style.display  = hasKey ? 'none'  : 'block';
+    if (homeInput)  homeInput.style.display  = hasKey ? ''      : 'none';
   }
 
-  function appendChatMessage(role, text) {
-    var msgList = document.getElementById('frierenChatMessages');
+  function appendChatMessage(role, text, msgListId) {
+    var msgList = document.getElementById(msgListId || 'frierenChatMessages');
     if (!msgList) return;
 
     var wrap = document.createElement('div');
@@ -96,57 +199,69 @@
     msgList.scrollTop = msgList.scrollHeight;
   }
 
-  function setThinking(visible) {
-    var el = document.getElementById('frierenChatThinking');
+  function setThinking(visible, thinkingId, msgListId) {
+    var el = document.getElementById(thinkingId || 'frierenChatThinking');
     if (el) el.classList.toggle('visible', visible);
-    var msgList = document.getElementById('frierenChatMessages');
+    var msgList = document.getElementById(msgListId || 'frierenChatMessages');
     if (msgList && visible) msgList.scrollTop = msgList.scrollHeight;
   }
 
-  function setSendDisabled(disabled) {
-    var btn   = document.getElementById('frierenChatSend');
-    var input = document.getElementById('frierenChatInput');
+  function setSendDisabled(disabled, sendBtnId, sendInputId) {
+    var btn   = document.getElementById(sendBtnId   || 'frierenChatSend');
+    var input = document.getElementById(sendInputId || 'frierenChatInput');
     if (btn)   btn.disabled   = disabled;
     if (input) input.disabled = disabled;
   }
 
-  async function sendChatMessage(userText, showSpeech, hideSpeech, frieren3d) {
+  async function sendChatMessage(userText, showSpeech, hideSpeech, frieren3d, msgListId, historyArr) {
     userText = userText.trim();
     if (!userText) return;
 
-    var inputEl = document.getElementById('frierenChatInput');
+    msgListId  = msgListId  || 'frierenChatMessages';
+    historyArr = historyArr || chatHistory;
+
+    var inputEl = document.getElementById(
+      msgListId === 'homeChatMessages' ? 'homeChatInput' : 'frierenChatInput'
+    );
     if (inputEl) inputEl.value = '';
 
-    appendChatMessage('user', userText);
-    chatHistory.push({ role: 'user', content: userText });
+    appendChatMessage('user', userText, msgListId);
+    historyArr.push({ role: 'user', content: userText });
 
-    setSendDisabled(true);
-    setThinking(true);
+    var thinkingId = msgListId === 'homeChatMessages' ? 'homeChatThinking' : 'frierenChatThinking';
+    var sendBtnId  = msgListId === 'homeChatMessages' ? 'homeChatSend'     : 'frierenChatSend';
+    var sendInputId= msgListId === 'homeChatMessages' ? 'homeChatInput'    : 'frierenChatInput';
+
+    setSendDisabled(true, sendBtnId, sendInputId);
+    setThinking(true, thinkingId, msgListId);
     if (frieren3d && typeof frieren3d.think === 'function') frieren3d.think();
 
     try {
       var contextSuffix = getTimerContext();
-      var reply = await callAiApi(chatHistory, contextSuffix);
+      var reply = await callAiApi(historyArr, contextSuffix);
 
-      chatHistory.push({ role: 'assistant', content: reply });
-      appendChatMessage('assistant', reply);
-      setThinking(false);
-      setSendDisabled(false);
+      // Parse + execute any embedded command token
+      var cleanReply = parseAndExecuteCommand(reply);
+
+      historyArr.push({ role: 'assistant', content: cleanReply });
+      appendChatMessage('assistant', cleanReply, msgListId);
+      setThinking(false, thinkingId, msgListId);
+      setSendDisabled(false, sendBtnId, sendInputId);
 
       // Show first ~120 chars in speech bubble
       if (showSpeech) {
-        var snippet = reply.length > 120 ? reply.slice(0, 117) + '…' : reply;
+        var snippet = cleanReply.length > 120 ? cleanReply.slice(0, 117) + '…' : cleanReply;
         showSpeech(snippet);
         setTimeout(function () { if (hideSpeech) hideSpeech(); }, 5000);
       }
       if (frieren3d && typeof frieren3d.nod === 'function') frieren3d.nod();
 
     } catch (err) {
-      setThinking(false);
-      setSendDisabled(false);
+      setThinking(false, thinkingId, msgListId);
+      setSendDisabled(false, sendBtnId, sendInputId);
       var errMsg = '…I couldn\'t reach the outside world. ' + (err.message || 'Unknown error.');
-      chatHistory.push({ role: 'assistant', content: errMsg });
-      appendChatMessage('assistant', errMsg);
+      historyArr.push({ role: 'assistant', content: errMsg });
+      appendChatMessage('assistant', errMsg, msgListId);
     }
   }
 
@@ -396,13 +511,14 @@
       return msg;
     }
 
-    // ── Chat input wiring ─────────────────────────────────
+    // ── Chat input wiring (companion panel) ──────────────
     var chatSendBtn   = document.getElementById('frierenChatSend');
     var chatInputEl   = document.getElementById('frierenChatInput');
 
     function doSend() {
       if (!chatInputEl) return;
-      sendChatMessage(chatInputEl.value, showSpeech, hideSpeech, frieren3d);
+      sendChatMessage(chatInputEl.value, showSpeech, hideSpeech, frieren3d,
+        'frierenChatMessages', chatHistory);
     }
 
     if (chatSendBtn) {
@@ -421,6 +537,41 @@
         this.style.height = Math.min(this.scrollHeight, 80) + 'px';
       });
     }
+
+    // ── Home screen chat wiring ───────────────────────────
+    var homeSendBtn  = document.getElementById('homeChatSend');
+    var homeInputEl  = document.getElementById('homeChatInput');
+
+    function doHomeSend() {
+      if (!homeInputEl) return;
+      sendChatMessage(homeInputEl.value, null, null, homeCharacter,
+        'homeChatMessages', homeChatHistory);
+    }
+
+    if (homeSendBtn) {
+      homeSendBtn.addEventListener('click', doHomeSend);
+    }
+    if (homeInputEl) {
+      homeInputEl.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          doHomeSend();
+        }
+      });
+      homeInputEl.addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 80) + 'px';
+      });
+    }
+
+    // Seed home chat with Frieren's greeting
+    if (document.getElementById('homeChatMessages')) {
+      appendChatMessage('assistant',
+        'The journey of a thousand years begins here. What shall we accomplish today? ' +
+        'I am here to help you focus, set timers, and guide your endeavours.',
+        'homeChatMessages');
+    }
+    buildChatUI(); // set initial visibility for home chat too
 
     // ── Periodic idle animation every 90 s ───────────────
     var waveInterval = setInterval(function () {
@@ -449,9 +600,22 @@
       setTimeout(function () { if (!helpVisible) hideSpeech(); }, 4000);
     });
 
+    // ── Home screen 3D Frieren ────────────────────────────
+    var home3dMount = document.getElementById('home3dMount');
+    if (home3dMount && typeof FrierenCharacter !== 'undefined') {
+      homeCharacter = new FrierenCharacter(home3dMount, {
+        width: 320, height: 360,
+        waistFraction: 0.58,
+        headFraction: 1.18,
+        fov: 48
+      });
+      homeCharacter.init();
+    }
+
     window.addEventListener('beforeunload', function () {
       clearInterval(waveInterval);
       if (frieren3d) frieren3d.dispose();
+      if (homeCharacter) homeCharacter.dispose();
     });
   }
 

@@ -404,6 +404,7 @@ function initTabs() {
         if (target === 'profile'   && window.Profile)   window.Profile.updateProfileStats();
         if (target === 'grimoire'  && window.Grimoire)  { window.Grimoire.renderBoards(); window.Grimoire.renderHabitList(); }
         if (target === 'journal'   && window.Journal)   window.Journal.renderEntryList();
+        if (target === 'home') refreshHomeScreen();
         Storage.set('lastTab', target);
       }
 
@@ -417,9 +418,14 @@ function initTabs() {
 }
 
 async function restoreLastTab() {
-  const last = await Storage.get('lastTab', 'journey');
+  const last = await Storage.get('lastTab', 'home');
   const btn = document.querySelector(`.nav-tab[data-tab="${last}"]`);
   if (btn) btn.click();
+  else {
+    // Fall back to home or journey
+    const homeBtn = document.getElementById('homeTabBtn');
+    if (homeBtn) homeBtn.click();
+  }
 }
 
 // ── Focus Mode ───────────────────────────────────────────────
@@ -582,6 +588,218 @@ function initQuickNotes() {
     });
   }
 }
+
+// ── Home Screen ───────────────────────────────────────────
+// ── Home screen widgets ───────────────────────────────────
+
+var _homeTasksBound = false;
+
+async function refreshHomeScreen() {
+  // Update greeting date
+  var homeDate = document.getElementById('homeGreetDate');
+  if (homeDate) {
+    homeDate.textContent = new Date().toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+  }
+
+  // Today's stats
+  await _refreshHomeFocusStats();
+
+  // Quick tasks
+  _renderHomeTasks();
+  if (!_homeTasksBound) {
+    _homeTasksBound = true;
+    _bindHomeTaskControls();
+  }
+
+  // Habits
+  await _renderHomeHabits();
+
+  // Quick note
+  var homeNote = await Storage.get('homeQuickNote', '');
+  var homeNoteArea = document.getElementById('homeNoteArea');
+  if (homeNoteArea) homeNoteArea.value = homeNote;
+  var homeNoteSave = document.getElementById('homeNoteSave');
+  if (homeNoteSave && !homeNoteSave._bound) {
+    homeNoteSave._bound = true;
+    homeNoteSave.addEventListener('click', async function () {
+      var val = homeNoteArea ? homeNoteArea.value : '';
+      await Storage.set('homeQuickNote', val);
+      if (window.showToast) showToast('Note saved! 📝', 'success');
+    });
+    if (homeNoteArea) {
+      homeNoteArea.addEventListener('blur', async function () {
+        await Storage.set('homeQuickNote', this.value);
+      });
+    }
+  }
+
+  // Begin session button
+  var homeStart = document.getElementById('homeStartSession');
+  if (homeStart && !homeStart._bound) {
+    homeStart._bound = true;
+    homeStart.addEventListener('click', function () {
+      var journeyBtn = document.querySelector('.nav-tab[data-tab="journey"]');
+      if (journeyBtn) journeyBtn.click();
+    });
+  }
+}
+
+async function _refreshHomeFocusStats() {
+  var sessions   = await Storage.get('chronicle', []);
+  var today      = new Date().toISOString().split('T')[0];
+  var todaySess  = sessions.filter(function (s) { return s.date === today; });
+  var todaySecs  = todaySess.reduce(function (s, x) { return s + (x.duration || 0); }, 0);
+  var hours      = Math.floor(todaySecs / 3600);
+  var mins       = Math.floor((todaySecs % 3600) / 60);
+
+  var streak = window.Chronicle ? window.Chronicle.calculateStreak(sessions) : 0;
+
+  var sessEl = document.getElementById('homeTodaySessions');
+  var timeEl = document.getElementById('homeTodayTime');
+  var strEl  = document.getElementById('homeStreak');
+  if (sessEl) sessEl.textContent = todaySess.length;
+  if (timeEl) timeEl.textContent = (hours ? hours + 'h ' : '') + mins + 'm';
+  if (strEl)  strEl.textContent  = streak + '🔥';
+}
+
+function _bindHomeTaskControls() {
+  var input  = document.getElementById('homeTaskInput');
+  var addBtn = document.getElementById('homeTaskAdd');
+
+  function addTask() {
+    if (!input) return;
+    var text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    Storage.get('homeTasks', []).then(function (tasks) {
+      tasks.push({ id: Date.now().toString(), text: text, done: false });
+      Storage.set('homeTasks', tasks).then(function () { _renderHomeTasks(); });
+    });
+  }
+
+  if (addBtn) addBtn.addEventListener('click', addTask);
+  if (input) {
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); addTask(); }
+    });
+  }
+}
+
+function _renderHomeTasks() {
+  var list = document.getElementById('homeTaskList');
+  if (!list) return;
+
+  Storage.get('homeTasks', []).then(function (tasks) {
+    list.innerHTML = '';
+    if (!tasks.length) {
+      var empty = document.createElement('div');
+      empty.className = 'home-habit-empty';
+      empty.textContent = 'No tasks yet — add one above! ✨';
+      list.appendChild(empty);
+      return;
+    }
+    tasks.forEach(function (task) {
+      var item = document.createElement('div');
+      item.className = 'home-task-item' + (task.done ? ' done' : '');
+
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'home-task-cb';
+      cb.checked = !!task.done;
+      cb.addEventListener('change', function () {
+        Storage.get('homeTasks', []).then(function (ts) {
+          var t = ts.find(function (x) { return x.id === task.id; });
+          if (t) t.done = cb.checked;
+          Storage.set('homeTasks', ts).then(function () { _renderHomeTasks(); });
+        });
+      });
+
+      var label = document.createElement('span');
+      label.className = 'home-task-text';
+      label.textContent = task.text;
+
+      var del = document.createElement('button');
+      del.className = 'home-task-del';
+      del.textContent = '✕';
+      del.title = 'Remove';
+      del.addEventListener('click', function () {
+        Storage.get('homeTasks', []).then(function (ts) {
+          var filtered = ts.filter(function (x) { return x.id !== task.id; });
+          Storage.set('homeTasks', filtered).then(function () { _renderHomeTasks(); });
+        });
+      });
+
+      item.appendChild(cb);
+      item.appendChild(label);
+      item.appendChild(del);
+      list.appendChild(item);
+    });
+  });
+}
+
+async function _renderHomeHabits() {
+  var container = document.getElementById('homeHabitList');
+  if (!container) return;
+
+  // Read habits from Grimoire storage (completions stored in habit.completedDates)
+  var habits = await Storage.get('habits', []);
+  var today  = new Date().toISOString().split('T')[0];
+
+  container.innerHTML = '';
+
+  if (!habits || habits.length === 0) {
+    var empty = document.createElement('div');
+    empty.className = 'home-habit-empty';
+    empty.textContent = 'No rituals yet — add some in Grimoire! 🌿';
+    container.appendChild(empty);
+    return;
+  }
+
+  habits.slice(0, 6).forEach(function (habit) {
+    var done = (habit.completedDates || []).indexOf(today) !== -1;
+
+    var item = document.createElement('div');
+    item.className = 'home-habit-item';
+    item.title = done ? 'Mark incomplete' : 'Mark complete';
+
+    var emoji = document.createElement('span');
+    emoji.className = 'home-habit-emoji';
+    emoji.textContent = habit.emoji || '🌱';
+
+    var name = document.createElement('span');
+    name.className = 'home-habit-name';
+    name.textContent = habit.name;
+
+    var check = document.createElement('div');
+    check.className = 'home-habit-check' + (done ? ' done' : '');
+    check.textContent = done ? '✓' : '';
+
+    item.addEventListener('click', async function () {
+      var allHabits = await Storage.get('habits', []);
+      var h = allHabits.find(function (x) { return x.id === habit.id; });
+      if (!h) return;
+      if (!h.completedDates) h.completedDates = [];
+      var idx = h.completedDates.indexOf(today);
+      if (idx !== -1) {
+        h.completedDates.splice(idx, 1);
+      } else {
+        h.completedDates.push(today);
+      }
+      await Storage.set('habits', allHabits);
+      _renderHomeHabits();
+      if (window.Grimoire && window.Grimoire.renderHabitList) window.Grimoire.renderHabitList();
+    });
+
+    item.appendChild(emoji);
+    item.appendChild(name);
+    item.appendChild(check);
+    container.appendChild(item);
+  });
+}
+
+window.refreshHomeScreen = refreshHomeScreen;
 
 // ── Application Init ──────────────────────────────────────────
 // ── Journey Mode Selection ────────────────────────────────────
@@ -919,6 +1137,15 @@ async function initApp() {
   // 8. Tab navigation
   initTabs();
   await restoreLastTab();
+
+  // Wire logo → home tab
+  var topNavLogo = document.getElementById('topNavLogo');
+  if (topNavLogo) {
+    topNavLogo.addEventListener('click', function () {
+      var homeBtn = document.getElementById('homeTabBtn');
+      if (homeBtn) homeBtn.click();
+    });
+  }
 
   // 9. Focus overlay click to exit
   const overlay = document.getElementById('focusOverlay');
