@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; frame-src https://www.youtube.com https://youtube.com https://open.spotify.com https://w.soundcloud.com https://soundcloud.com; img-src * blob: data:; media-src * blob: data:; connect-src 'self' blob: https://open.spotify.com https://*.spotify.com https://*.scdn.co https://api.openai.com https://generativelanguage.googleapis.com https://api.groq.com; font-src 'self' data: https://fonts.gstatic.com; worker-src blob: 'self';">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <title>Frieren Chronomark</title>
+  <!-- Favicon — replace Sprite.png in assets/ to change the app icon -->
+  <link rel="icon" type="image/png" href="../assets/Sprite.png" id="appFavicon">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <!-- Startup splash screen -->
+  <div id="splashScreen">
+    <img id="splashLogo" src="../assets/startup-logo.gif" alt="Chronomark Logo">
+    <div id="splashText">Chronomark</div>
+  </div>
+
+  <!-- Particle canvas background -->
+  <canvas id="particleCanvas"></canvas>
+
+  <!-- Custom title bar -->
+  <div id="titleBar">
+    <div class="title-drag-area">✨ Frieren Chronomark</div>
+    <div class="title-controls">
+      <button id="btnMinimize" title="Minimize">—</button>
+      <button id="btnMaximize" title="Maximize">□</button>
+      <button id="btnClose" title="Close">✕</button>
+    </div>
+  </div>
+
+  <!-- Top Navigation Bar -->
+  <nav id="topNav">
+    <!-- Logo (left anchor) — click to go home -->
+    <div class="topnav-logo" id="topNavLogo" style="cursor:pointer;" title="Home">
+      <img class="logo-img" src="https://github.com/user-attachments/assets/fff765b4-a84b-4829-abff-75c77ec4307c" alt="Frieren Chronomark logo">
+    </div>
+    <!-- Hidden home tab button (keeps tab-switching logic working) -->
+    <button class="nav-tab" data-tab="home" id="homeTabBtn" style="display:none;"></button>
+
+    <!-- Journey PLAY button — styled like the LoL PLAY button -->
+    <button class="nav-journey-play nav-tab active" data-tab="journey">
+      <span class="njp-icon">⚔</span>
+      <span class="njp-text">JOURNEY</span>
+      <span class="njp-arrow">▶</span>
+    </button>
+
+    <!-- Secondary tabs — like LEAGUE, TFT -->
+    <div class="topnav-tabs">
+      <button class="nav-tab" data-tab="journal">JOURNAL</button>
+      <button class="nav-tab" data-tab="grimoire">GRIMOIRE</button>
+      <button class="nav-tab" data-tab="chronicle">CHRONICLE</button>
+      <button class="nav-tab" data-tab="reader">READER</button>
+      <button class="nav-tab" data-tab="settings">SETTINGS</button>
+    </div>
+
+    <!-- Flexible spacer (drag area) -->
+    <div class="topnav-spacer"></div>
+
+    <!-- Running-timer display (hidden when timer is stopped) -->
+    <div class="topnav-timer-pill" id="navTimerPill" style="display:none;" title="Go to Timer">
+      <span class="topnav-timer-icon">⏱</span>
+      <span class="topnav-timer-val" id="navTimerVal">00:00:00</span>
+    </div>
+
+    <!-- Date + Clock + World Clock -->
+    <div class="topnav-clock-area">
+      <div class="topnav-clock-main">
+        <span class="topnav-date" id="sidebarDate"></span>
+        <span class="topnav-time" id="sidebarClock"></span>
+      </div>
+      <div class="topnav-worldclock" id="worldClockWidget" title="World Clock">
+        <span class="wc-label" id="worldClockLabel">🌍</span>
+        <span class="wc-time" id="worldClockTime">--:--</span>
+        <button class="wc-config-btn" id="worldClockConfigBtn" title="Configure world clock">⚙</button>
+      </div>
+    </div>
+
+    <!-- Profile mini-widget — like the LoL profile in top-right -->
+    <div class="topnav-profile" id="navProfileWidget" title="View Profile">
+      <div class="nav-pf-avatar-wrap">
+        <img class="nav-pf-avatar" id="navPfAvatar" src="" alt="Profile">
+        <span class="nav-pf-level" id="navPfLevel">1</span>
+      </div>
+      <div class="nav-pf-info">
+        <span class="nav-pf-name" id="navPfName">Adventurer</span>
+        <span class="nav-pf-status"><span class="nav-pf-dot"></span>Online</span>
+      </div>
+    </div>
+
+    <!-- Hidden profile tab button (keeps tab-switching logic working) -->
+    <button class="nav-tab" data-tab="profile" style="display:none;"></button>
+  </nav>
+
+  <!-- Main layout -->
+  <div id="appLayout">
+
+    <!-- Content panels -->
+    <main id="content">
+
+      <!-- ═══════════════════════════════════════════════════
+           HOME SCREEN TAB
+           ═══════════════════════════════════════════════════ -->
+      <div id="tab-home" class="tab-panel">
+
+        <!-- ── Hero: Frieren + Chat ────────────────────────── -->
+        <div class="home-hero">
+
+          <!-- Left: Frieren 3D -->
+          <div class="home-frieren-col">
+            <div class="home-frieren-greeting">
+              <div class="home-greeting-top">✨ Welcome back, Adventurer</div>
+              <div class="home-greeting-date" id="homeGreetDate"></div>
+            </div>
+            <div id="home3dMount" class="home-3d-mount"></div>
+          </div>
+
+          <!-- Right: AI Chat -->
+          <div class="home-chat-col">
+            <div class="home-chat-header">
+              <div class="home-chat-title">💬 What's on your mind today?</div>
+              <div class="home-chat-sub">Ask Frieren anything — she's been wandering for a thousand years and has seen much.</div>
+            </div>
+            <div class="home-chat-messages" id="homeChatMessages"></div>
+            <div class="home-thinking" id="homeChatThinking">Frieren is pondering…</div>
+            <div class="home-chat-nokey" id="homeChatNoKey">
+              🔑 Add your API key in <strong>Settings → Companion → AI Chat</strong> to chat with Frieren here.
+            </div>
+            <div class="home-chat-input-row" id="homeChatInputRow">
+              <textarea class="home-chat-input" id="homeChatInput" rows="1" placeholder="Ask Frieren anything…"></textarea>
+              <button class="frieren-chat-send" id="homeChatSend" title="Send">➤</button>
+            </div>
+          </div>
+
+        </div><!-- /.home-hero -->
+
+        <!-- ── Productivity Widgets ─────────────────────────── -->
+        <div class="home-widgets">
+
+          <!-- Today's Journey (focus stats) -->
+          <div class="home-widget">
+            <div class="home-widget-header">
+              <span class="home-widget-icon">⚔️</span>
+              <span>Today's Journey</span>
+            </div>
+            <div class="home-widget-body">
+              <div class="home-focus-stats">
+                <div class="home-focus-stat">
+                  <div class="home-focus-val" id="homeTodaySessions">0</div>
+                  <div class="home-focus-label">Sessions</div>
+                </div>
+                <div class="home-focus-stat">
+                  <div class="home-focus-val" id="homeTodayTime">0h 0m</div>
+                  <div class="home-focus-label">Focus Time</div>
+                </div>
+                <div class="home-focus-stat">
+                  <div class="home-focus-val" id="homeStreak">0🔥</div>
+                  <div class="home-focus-label">Day Streak</div>
+                </div>
+              </div>
+              <button class="btn-begin-session home-start-btn" id="homeStartSession">⚔ Begin Session</button>
+            </div>
+          </div>
+
+          <!-- Quick Tasks -->
+          <div class="home-widget">
+            <div class="home-widget-header">
+              <span class="home-widget-icon">✅</span>
+              <span>Quick Tasks</span>
+            </div>
+            <div class="home-widget-body">
+              <div class="home-tasks-add">
+                <input type="text" id="homeTaskInput" placeholder="Add a task…" maxlength="120">
+                <button id="homeTaskAdd" class="btn-primary btn-sm">+</button>
+              </div>
+              <div id="homeTaskList" class="home-task-list"></div>
+            </div>
+          </div>
+
+          <!-- Today's Rituals (habits) -->
+          <div class="home-widget">
+            <div class="home-widget-header">
+              <span class="home-widget-icon">🌱</span>
+              <span>Today's Rituals</span>
+            </div>
+            <div class="home-widget-body" id="homeHabitList">
+              <div class="home-habit-empty">No rituals yet — add some in Grimoire! 🌿</div>
+            </div>
+          </div>
+
+          <!-- Quick Note -->
+          <div class="home-widget">
+            <div class="home-widget-header">
+              <span class="home-widget-icon">📝</span>
+              <span>Quick Note</span>
+            </div>
+            <div class="home-widget-body">
+              <textarea id="homeNoteArea" class="home-note-area" placeholder="Brain dump… thoughts, ideas, reminders…"></textarea>
+              <button id="homeNoteSave" class="btn-primary btn-sm">💾 Save</button>
+            </div>
+          </div>
+
+        </div><!-- /.home-widgets -->
+
+      </div><!-- /#tab-home -->
+
+
+      <!-- ═══════════════════════════════════════════════════
+           JOURNEY TAB
+           ═══════════════════════════════════════════════════ -->
+      <div id="tab-journey" class="tab-panel active">
+
+        <!-- ══════════════════════════════════════════════════
+             JOURNEY: MODE SELECTION SCREEN (shown first)
+             Like the LoL game-mode picker
+             ══════════════════════════════════════════════════ -->
+        <div id="journeyModeSelect" class="journey-mode-select">
+
+          <!-- Sub-nav: like PVP | CO-OP VS. AI | TRAINING | CREATE CUSTOM -->
+          <div class="jms-subnav">
+            <button class="jms-subbtn active" data-subnav="solo">SOLO FOCUSED</button>
+            <button class="jms-subbtn" data-subnav="technique">TECHNIQUE</button>
+            <div class="jms-subnav-sep"></div>
+            <button class="jms-subbtn" data-subnav="create-custom">CREATE CUSTOM</button>
+          </div>
+
+          <!-- Mode cards row: like Summoner's Rift, ARAM, Arena, TFT -->
+          <div class="jms-cards-row">
+            <div class="jms-card selected" data-mode="working">
+              <div class="jms-card-bg jms-bg-work"></div>
+              <div class="jms-card-inner">
+                <div class="jms-card-frame"><span class="jms-card-icon">⚔️</span></div>
+                <div class="jms-card-category">DEEP FOCUS</div>
+                <div class="jms-card-name">WORK<br>SESSION</div>
+              </div>
+            </div>
+            <div class="jms-card" data-mode="studying">
+              <div class="jms-card-bg jms-bg-study"></div>
+              <div class="jms-card-inner">
+                <div class="jms-card-frame"><span class="jms-card-icon">📖</span></div>
+                <div class="jms-card-category">LEARNING</div>
+                <div class="jms-card-name">STUDY<br>SESSION</div>
+              </div>
+            </div>
+            <div class="jms-card" data-mode="custom">
+              <div class="jms-card-bg jms-bg-custom"></div>
+              <div class="jms-card-inner">
+                <div class="jms-card-frame"><span class="jms-card-icon">✨</span></div>
+                <div class="jms-card-category">FLEXIBLE</div>
+                <div class="jms-card-name">CUSTOM<br>SESSION</div>
+              </div>
+            </div>
+            <div class="jms-card-separator"></div>
+            <div class="jms-card" data-mode="pomodoro">
+              <div class="jms-card-bg jms-bg-pom"></div>
+              <div class="jms-card-inner">
+                <div class="jms-card-frame"><span class="jms-card-icon">🍅</span></div>
+                <div class="jms-card-category">TECHNIQUE</div>
+                <div class="jms-card-name">POMODORO<br>TIMER</div>
+              </div>
+            </div>
+          </div><!-- /.jms-cards-row -->
+
+          <!-- Description + sub-modes -->
+          <div class="jms-body">
+            <div class="jms-desc-panel">
+              <p class="jms-desc-text" id="jmsDescText">Authentic deep work in a distraction-free session. Track your focused work time with full timer controls.</p>
+              <div class="jms-desc-rule"></div>
+              <div class="jms-submodes" id="jmsSubmodes"></div>
+            </div>
+          </div><!-- /.jms-body -->
+
+          <!-- Confirm button bar (bottom, centered — like LoL confirm) -->
+          <div class="jms-footer">
+            <button class="jms-confirm-btn" id="jmsConfirmBtn">
+              <span class="jms-confirm-x">✕</span>
+              <span class="jms-confirm-text">CONFIRM</span>
+              <span class="jms-confirm-arrow">▶</span>
+            </button>
+          </div>
+
+        </div><!-- /#journeyModeSelect -->
+
+        <!-- ══════════════════════════════════════════════════
+             JOURNEY: TIMER VIEW (shown after CONFIRM)
+             ══════════════════════════════════════════════════ -->
+        <div id="journeyTimerView" class="journey-timer-view" style="display:none;">
+
+          <!-- Back bar -->
+          <div class="journey-back-bar">
+            <button id="journeyBackBtn" class="btn-ghost">← CHANGE MODE</button>
+            <span class="journey-active-mode" id="journeyActiveModeLabel">⚔️ Work Session</span>
+          </div>
+
+        <!-- Lobby: main area + right panel -->
+        <div class="journey-lobby">
+
+          <!-- Left: Main timer area -->
+          <div class="lobby-main">
+
+            <!-- Compact header: date/time + session type -->
+            <div class="lobby-header">
+              <div class="live-datetime" id="liveDatetime"></div>
+              <select id="timerTypeSelect">
+                <option value="working">⚔️ Working</option>
+                <option value="studying">📖 Studying</option>
+                <option value="custom">✨ Custom</option>
+              </select>
+              <input type="text" id="customTimerLabel" placeholder="Custom label..." style="display:none; width:140px;">
+            </div>
+
+            <!-- Timer Frame (game lobby center) -->
+            <div class="journey-frame" id="journeyFrame">
+              <div class="frame-bg" id="timerBgOverlay"></div>
+              <!-- Bell animation shown in full-window overlay on timer completion -->
+              <div class="frame-content">
+                <h2 class="frame-title">⚜ Frieren Chronomark ⚜</h2>
+
+                <!-- Manual time inputs -->
+                <div class="time-inputs">
+                  <label>Start <input type="time" id="startTimeInput"></label>
+                  <button id="setNowBtn" class="btn-secondary btn-sm" title="Set start to current time">⏱ Now</button>
+                  <label>End <input type="time" id="endTimeInput"></label>
+                  <button id="applyTimesBtn" class="btn-primary btn-sm">Apply</button>
+                </div>
+
+                <!-- Custom duration setter -->
+                <div class="duration-row">
+                  <span class="duration-label">⏱ Set Duration</span>
+                  <input type="number" id="durationHours" min="0" max="23" value="1" title="Hours">
+                  <span class="duration-sep">h</span>
+                  <input type="number" id="durationMinutes" min="0" max="59" value="0" title="Minutes">
+                  <span class="duration-sep">min</span>
+                  <button id="setDurationBtn" class="btn-primary btn-sm">✓ Set</button>
+                </div>
+
+                <!-- Timer display -->
+                <div class="timer-display" id="timerDisplay">00:00:00</div>
+                <div class="time-left" id="timeLeft">Time Left: --:--:--</div>
+
+                <!-- Progress bar with walker -->
+                <div class="progress-container" id="progressContainer">
+
+                  <!-- ── Style: Classic Bar (default) ─────────────────── -->
+                  <div class="progress-bar-wrap" id="progressBarWrap">
+                    <div class="progress-track">
+                      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+                      <div class="progress-walker" id="progressWalker" style="left: -16px;">
+                        <img id="walkerImg" src="" alt="🧝">
+                      </div>
+                    </div>
+                    <div class="progress-labels">
+                      <span id="progressStart">--:--</span>
+                      <span id="progressPercent">0%</span>
+                      <span id="progressEnd">--:--</span>
+                    </div>
+                  </div>
+
+                  <!-- ── Style: Doughnut ───────────────────────────────── -->
+                  <div class="progress-doughnut-wrap" id="progressDoughnutWrap">
+                    <svg class="doughnut-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="doughnutGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%"   stop-color="var(--accent)"/>
+                          <stop offset="50%"  stop-color="var(--gold)"/>
+                          <stop offset="100%" stop-color="var(--secondary)"/>
+                        </linearGradient>
+                      </defs>
+                      <circle class="doughnut-track" cx="100" cy="100" r="80"/>
+                      <circle class="doughnut-fill" id="doughnutFill" cx="100" cy="100" r="80"
+                              stroke="url(#doughnutGrad)"
+                              stroke-dasharray="502.65"
+                              stroke-dashoffset="502.65"/>
+                      <text class="doughnut-pct" id="doughnutPct" x="100" y="107">0%</text>
+                    </svg>
+                  </div>
+
+                  <!-- ── Style: Hourglass ──────────────────────────────── -->
+                  <div class="progress-hourglass-wrap" id="progressHourglassWrap">
+                    <svg class="hourglass-svg" id="hourglassSvg" viewBox="0 0 120 200" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <clipPath id="hourglassClipTop">
+                          <polygon id="hourglassClipTopPoly" points="10,10 110,10 60,100"/>
+                        </clipPath>
+                        <clipPath id="hourglassClipBot">
+                          <polygon id="hourglassClipBotPoly" points="10,190 110,190 60,100"/>
+                        </clipPath>
+                        <linearGradient id="sandGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%"  stop-color="#d4a843"/>
+                          <stop offset="100%" stop-color="#f0c860"/>
+                        </linearGradient>
+                      </defs>
+                      <polygon class="hg-outline" points="10,10 110,10 60,100 110,190 10,190 60,100"/>
+                      <line class="hg-pinch" x1="10" y1="100" x2="110" y2="100"/>
+                      <polygon class="hg-sand-top" id="hgSandTop"
+                               points="10,10 110,10 60,100"
+                               clip-path="url(#hourglassClipTop)"/>
+                      <polygon class="hg-sand-bot" id="hgSandBot"
+                               points="10,190 110,190 60,100"
+                               clip-path="url(#hourglassClipBot)"/>
+                      <circle class="hg-particle" id="hgParticle" cx="60" cy="100" r="3"/>
+                      <text class="hg-pct" id="hgPct" x="60" y="220">0%</text>
+                    </svg>
+                  </div>
+
+                  <!-- ── Style: Mana Bar ───────────────────────────────── -->
+                  <div class="progress-mana-wrap" id="progressManaWrap">
+                    <div class="mana-bar-container">
+                      <div class="mana-label-row">
+                        <span class="mana-label-icon">💎</span>
+                        <span class="mana-label-text">Mana</span>
+                        <span class="mana-pct" id="manaPct">0%</span>
+                      </div>
+                      <div class="mana-track">
+                        <div class="mana-fill" id="manaFill" style="width:0%">
+                          <canvas class="mana-sparkle-canvas" id="manaSparkleCanvas"></canvas>
+                        </div>
+                        <div class="mana-shine"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- Secondary session controls (shown once running) -->
+                <div class="session-secondary-controls">
+                  <button id="timerPause" class="btn-ghost" disabled>⏸ Pause</button>
+                  <button id="timerStop" class="btn-ghost-danger" disabled>■ Stop</button>
+                  <button id="timerReset" class="btn-ghost" disabled>↺ Reset</button>
+                </div>
+
+              </div>
+            </div>
+
+          </div><!-- /.lobby-main -->
+
+          <!-- Right panel (social/tools) -->
+          <div class="journey-right">
+
+            <!-- Music Player -->
+            <div class="panel music-panel">
+              <h3 class="panel-title">🎵 Arcane Melodies</h3>
+              <div class="music-url-row">
+                <input type="text" id="musicUrl" placeholder="Paste Spotify track/playlist/album URL...">
+                <button id="loadMusicBtn" class="btn-primary btn-sm">▶ Load</button>
+              </div>
+              <div id="musicPlayerWrap">
+                <!-- Spotify Embed iFrame -->
+                <iframe id="spotifyFrame" src="about:blank" frameborder="0"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                  style="display:none;width:100%;height:152px;margin-top:8px;border-radius:12px;"></iframe>
+              </div>
+              <p class="music-hint">Paste any Spotify track, album or playlist URL.</p>
+            </div>
+
+            <!-- Quick Notes -->
+            <div class="panel notes-panel">
+              <h3 class="panel-title">📝 Quick Notes</h3>
+              <textarea id="quickNotes" placeholder="Brain dump... thoughts, ideas, tasks..."></textarea>
+              <button id="saveNotes" class="btn-primary btn-sm">Save Notes</button>
+            </div>
+
+            <!-- Reminders -->
+            <div class="panel reminders-panel">
+              <h3 class="panel-title">🔔 Reminders</h3>
+              <div class="reminder-add">
+                <input type="text" id="reminderText" placeholder="Reminder text...">
+                <input type="time" id="reminderTime">
+                <button id="addReminder" class="btn-primary btn-sm">+ Add</button>
+              </div>
+              <div id="remindersList"></div>
+            </div>
+
+          </div><!-- /.journey-right -->
+
+        </div><!-- /.journey-lobby -->
+
+        <!-- ── Bottom action bar — the "FIND MATCH" zone ─────────── -->
+        <div class="journey-bottom-bar">
+          <div class="bottom-bar-left">
+            <button id="focusModeBtn" class="btn-ghost">🧠 Focus Mode</button>
+            <button id="pomodoroBtn" class="btn-ghost">🍅 Pomodoro</button>
+          </div>
+          <button id="timerStart" class="btn-begin-session">⚔ BEGIN SESSION</button>
+          <div class="bottom-bar-right"></div>
+        </div>
+
+        <!-- Pomodoro floating panel -->
+        <div id="pomodoroPanel" class="floating-panel" style="display:none;">
+          <button class="floating-close" id="closePomodoroBtn">✕</button>
+          <h3>🍅 Pomodoro Timer</h3>
+          <div class="pomodoro-display" id="pomodoroDisplay">25:00</div>
+          <div class="pomodoro-status" id="pomodoroStatus">Work Session</div>
+          <div class="pomodoro-controls">
+            <button id="pomStart" class="btn-primary">▶ Start</button>
+            <button id="pomReset" class="btn-secondary">↺ Reset</button>
+          </div>
+          <div class="pomodoro-config">
+            <label>Work <input type="number" id="pomWork" value="25" min="1" max="90"> min</label>
+            <label>Break <input type="number" id="pomBreak" value="5" min="1" max="30"> min</label>
+            <label>Sessions: <span id="pomSessions">0</span>/4</label>
+          </div>
+        </div>
+
+        </div><!-- /#journeyTimerView -->
+
+        <!-- ══════════════════════════════════════════════════
+             JOURNEY: DEDICATED POMODORO SCREEN
+             ══════════════════════════════════════════════════ -->
+        <div id="journeyPomodoroView" class="journey-pomodoro-view" style="display:none;">
+
+          <!-- Back bar -->
+          <div class="journey-back-bar">
+            <button id="pomBackBtn" class="btn-ghost">← CHANGE MODE</button>
+            <span class="journey-active-mode">🍅 Pomodoro Timer</span>
+          </div>
+
+          <div class="pom-view-body">
+
+            <!-- Phase indicator dots -->
+            <div class="pom-phase-dots" id="pomViewDots">
+              <span class="pom-phase-dot active" data-idx="0"></span>
+              <span class="pom-phase-dot" data-idx="1"></span>
+              <span class="pom-phase-dot" data-idx="2"></span>
+              <span class="pom-phase-dot" data-idx="3"></span>
+            </div>
+
+            <!-- Session phase label -->
+            <div class="pom-view-phase" id="pomViewStatus">Work Session</div>
+
+            <!-- Ring + big timer -->
+            <div class="pom-ring-wrap">
+              <svg class="pom-ring-svg" viewBox="0 0 220 220">
+                <circle class="pom-ring-bg" cx="110" cy="110" r="95"/>
+                <circle class="pom-ring-fill" id="pomViewRingFill" cx="110" cy="110" r="95"/>
+              </svg>
+              <div class="pom-ring-inner">
+                <div class="pom-view-display" id="pomViewDisplay">25:00</div>
+                <div class="pom-view-sublabel" id="pomViewSubLabel">Focus</div>
+              </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="pom-view-controls">
+              <button id="pomViewReset" class="btn-secondary">↺ Reset</button>
+              <button id="pomViewStart" class="btn-begin-session pom-view-start-btn">▶ Start</button>
+              <button id="pomViewSkip" class="btn-ghost">⏭ Skip</button>
+            </div>
+
+            <!-- Config row -->
+            <div class="pom-view-config">
+              <label>Work
+                <input type="number" id="pomViewWork" value="25" min="1" max="90">
+                <span>min</span>
+              </label>
+              <div class="pom-view-config-sep">·</div>
+              <label>Break
+                <input type="number" id="pomViewBreak" value="5" min="1" max="30">
+                <span>min</span>
+              </label>
+              <div class="pom-view-config-sep">·</div>
+              <div class="pom-view-sessions-wrap">
+                <span>Sessions:</span>
+                <strong id="pomViewSessions">0</strong>
+                <span>/ 4</span>
+              </div>
+            </div>
+
+          </div><!-- /.pom-view-body -->
+        </div><!-- /#journeyPomodoroView -->
+
+      </div><!-- /#tab-journey -->
+
+
+      <!-- ═══════════════════════════════════════════════════
+           JOURNAL TAB
+           ═══════════════════════════════════════════════════ -->
+      <div id="tab-journal" class="tab-panel">
+        <div class="tab-header">
+          <h2>📖 Journal</h2>
+          <div class="tab-actions">
+            <input type="date" id="journalDate">
+            <button id="newJournalEntry" class="btn-primary">+ New Entry</button>
+          </div>
+        </div>
+        <div class="journal-layout">
+          <!-- Entry list sidebar -->
+          <div class="journal-sidebar">
+            <div class="search-box">
+              <input type="text" id="journalSearch" placeholder="Search entries..." style="width:100%;">
+            </div>
+            <div id="journalEntryList"></div>
+          </div>
+          <!-- Editor -->
+          <div class="journal-editor">
+            <input type="text" id="journalTitle" placeholder="Entry title..." class="entry-title-input">
+            <div class="journal-toolbar">
+              <button onclick="document.execCommand('bold')" title="Bold"><b>B</b></button>
+              <button onclick="document.execCommand('italic')" title="Italic"><i>I</i></button>
+              <button onclick="document.execCommand('underline')" title="Underline"><u>U</u></button>
+              <button onclick="document.execCommand('insertUnorderedList')" title="List">≡</button>
+              <button onclick="document.execCommand('insertOrderedList')" title="Numbered List">#</button>
+              <select id="journalMood">
+                <option value="">Mood...</option>
+                <option value="✨">✨ Inspired</option>
+                <option value="😊">😊 Good</option>
+                <option value="😐">😐 Neutral</option>
+                <option value="😔">😔 Low</option>
+                <option value="⚡">⚡ Focused</option>
+                <option value="😴">😴 Tired</option>
+              </select>
+              <select id="journalEnergyLevel">
+                <option value="">Energy...</option>
+                <option value="5">⚡⚡⚡ High</option>
+                <option value="3">⚡⚡ Medium</option>
+                <option value="1">⚡ Low</option>
+              </select>
+            </div>
+            <div id="journalEditor" contenteditable="true" class="rich-editor"
+                 placeholder="Write your thoughts, reflections, and adventures..."></div>
+            <div class="editor-footer">
+              <button id="saveJournalEntry" class="btn-primary">💾 Save Entry</button>
+              <button id="deleteJournalEntry" class="btn-danger">🗑 Delete</button>
+              <span id="journalWordCount">0 words</span>
+            </div>
+          </div>
+        </div>
+      </div><!-- /#tab-journal -->
+
+
+      <!-- ═══════════════════════════════════════════════════
+           GRIMOIRE TAB
+           ═══════════════════════════════════════════════════ -->
+      <div id="tab-grimoire" class="tab-panel">
+        <div class="tab-header">
+          <h2>📚 Grimoire</h2>
+          <button id="newSpell" class="btn-primary">+ New Spell (Task)</button>
+        </div>
+        <div class="grimoire-layout">
+          <!-- Kanban Boards -->
+          <div class="grimoire-boards">
+            <div class="grimoire-board" data-status="todo">
+              <h3>📋 To Cast</h3>
+              <div class="board-cards" id="board-todo"></div>
+              <button class="add-card-btn" data-status="todo">+ Add Spell</button>
+            </div>
+            <div class="grimoire-board" data-status="inprogress">
+              <h3>⚡ Casting</h3>
+              <div class="board-cards" id="board-inprogress"></div>
+              <button class="add-card-btn" data-status="inprogress">+ Add Spell</button>
+            </div>
+            <div class="grimoire-board" data-status="done">
+              <h3>✅ Mastered</h3>
+              <div class="board-cards" id="board-done"></div>
+              <button class="add-card-btn" data-status="done">+ Add Spell</button>
+            </div>
+          </div>
+          <!-- Habit Tracker -->
+          <div class="panel habit-panel">
+            <h3 class="panel-title">🌱 Daily Rituals (Habits)</h3>
+            <div class="habit-add">
+              <input type="text" id="habitName" placeholder="New ritual name...">
+              <select id="habitEmoji">
+                <option>🌊</option><option>📖</option><option>🏃</option>
+                <option>💧</option><option>🧘</option><option>✍️</option>
+                <option>🎯</option><option>⚔️</option><option>🌸</option>
+                <option>🔥</option>
+              </select>
+              <button id="addHabit" class="btn-primary btn-sm">+ Add</button>
+            </div>
+            <div id="habitList"></div>
+          </div>
+        </div>
+
+        <!-- Spell editor modal -->
+        <div id="spellModal" class="modal" style="display:none;">
+          <div class="modal-content">
+            <h3>✨ Edit Spell</h3>
+            <input type="text" id="spellTitle" placeholder="Spell name...">
+            <textarea id="spellDesc" placeholder="Description (optional)..."></textarea>
+            <select id="spellPriority">
+              <option value="low">🟢 Low Priority</option>
+              <option value="medium" selected>🟡 Medium Priority</option>
+              <option value="high">🔴 High Priority</option>
+            </select>
+            <select id="spellStatus">
+              <option value="todo">📋 To Cast</option>
+              <option value="inprogress">⚡ Casting</option>
+              <option value="done">✅ Mastered</option>
+            </select>
+            <div class="modal-actions">
+              <button id="deleteSpell" class="btn-danger" style="display:none;">🗑 Delete</button>
+              <button id="cancelSpell" class="btn-secondary">Cancel</button>
+              <button id="saveSpell" class="btn-primary">✨ Save Spell</button>
+            </div>
+          </div>
+        </div>
+      </div><!-- /#tab-grimoire -->
+
+
+      <!-- ═══════════════════════════════════════════════════
+           CHRONICLE TAB
+           ═══════════════════════════════════════════════════ -->
+      <div id="tab-chronicle" class="tab-panel">
+        <div class="tab-header">
+          <h2>📜 Chronicle</h2>
+          <div class="tab-actions">
+            <select id="chronicleFilter">
+              <option value="all">All Sessions</option>
+              <option value="working">⚔️ Working</option>
+              <option value="studying">📖 Studying</option>
+              <option value="custom">✨ Custom</option>
+            </select>
+            <button id="exportChronicle" class="btn-secondary">⬇ Export CSV</button>
+          </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="chronicle-stats">
+          <div class="stat-card">
+            <div class="stat-icon">⚔️</div>
+            <div class="stat-info">
+              <div class="stat-value" id="totalWorkTime">0h 0m</div>
+              <div class="stat-label">Total Work</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📖</div>
+            <div class="stat-info">
+              <div class="stat-value" id="totalStudyTime">0h 0m</div>
+              <div class="stat-label">Total Study</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-info">
+              <div class="stat-value" id="todayTime">0h 0m</div>
+              <div class="stat-label">Today</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-info">
+              <div class="stat-value" id="currentStreak">0</div>
+              <div class="stat-label">Day Streak</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly chart -->
+        <div class="panel" style="margin-bottom:18px;">
+          <h3 class="panel-title">📊 Weekly Overview</h3>
+          <canvas id="weeklyChart" height="120"></canvas>
+        </div>
+
+        <!-- Session log -->
+        <div class="panel">
+          <h3 class="panel-title">📋 Session Log</h3>
+          <div style="overflow-x:auto;">
+            <table class="chronicle-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Duration</th>
+                  <th>Label</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody id="chronicleTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /#tab-chronicle -->
+
+
+      <!-- ═══════════════════════════════════════════════════
+           PROFILE TAB
+           ═══════════════════════════════════════════════════ -->
+      <div id="tab-profile" class="tab-panel">
+        <!-- LoL-style profile layout: sidebar identity + main stats/achievements -->
+        <div class="prf-layout">
+
+          <!-- ═══ LEFT SIDEBAR ═══  (LoL-style profile card) -->
+          <div class="prf-sidebar">
+
+            <!-- Gradient/art background layers inside the sidebar card -->
+            <div class="prf-card-bg"></div>
+
+            <!-- Level badge at the top center -->
+            <div class="prf-level-badge">
+              <span class="prf-level-num" id="prfLevelNum">1</span>
+            </div>
+
+            <!-- Ornate avatar frame -->
+            <div class="prf-avatar-frame">
+              <img id="profileAvatar" src="" alt="Avatar" class="prf-avatar">
+              <label class="prf-avatar-upload" title="Upload photo">
+                <input type="file" id="profileAvatarUpload" accept="image/*" style="display:none;">
+                📷
+              </label>
+            </div>
+
+            <!-- Name + title (display mode) -->
+            <div id="profileDisplayInfo" class="prf-identity">
+              <h2 class="prf-name" id="profileName">Adventurer</h2>
+              <p class="prf-title" id="profileTitle">Apprentice Mage</p>
+              <p class="prf-bio" id="profileBio"></p>
+            </div>
+
+            <!-- Edit form (hidden) -->
+            <div id="profileEditForm" class="prf-edit-form" style="display:none;">
+              <input type="text" id="editName" placeholder="Your name...">
+              <input type="text" id="editTitle" placeholder="Title (blank = auto)...">
+              <textarea id="editBio" placeholder="Bio..."></textarea>
+              <div class="prf-edit-actions">
+                <button id="saveProfile" class="btn-primary btn-sm">Save</button>
+                <button id="cancelProfile" class="btn-secondary btn-sm">Cancel</button>
+              </div>
+            </div>
+
+            <!-- XP progress bar -->
+            <div class="prf-xp-section">
+              <div class="prf-xp-label">
+                <span>LEVEL <span id="prfXpLevel">1</span></span>
+                <span><span id="prfXpCurrent">0</span> / <span id="prfXpNext">60</span> XP</span>
+              </div>
+              <div class="prf-xp-track">
+                <div class="prf-xp-fill" id="prfXpFill" style="width:0%"></div>
+              </div>
+            </div>
+
+            <!-- Military rank badge -->
+            <div class="prf-rank-block" id="prfRankBlock">
+              <div class="prf-rank-insignia" id="prfRankInsignia"></div>
+              <div class="prf-rank-info">
+                <div class="prf-rank-grade" id="prfRankGrade">E-1</div>
+                <div class="prf-rank-name"  id="prfRankName">Private</div>
+              </div>
+            </div>
+
+            <!-- Medals showcase row (top 3 earned medals displayed as badges) -->
+            <div class="prf-medals-row" id="prfMedalsRow"></div>
+
+            <!-- Edit button -->
+            <button id="editProfileBtn" class="btn-ghost btn-sm prf-edit-btn">✏️ Edit</button>
+
+            <!-- Decorative sword/banner bottom ornament -->
+            <div class="prf-banner-bottom">
+              <div class="prf-sword prf-sword-left">⚔</div>
+              <div class="prf-sword-divider"></div>
+              <div class="prf-sword prf-sword-right">⚔</div>
+            </div>
+
+          </div><!-- /.prf-sidebar -->
+
+          <!-- ═══ MAIN CONTENT ═══ -->
+          <div class="prf-main">
+
+            <!-- Background art overlay -->
+            <div class="prf-bg-art"></div>
+
+            <!-- Stats row: like LoL SOLO/DUO | HONOR | MASTERY SCORE | TROPHY | BANNER -->
+            <div class="prf-stats-row">
+              <div class="prf-stat-block">
+                <div class="prf-stat-cat">WORK</div>
+                <div class="prf-stat-icon-lg">⚔️</div>
+                <div class="prf-stat-val" id="profileTotalWork">0h</div>
+              </div>
+              <div class="prf-stat-block">
+                <div class="prf-stat-cat">STUDY</div>
+                <div class="prf-stat-icon-lg">📖</div>
+                <div class="prf-stat-val" id="profileTotalStudy">0h</div>
+              </div>
+              <div class="prf-stat-block">
+                <div class="prf-stat-cat">MASTERY SCORE</div>
+                <div class="prf-stat-icon-lg">✨</div>
+                <div class="prf-stat-val" id="profileMasteryScore">0</div>
+              </div>
+              <div class="prf-stat-block">
+                <div class="prf-stat-cat">STREAK</div>
+                <div class="prf-stat-icon-lg">🔥</div>
+                <div class="prf-stat-val" id="profileStreak">0</div>
+              </div>
+              <div class="prf-stat-block">
+                <div class="prf-stat-cat">SESSIONS</div>
+                <div class="prf-stat-icon-lg">🏅</div>
+                <div class="prf-stat-val" id="profileSessions">0</div>
+              </div>
+              <div class="prf-stat-block">
+                <div class="prf-stat-cat">RANK</div>
+                <div class="prf-stat-icon-lg" id="profileRankIcon">🪖</div>
+                <div class="prf-stat-val prf-stat-rank" id="profileRankName">Private</div>
+              </div>
+            </div><!-- /.prf-stats-row -->
+
+            <!-- Ribbons -->
+            <div class="prf-section">
+              <h3 class="prf-section-title">🎖 RIBBON RACK</h3>
+              <div id="ribbonRack" class="ribbon-rack"></div>
+            </div>
+
+            <!-- Medals -->
+            <div class="prf-section">
+              <h3 class="prf-section-title">🏅 MEDALS</h3>
+              <div id="medalRack" class="medal-rack"></div>
+            </div>
+
+            <!-- Achievements -->
+            <div class="prf-section">
+              <h3 class="prf-section-title">🏆 ACHIEVEMENTS</h3>
+              <div id="achievementsGrid" class="achievements-grid"></div>
+            </div>
+
+          </div><!-- /.prf-main -->
+
+        </div><!-- /.prf-layout -->
+      </div><!-- /#tab-profile -->
+
+
+      <!-- ═══════════════════════════════════════════════════
+           READER TAB
+           ═══════════════════════════════════════════════════ -->
+      <div id="tab-reader" class="tab-panel reader-panel">
+
+        <!-- Left sidebar: document library -->
+        <div class="reader-sidebar">
+          <div class="reader-sidebar-header">
+            <span class="reader-sidebar-title">📚 Library</span>
+            <label class="btn-upload reader-upload-btn" title="Add document">
+              <input type="file" id="readerFileInput" accept=".pdf,.docx,.doc" multiple>
+              ＋
+            </label>
+          </div>
+          <!-- Drag-and-drop zone when library is empty -->
+          <div id="readerDropZone" class="reader-drop-zone">
+            <div class="reader-drop-icon">📂</div>
+            <p class="reader-drop-text">Drop PDF or Word files here<br><span style="font-size:0.75rem;opacity:0.6;">or click ＋ above</span></p>
+          </div>
+          <ul id="readerDocList" class="reader-doc-list"></ul>
+        </div>
+
+        <!-- Main viewer area -->
+        <div class="reader-main" id="readerMain">
+          <div id="readerEmpty" class="reader-empty">
+            <div class="reader-empty-icon">📖</div>
+            <p>Open a document from your library to start reading.</p>
+          </div>
+          <!-- PDF canvas container -->
+          <div id="readerPdfContainer" class="reader-pdf-container" style="display:none;">
+            <!-- Navigation + zoom row -->
+            <div class="reader-toolbar">
+              <button id="readerPrevPage" class="btn-ghost btn-sm">◀</button>
+              <span class="reader-page-info">
+                <input id="readerPageInput" class="reader-page-input" type="number" min="1" value="1" title="Go to page"> / <span id="readerPageTotal">1</span>
+              </span>
+              <button id="readerNextPage" class="btn-ghost btn-sm">▶</button>
+              <div class="reader-toolbar-sep"></div>
+              <button id="readerZoomOut" class="btn-ghost btn-sm" title="Zoom out (Ctrl+scroll)">－</button>
+              <span id="readerZoomLabel" class="reader-zoom-label">100%</span>
+              <button id="readerZoomIn"  class="btn-ghost btn-sm" title="Zoom in  (Ctrl+scroll)">＋</button>
+              <button id="readerCloseDoc" class="btn-ghost btn-sm" style="margin-left:auto;" title="Close document">✕</button>
+            </div>
+            <!-- Annotation tools row -->
+            <div class="reader-toolbar reader-annot-toolbar">
+              <button id="readerTool_draw"      class="btn-ghost btn-sm reader-tool-btn" title="Draw / Pen">✏️ Draw</button>
+              <button id="readerTool_highlight" class="btn-ghost btn-sm reader-tool-btn" title="Highlight">🖊 Highlight</button>
+              <button id="readerTool_text"      class="btn-ghost btn-sm reader-tool-btn" title="Add text note">T Text</button>
+              <button id="readerTool_erase"     class="btn-ghost btn-sm reader-tool-btn" title="Erase near click">◻ Erase</button>
+              <div class="reader-toolbar-sep"></div>
+              <!-- Draw pen style -->
+              <select id="readerPenStyle" class="reader-select" title="Pen style">
+                <option value="pen">🖊 Pen</option>
+                <option value="marker">📍 Marker</option>
+                <option value="brush">🖌 Brush</option>
+              </select>
+              <!-- Draw / text color -->
+              <label class="reader-color-label" title="Draw/Text color">
+                <input type="color" id="readerDrawColor" value="#ff3366" class="reader-color-input">
+                <span>Color</span>
+              </label>
+              <!-- Highlight color -->
+              <label class="reader-color-label" title="Highlight color">
+                <input type="color" id="readerHighlightColor" value="#ffe94d" class="reader-color-input">
+                <span>HL</span>
+              </label>
+              <!-- Highlight opacity -->
+              <label class="reader-color-label" title="Highlight opacity">
+                <input type="range" id="readerHighlightOpacity" min="10" max="80" value="38" class="reader-opacity-slider">
+                <span id="readerHighlightOpacityLabel">38%</span>
+              </label>
+              <button id="readerClearAnnot" class="btn-ghost btn-sm reader-tool-btn" title="Clear all annotations on this page" style="margin-left:auto; color:var(--danger);">🗑 Clear page</button>
+            </div>
+            <!-- Canvas stack: PDF underneath, annotation overlay on top -->
+            <div id="readerPdfScroll" class="reader-pdf-scroll">
+              <div class="reader-canvas-stack">
+                <canvas id="readerPdfCanvas"></canvas>
+                <canvas id="readerAnnotCanvas" class="reader-annot-canvas"></canvas>
+              </div>
+            </div>
+          </div>
+          <!-- DOCX HTML container -->
+          <div id="readerDocxContainer" class="reader-docx-container" style="display:none;">
+            <div class="reader-toolbar">
+              <button id="readerDocxClose" class="btn-ghost btn-sm" title="Close document" style="margin-left:auto;">✕ Close</button>
+            </div>
+            <div id="readerDocxContent" class="reader-docx-content"></div>
+          </div>
+        </div>
+
+      </div><!-- /#tab-reader -->
+
+
+      <!-- ═══════════════════════════════════════════════════
+           SETTINGS TAB
+           ═══════════════════════════════════════════════════ -->
+      <div id="tab-settings" class="tab-panel">
+        <div class="tab-header">
+          <h2 id="settingsHeading">⚙️ Settings</h2>
+        </div>
+        <div class="settings-layout">
+          <!-- Settings categories nav -->
+          <div class="settings-nav">
+            <button class="settings-tab active" data-settings="appearance">🎨 Appearance</button>
+            <button class="settings-tab" data-settings="timer">⏱ Timer</button>
+            <button class="settings-tab" data-settings="notifications">🔔 Notifications</button>
+            <button class="settings-tab" data-settings="adhd">🧠 Focus</button>
+            <button class="settings-tab" data-settings="companion">🧝 Companion</button>
+            <button class="settings-tab" data-settings="data">💾 Data</button>
+            <button class="settings-tab" data-settings="about">ℹ About</button>
+            <button class="settings-tab" data-settings="system">⚙️ System</button>
+            <!-- Hidden debug tab — unlocked by clicking Settings heading 5 times -->
+            <button class="settings-tab" data-settings="debug" id="debugTab" style="display:none;">🐛 Debug</button>
+          </div>
+
+          <div class="settings-content">
+
+            <!-- Appearance -->
+            <div class="settings-panel active" id="settings-appearance">
+              <h3>🎨 Appearance</h3>
+              <div class="setting-group">
+                <label>Theme Accent Color</label>
+                <input type="color" id="accentColor" value="#7c5cbf">
+              </div>
+              <div class="setting-group">
+                <label>Secondary Color</label>
+                <input type="color" id="secondaryColor" value="#3d8b7a">
+              </div>
+              <div class="setting-group">
+                <label>Background Color</label>
+                <input type="color" id="bgColor" value="#050510">
+              </div>
+              <div class="setting-group">
+                <label>Font Size</label>
+                <input type="range" id="fontSize" min="12" max="20" value="14">
+                <span id="fontSizeVal">14px</span>
+              </div>
+              <div class="setting-group">
+                <label>UI Scale</label>
+                <input type="range" id="uiScale" min="0.7" max="1.4" step="0.05" value="1">
+                <span id="uiScaleVal">100%</span>
+              </div>
+              <div class="setting-group">
+                <label>Particle Effects</label>
+                <input type="checkbox" id="particleEffects" checked>
+              </div>
+              <div class="setting-group">
+                <label>Border Animations</label>
+                <input type="checkbox" id="borderAnimations" checked>
+              </div>
+              <div style="margin-top:16px;">
+                <button id="resetAppearance" class="btn-secondary">↺ Reset Defaults</button>
+              </div>
+              <div class="setting-group" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+                <label>Progress Bar Style</label>
+                <select id="progressBarStyle">
+                  <option value="bar">🟣 Classic Bar</option>
+                  <option value="doughnut">🍩 Doughnut</option>
+                  <option value="hourglass">⏳ Hourglass</option>
+                  <option value="mana" selected>💎 Mana Bar</option>
+                </select>
+              </div>
+
+              <!-- ── Animation Settings ─────────────────────────── -->
+              <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border);">
+                <h4 style="margin:0 0 12px;font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;">✨ Animations</h4>
+                <div class="setting-group">
+                  <label>Background Effect</label>
+                  <select id="bgEffect">
+                    <option value="particles">✨ Floating Particles</option>
+                    <option value="sparkles">💫 Sparkles</option>
+                    <option value="matrix">🖥 Matrix Rain</option>
+                    <option value="starfield">🌌 Starfield</option>
+                    <option value="aurora">🌈 Aurora</option>
+                    <option value="fireflies">🌿 Fireflies</option>
+                    <option value="snow">❄️ Snow</option>
+                    <option value="neon-grid">🟣 Neon Grid</option>
+                    <option value="none">⊘ None</option>
+                  </select>
+                </div>
+                <div class="setting-group">
+                  <label>Tab Transition</label>
+                  <select id="tabTransition">
+                    <option value="slide">↔ Slide</option>
+                    <option value="fade">◌ Fade</option>
+                    <option value="zoom">⬡ Zoom</option>
+                    <option value="none">⊘ None</option>
+                  </select>
+                </div>
+                <div class="setting-group">
+                  <label>UI Animations <small style="color:var(--text-muted)">(ripples, hover, pop-in)</small></label>
+                  <input type="checkbox" id="uiAnimations" checked>
+                </div>
+              </div>
+              <div class="setting-group" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+                <label>Timer Background Image</label>
+                <label class="btn-upload">
+                  <input type="file" id="uploadBg" accept="image/*">
+                  🖼 Upload Background
+                </label>
+              </div>
+              <div class="setting-group">
+                <label>Progress Walker Sprite</label>
+                <label class="btn-upload">
+                  <input type="file" id="uploadWalker" accept="image/*,image/gif">
+                  🧝 Upload Walker
+                </label>
+              </div>
+              <div class="setting-group" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+                <label>Startup Logo (.gif recommended)</label>
+                <label class="btn-upload">
+                  <input type="file" id="uploadSplashLogo" accept="image/*,image/gif">
+                  ✨ Upload Startup Logo
+                </label>
+                <small style="color:var(--text-muted);margin-top:4px;display:block;">Shown on app startup. Replace with your own .gif!</small>
+              </div>
+            </div>
+
+            <!-- Companion settings -->
+            <div class="settings-panel" id="settings-companion">
+              <h3>🧝 Companion Character</h3>
+
+              <!-- ── Model & Visibility ───────────────────────────── -->
+              <div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+                <h4 style="margin:0 0 10px;font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;">🗿 Model</h4>
+                <div class="setting-group">
+                  <label>Character Model</label>
+                  <select id="companionModel">
+                    <option value="model1">🧙 Frieren</option>
+                  </select>
+                </div>
+                <div class="setting-group">
+                  <label>Show Companion</label>
+                  <input type="checkbox" id="companionVisible" checked>
+                </div>
+              </div>
+
+              <!-- ── Camera Framing ───────────────────────────────── -->
+              <div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+                <h4 style="margin:0 0 6px;font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;">📷 Camera Framing</h4>
+                <p style="font-size:0.78rem;color:var(--text-muted);margin:0 0 12px;">Values are fractions of skeleton height (1.0 = top of head area). Adjust to control which part of the character is framed.</p>
+                <div class="setting-group">
+                  <label>Frame Top <small style="color:var(--text-muted)">(higher = more headroom above)</small></label>
+                  <input type="range" id="companionHeadFraction" min="0.80" max="2.00" step="0.01" value="1.12">
+                  <span id="companionHeadFractionVal">1.12</span>
+                </div>
+                <div class="setting-group">
+                  <label>Frame Bottom <small style="color:var(--text-muted)">(lower = see more of body)</small></label>
+                  <input type="range" id="companionWaistFraction" min="0.00" max="1.40" step="0.01" value="0.68">
+                  <span id="companionWaistFractionVal">0.68</span>
+                </div>
+                <div class="setting-group">
+                  <label>Camera FOV <small style="color:var(--text-muted)">(lower = tighter/closer)</small></label>
+                  <input type="range" id="companionFov" min="15" max="90" step="1" value="52">
+                  <span id="companionFovVal">52°</span>
+                </div>
+                <div class="setting-group">
+                  <label>Zoom Factor <small style="color:var(--text-muted)">(higher = zoom in more)</small></label>
+                  <input type="range" id="companionZoom" min="0.30" max="3.00" step="0.05" value="1.00">
+                  <span id="companionZoomVal">1.00×</span>
+                </div>
+              </div>
+
+              <!-- ── Camera Position ──────────────────────────────── -->
+              <div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+                <h4 style="margin:0 0 10px;font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;">↔ Camera Position</h4>
+                <div class="setting-group">
+                  <label>Horizontal Offset <small style="color:var(--text-muted)">(negative = shift left)</small></label>
+                  <input type="range" id="companionCameraX" min="-1.00" max="1.00" step="0.01" value="0">
+                  <span id="companionCameraXVal">0.00</span>
+                </div>
+                <div class="setting-group">
+                  <label>Vertical Offset <small style="color:var(--text-muted)">(positive = look higher)</small></label>
+                  <input type="range" id="companionCameraY" min="-0.50" max="0.50" step="0.01" value="0.08">
+                  <span id="companionCameraYVal">0.08</span>
+                </div>
+              </div>
+
+              <!-- ── Widget Size ───────────────────────────────────── -->
+              <div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+                <h4 style="margin:0 0 10px;font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;">📐 Widget Size</h4>
+                <div class="setting-group">
+                  <label>Preset</label>
+                  <select id="companionSizePreset">
+                    <option value="small">Small (280 × 310)</option>
+                    <option value="medium" selected>Medium (340 × 370)</option>
+                    <option value="large">Large (420 × 460)</option>
+                    <option value="xlarge">X-Large (520 × 560)</option>
+                    <option value="custom">Custom…</option>
+                  </select>
+                </div>
+                <div id="companionCustomSizeRow" style="display:none;">
+                  <div class="setting-group">
+                    <label>Width (px)</label>
+                    <input type="number" id="companionWidth" min="80" max="700" value="340">
+                  </div>
+                  <div class="setting-group">
+                    <label>Height (px)</label>
+                    <input type="number" id="companionHeight" min="80" max="700" value="370">
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button id="saveCompanionSettings" class="btn-primary">💾 Save &amp; Apply</button>
+                <button id="previewCompanionSettings" class="btn-secondary">👁 Preview</button>
+                <button id="resetCompanionSettings" class="btn-secondary">↺ Reset Defaults</button>
+              </div>
+
+              <!-- ── AI Chat ────────────────────────────────────────── -->
+              <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border);">
+                <h4 style="margin:0 0 6px;font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;">🤖 AI Chat</h4>
+                <p style="font-size:0.78rem;color:var(--text-muted);margin:0 0 12px;">Power the 💬 Chat tab in the companion panel. Your key is stored only in localStorage on this device.</p>
+                <div class="setting-group">
+                  <label>Provider</label>
+                  <select id="companionAiProvider">
+                    <option value="gemini">Google Gemini (gemini-2.0-flash · free tier)</option>
+                    <option value="groq">Groq (llama-3.3-70b · free tier)</option>
+                    <option value="openai">OpenAI (gpt-4o-mini)</option>
+                  </select>
+                </div>
+                <div class="setting-group">
+                  <label>API Key</label>
+                  <input type="password" id="companionAiKey" placeholder="Paste your key here" style="width:200px;max-width:100%;">
+                </div>
+                <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+                  <button id="saveAiKey" class="btn-primary" style="font-size:0.82rem;padding:6px 14px;">💾 Save Key</button>
+                  <button id="testAiKey" class="btn-secondary" style="font-size:0.82rem;padding:6px 14px;">🔌 Test Connection</button>
+                </div>
+                <div id="aiKeyStatus" style="margin-top:8px;font-size:0.78rem;min-height:18px;"></div>
+              </div>
+            </div>
+
+            <!-- Timer settings -->
+            <div class="settings-panel" id="settings-timer">
+              <h3>⏱ Timer Settings</h3>
+              <div class="setting-group">
+                <label>Default Study Duration (minutes)</label>
+                <input type="number" id="defaultStudyDuration" value="90" min="1" max="480">
+              </div>
+              <div class="setting-group">
+                <label>Auto-save timer sessions</label>
+                <input type="checkbox" id="autoSaveSessions" checked>
+              </div>
+              <div class="setting-group">
+                <label>Timer sound effects</label>
+                <input type="checkbox" id="timerSounds" checked>
+              </div>
+              <div class="setting-group">
+                <label>Break reminder every (minutes)</label>
+                <input type="number" id="breakReminderInterval" value="30" min="5" max="120">
+              </div>
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;">
+                <label>Custom Timer Labels</label>
+                <div id="customTimerLabelsList"></div>
+                <div class="add-custom-label">
+                  <input type="text" id="newCustomLabel" placeholder="New label...">
+                  <button id="addCustomLabel" class="btn-primary btn-sm">+</button>
+                </div>
+              </div>
+              <div style="margin-top:16px;">
+                <button id="saveTimerSettings" class="btn-primary">Save Timer Settings</button>
+              </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="settings-panel" id="settings-notifications">
+              <h3>🔔 Notifications</h3>
+              <div class="setting-group">
+                <label>Enable desktop notifications</label>
+                <input type="checkbox" id="desktopNotifications" checked>
+              </div>
+              <div class="setting-group">
+                <label>Timer completion notification</label>
+                <input type="checkbox" id="timerCompleteNotif" checked>
+              </div>
+              <div class="setting-group">
+                <label>Break reminders</label>
+                <input type="checkbox" id="breakReminders" checked>
+              </div>
+              <div class="setting-group">
+                <label>Daily streak reminder</label>
+                <input type="checkbox" id="dailyReminder" checked>
+              </div>
+              <div class="setting-group">
+                <label>Daily reminder time</label>
+                <input type="time" id="dailyReminderTime" value="09:00">
+              </div>
+
+              <!-- Custom sounds -->
+              <h4 style="margin:18px 0 10px;color:var(--gold-light);font-size:0.85rem;letter-spacing:1px;">🔊 Custom Sounds</h4>
+              <div class="setting-group">
+                <label>Timer complete sound</label>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <label class="btn-upload">
+                    <input type="file" id="uploadTimerSound" accept="audio/*">
+                    🎵 Upload
+                  </label>
+                  <button id="playTimerSound" class="btn-secondary btn-sm">▶ Test</button>
+                  <button id="clearTimerSound" class="btn-ghost btn-sm">✕ Clear</button>
+                  <span id="timerSoundName" style="font-size:0.75rem;color:var(--text-muted);"></span>
+                </div>
+              </div>
+              <div class="setting-group">
+                <label>Achievement sound</label>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <label class="btn-upload">
+                    <input type="file" id="uploadAchieveSound" accept="audio/*">
+                    🎵 Upload
+                  </label>
+                  <button id="playAchieveSound" class="btn-secondary btn-sm">▶ Test</button>
+                  <button id="clearAchieveSound" class="btn-ghost btn-sm">✕ Clear</button>
+                  <span id="achieveSoundName" style="font-size:0.75rem;color:var(--text-muted);"></span>
+                </div>
+              </div>
+              <div class="setting-group">
+                <label>Sound volume</label>
+                <input type="range" id="soundVolume" min="0" max="100" value="80" style="width:140px;">
+                <span id="soundVolumeLabel" style="font-size:0.8rem;color:var(--text-muted);min-width:36px;">80%</span>
+              </div>
+
+              <div style="margin-top:16px;display:flex;gap:10px;">
+                <button id="testNotification" class="btn-secondary">🔔 Test Notification</button>
+                <button id="saveNotifSettings" class="btn-primary">Save</button>
+              </div>
+              <div class="setting-group" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+                <label>Notification Thumbs-Up Image (.gif recommended)</label>
+                <label class="btn-upload">
+                  <input type="file" id="uploadThumbsUp" accept="image/*,image/gif">
+                  👍 Upload Thumbs-Up
+                </label>
+                <small style="color:var(--text-muted);margin-top:4px;display:block;">Shown in toast notifications. Use a fun .gif!</small>
+              </div>
+            </div>
+
+            <!-- ADHD/Focus settings -->
+            <div class="settings-panel" id="settings-adhd">
+              <h3>🧠 ADHD &amp; Focus Settings</h3>
+              <div class="setting-group">
+                <label>Enable Pomodoro by default</label>
+                <input type="checkbox" id="autoPomodoro">
+              </div>
+              <div class="setting-group">
+                <label>Focus mode hides navigation bar</label>
+                <input type="checkbox" id="focusHidesSidebar" checked>
+              </div>
+              <div class="setting-group">
+                <label>Hyperfocus timer (auto-break after minutes)</label>
+                <input type="number" id="hyperfocusTimer" value="120" min="30" max="480">
+              </div>
+              <div class="setting-group">
+                <label>Visual progress pulse animation</label>
+                <input type="checkbox" id="progressPulse" checked>
+              </div>
+              <div class="setting-group">
+                <label>Time blindness helper (show % in title bar)</label>
+                <input type="checkbox" id="timeBlindenessHelper" checked>
+              </div>
+              <div class="setting-group">
+                <label>Encouragement messages during sessions</label>
+                <input type="checkbox" id="encouragementMessages" checked>
+              </div>
+              <div style="margin-top:16px;">
+                <button id="saveAdhdSettings" class="btn-primary">Save</button>
+              </div>
+            </div>
+
+            <!-- Data management -->
+            <div class="settings-panel" id="settings-data">
+              <h3>💾 Data Management</h3>
+              <div class="setting-group">
+                <label>Export all data as JSON</label>
+                <button id="exportAllData" class="btn-secondary">⬇ Export JSON</button>
+              </div>
+              <div class="setting-group">
+                <label>Import data from JSON</label>
+                <label class="btn-upload">
+                  <input type="file" id="importData" accept=".json">
+                  ⬆ Import JSON
+                </label>
+              </div>
+              <div class="setting-group danger-zone">
+                <label>⚠️ Danger Zone</label>
+                <button id="clearAllData" class="btn-danger">🗑 Clear All Data</button>
+              </div>
+            </div>
+
+            <!-- About -->
+            <div class="settings-panel" id="settings-about">
+              <h3>ℹ About Frieren Chronomark</h3>
+              <div class="about-content">
+                <div class="about-logo"><img src="https://github.com/user-attachments/assets/fff765b4-a84b-4829-abff-75c77ec4307c" alt="Frieren Chronomark" style="width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 0 12px rgba(200,170,110,0.6));"></div>
+                <div class="about-gif-wrap"><img src="../assets/about-img1.gif" class="about-gif" alt=""></div>
+                <h2>Frieren Chronomark</h2>
+                <p>Version 1.0.0</p>
+                <p class="about-tagline">For Tards, by Tards</p>
+                <p class="about-credit">Vibecoded by Emy, Inspired by KissToFear</p>
+                <p style="margin-top:10px;">A magical productivity companion for neurodivergent adventurers.</p>
+                <p>Frieren-themed • ADHD-friendly • Dark Mode</p>
+                <div class="about-features">
+                  <p>🎯 Customizable focus timer with visual progress</p>
+                  <p>📖 Journal with mood &amp; energy tracking</p>
+                  <p>📚 Grimoire task board (Kanban-style)</p>
+                  <p>📜 Detailed session chronicle with CSV export</p>
+                  <p>🏆 Achievement system with ribbon rack</p>
+                  <p>🍅 Pomodoro technique support</p>
+                  <p>🎵 Spotify music player (iFrame embed)</p>
+                  <p>🧠 ADHD-friendly focus mode</p>
+                  <p>🌱 Daily habit/ritual tracker</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- System settings (background, startup) -->
+            <div class="settings-panel" id="settings-system">
+              <h3>⚙️ System</h3>
+              <div class="setting-group">
+                <label>Run in background when closed
+                  <small style="display:block;color:var(--text-muted);font-size:0.78rem;margin-top:2px;">App stays running in the system tray instead of quitting.</small>
+                </label>
+                <input type="checkbox" id="runInBackground">
+              </div>
+              <div class="setting-group">
+                <label>Launch on startup
+                  <small style="display:block;color:var(--text-muted);font-size:0.78rem;margin-top:2px;">Automatically start when you log in to Windows.</small>
+                </label>
+                <input type="checkbox" id="launchOnStartup">
+              </div>
+            </div><!-- /#settings-system -->
+
+            <!-- DEBUG PANEL (hidden until unlocked) -->
+            <div class="settings-panel" id="settings-debug">
+              <h3>🐛 Debug / Cheat Mode</h3>
+              <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:12px;">⚠️ These tools directly modify stored data. Use for testing only.</p>
+
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;">
+                <label>Add Session Minutes (XP)</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="number" id="dbgAddMinutes" value="60" min="1" max="10000" style="width:100px;">
+                  <select id="dbgSessionType" style="width:120px;">
+                    <option value="working">Working</option>
+                    <option value="studying">Studying</option>
+                  </select>
+                  <button id="dbgAddSession" class="btn-primary btn-sm">+ Add Session</button>
+                </div>
+              </div>
+
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;margin-top:12px;">
+                <label>Set Session Count (bulk-add sessions)</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="number" id="dbgSessionCount" value="10" min="1" max="1000" style="width:100px;">
+                  <button id="dbgSetSessions" class="btn-primary btn-sm">Bulk Add</button>
+                </div>
+              </div>
+
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;margin-top:12px;">
+                <label>Set Streak Days</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="number" id="dbgStreakDays" value="7" min="0" max="365" style="width:100px;">
+                  <button id="dbgSetStreak" class="btn-primary btn-sm">Set Streak</button>
+                </div>
+              </div>
+
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;margin-top:12px;">
+                <label>Unlock All Achievements</label>
+                <button id="dbgUnlockAll" class="btn-primary btn-sm">🏆 Unlock All</button>
+              </div>
+
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;margin-top:12px;">
+                <label>Trigger Timer Complete (test bell)</label>
+                <button id="dbgTriggerBell" class="btn-secondary btn-sm">🔔 Trigger Bell</button>
+              </div>
+
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;margin-top:12px;">
+                <label>Test Toast Notification</label>
+                <div style="display:flex;gap:8px;">
+                  <button id="dbgToastSuccess" class="btn-primary btn-sm">✅ Success</button>
+                  <button id="dbgToastError" class="btn-primary btn-sm">❌ Error</button>
+                  <button id="dbgToastAchieve" class="btn-primary btn-sm">🏆 Achievement</button>
+                </div>
+              </div>
+
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;margin-top:12px;">
+                <label>Clear Chronicle (sessions only)</label>
+                <button id="dbgClearChronicle" class="btn-danger btn-sm">🗑 Clear Sessions</button>
+              </div>
+
+              <div class="setting-group" style="flex-direction:column;align-items:flex-start;gap:8px;margin-top:12px;">
+                <label>Clear Achievements only</label>
+                <button id="dbgClearAchievements" class="btn-danger btn-sm">🗑 Clear Achievements</button>
+              </div>
+            </div><!-- /#settings-debug -->
+
+          </div><!-- /.settings-content -->
+        </div><!-- /.settings-layout -->
+      </div><!-- /#tab-settings -->
+
+
+
+    </main>
+  </div><!-- /#appLayout -->
+
+  <!-- Toast notification container -->
+  <div id="toastContainer"></div>
+
+  <!-- Focus mode overlay -->
+  <div id="focusOverlay" style="display:none;"></div>
+
+  <!-- Full-window bell animation overlay (shown on timer completion, close manually) -->
+  <div id="bellOverlay" style="display:none;">
+    <div class="bell-inner">
+      <button id="bellClose" class="bell-close-btn" title="Close">✕</button>
+      <img id="bellGif" src="../assets/frieren-bell.gif" alt="Session complete!">
+    </div>
+  </div>
+
+  <!-- World Clock config modal -->
+  <div id="worldClockModal" class="wc-modal" style="display:none;">
+    <div class="wc-modal-box">
+      <h3 class="wc-modal-title">🌍 World Clock</h3>
+      <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px;">Choose a timezone and a display label.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <label style="font-size:0.82rem;">Label (e.g. Tokyo, UTC, NYC)</label>
+        <input type="text" id="wcLabelInput" placeholder="e.g. Tokyo" maxlength="16"
+          style="padding:6px 10px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem;">
+        <label style="font-size:0.82rem;">Timezone</label>
+        <select id="wcTzSelect" style="padding:6px 10px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.82rem;max-height:200px;"></select>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+        <button id="wcModalCancel" class="btn-ghost btn-sm">Cancel</button>
+        <button id="wcModalSave" class="btn-primary btn-sm">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reader: custom inline text input popup (replaces window.prompt) -->
+  <div id="readerTextPopup" style="display:none;position:fixed;z-index:9000;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px;box-shadow:0 4px 20px rgba(0,0,0,0.5);min-width:220px;">
+    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px;">Annotation text:</div>
+    <input type="text" id="readerTextInput" placeholder="Enter text…" maxlength="200"
+      style="width:100%;box-sizing:border-box;padding:6px 8px;background:var(--bg-base);border:1px solid var(--border);border-radius:5px;color:var(--text-primary);font-size:0.88rem;">
+    <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end;">
+      <button id="readerTextCancel" class="btn-ghost btn-sm">Cancel</button>
+      <button id="readerTextOk" class="btn-primary btn-sm">Add</button>
+    </div>
+  </div>
+
+  <!-- JS files — load in order (no ES6 modules) -->
+  <!-- PDF.js: in-app PDF rendering (local vendor copy) -->
+  <!-- PDF.js 4.2.67 (patched): loaded as ES module, exposed as window.pdfjsLib -->
+  <script type="module">
+    import * as pdfjs from './vendor/pdf.min.mjs';
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL('./vendor/pdf.worker.min.mjs', location.href).href;
+    window.pdfjsLib = pdfjs;
+  </script>
+  <!-- mammoth.js: DOCX → HTML conversion (local vendor copy) -->
+  <script src="vendor/mammoth.browser.min.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/achievements.js"></script>
+  <script src="js/reminders.js"></script>
+  <script src="js/timer.js"></script>
+  <script src="js/journal.js"></script>
+  <script src="js/grimoire.js"></script>
+  <script src="js/chronicle.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/reader.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/app.js"></script>
+  <script src="vendor/three-gltf.min.js"></script>
+  <script src="js/frieren-3d.js"></script>
+  <script src="js/frieren-companion.js"></script>
+
+  <!-- ── Frieren Companion Character ─────────────────────────── -->
+  <div id="frierenCompanion" class="frieren-companion" title="Ask Frieren for help!">
+    <!-- Minimize / restore button -->
+    <button id="frierenMinBtn" class="frieren-min-btn" title="Minimize companion">−</button>
+    <!-- Three.js canvas rendered here by frieren-companion.js -->
+    <div id="frieren3dMount" class="frieren-3d-mount"></div>
+    <div class="frieren-speech" id="frierenSpeech" style="display:none;">
+      <span id="frierenSpeechText">Hello, adventurer!</span>
+    </div>
+  </div>
+
+  <!-- ── Frieren Help / FAQ Panel ────────────────────────────── -->
+  <div id="frierenHelpPanel" class="frieren-help-panel" style="display:none;">
+    <div class="frieren-help-header">
+      <img src="../assets/frieren-default.gif" alt="Frieren" class="frieren-help-avatar">
+      <div>
+        <div class="frieren-help-title">Frieren's Guide</div>
+        <div class="frieren-help-sub">Your Chronomark companion</div>
+      </div>
+      <button id="frierenHelpClose" class="frieren-help-close">✕</button>
+    </div>
+
+    <div class="frieren-help-tabs">
+      <button class="frieren-help-tab active" data-ftab="faq">❓ FAQ</button>
+      <button class="frieren-help-tab" data-ftab="tips">💡 Tips</button>
+      <button class="frieren-help-tab" data-ftab="about">⚜ About</button>
+      <button class="frieren-help-tab" data-ftab="chat">💬 Chat</button>
+    </div>
+
+    <div class="frieren-help-body">
+
+      <!-- FAQ -->
+      <div class="frieren-help-section active" id="ftab-faq">
+        <div class="faq-item">
+          <div class="faq-q">How do I set a timer?</div>
+          <div class="faq-a">Use the <strong>Start / End Time</strong> inputs and press <em>Apply</em>, or set a duration directly with <em>Set Duration</em>. Use the <strong>⏱ Now</strong> button to auto-fill current time as start — any time already elapsed will be subtracted.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Why does the bar deplete?</div>
+          <div class="faq-a">The progress bar shows <strong>remaining time</strong> like a mana bar — it starts full and drains to zero as your session runs out. This keeps you aware of how much time you have left.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">How does Pomodoro work?</div>
+          <div class="faq-a">Select <strong>Pomodoro Timer</strong> on the mode screen. Work 25 min → Break 5 min, repeat. Every 4 cycles you get a long break. You can customise durations in the config row.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">How do I use Focus Mode?</div>
+          <div class="faq-a">Click <strong>🧠 Focus Mode</strong> to hide all distractions and show only the timer. Press it again or press <kbd>Esc</kbd> to exit.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Where are my sessions saved?</div>
+          <div class="faq-a">All sessions are saved automatically to the <strong>Chronicle</strong> tab where you can view your history, streaks and stats.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Can I change the background?</div>
+          <div class="faq-a">Yes! In the timer screen right panel, click <em>Upload Background</em> to use your own image.</div>
+        </div>
+      </div>
+
+      <!-- Tips -->
+      <div class="frieren-help-section" id="ftab-tips">
+        <div class="faq-item">
+          <div class="faq-q">🌟 Time-anchored sessions</div>
+          <div class="faq-a">Always set a start AND end time at the beginning of your day. If you open the app late, hit <strong>⏱ Now</strong> to auto-offset — the timer will know how far in you already are.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">🍅 Pomodoro for focus sprints</div>
+          <div class="faq-a">Try 25/5 for coding or writing, 50/10 for deep study. After 4 sessions take a longer 15–30 min break to recharge.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">📓 Journal as you go</div>
+          <div class="faq-a">Use the <strong>Quick Notes</strong> field before stopping a session — your notes are saved with the session in Chronicle.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">🔔 Enable break reminders</div>
+          <div class="faq-a">In Settings → Timer, enable <em>Break Reminders</em> so you get a nudge every 30–60 minutes without watching the clock.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">🧩 Drag me around!</div>
+          <div class="faq-a">You can drag me to any corner of the screen. I'll stay out of your way while you work.</div>
+        </div>
+      </div>
+
+      <!-- About -->
+      <div class="frieren-help-section" id="ftab-about">
+        <div style="text-align:center; padding: 12px 0 8px;">
+          <div style="font-size:1.5rem; font-weight:700; color:var(--accent-hover); letter-spacing:2px;">⚜ Aureole Timer ⚜</div>
+          <div style="color:var(--text-muted); font-size:0.8rem; margin-top:4px;">Frieren Chronomark</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-a">A focus and productivity timer inspired by <em>Frieren: Beyond Journey's End</em>. Track deep work, study sessions and Pomodoro cycles with a beautiful UI built for neurodiverse adventurers.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Features</div>
+          <div class="faq-a">
+            ✔ Start/End time with automatic elapsed-time offset<br>
+            ✔ Depleting mana-style progress bar<br>
+            ✔ Dedicated Pomodoro screen with ring timer<br>
+            ✔ Journal, Grimoire, Chronicle &amp; Reader tabs<br>
+            ✔ Achievements &amp; Profile system<br>
+            ✔ Customisable backgrounds &amp; walker sprite<br>
+            ✔ Break reminders &amp; Focus Mode
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat -->
+      <div class="frieren-help-section" id="ftab-chat">
+        <div class="frieren-chat-no-key" id="frierenChatNoKey" style="display:none;">
+          <div style="font-size:1.4rem;margin-bottom:8px;">🔑</div>
+          <strong style="color:var(--text-primary);">No AI key configured</strong><br>
+          Add your API key in <strong>Settings → Companion → AI Chat</strong> to start chatting with Frieren.<br><br>
+          Get a free key from:<br>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio (Gemini — free tier)</a><br>
+          <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform (GPT-4o-mini)</a>
+        </div>
+        <div class="frieren-chat-messages" id="frierenChatMessages"></div>
+        <div class="frieren-chat-thinking" id="frierenChatThinking">Frieren is pondering…</div>
+        <div class="frieren-chat-input-row" id="frierenChatInputRow">
+          <textarea class="frieren-chat-input" id="frierenChatInput" rows="1" placeholder="Ask Frieren anything…"></textarea>
+          <button class="frieren-chat-send" id="frierenChatSend" title="Send">➤</button>
+        </div>
+      </div>
+
+    </div><!-- /.frieren-help-body -->
+  </div><!-- /#frierenHelpPanel -->
+
+</body>
+</html>
