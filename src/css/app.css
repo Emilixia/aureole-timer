@@ -177,7 +177,8 @@ html, body {
   padding: 0 22px;
   border-right: 1px solid rgba(120, 90, 40, 0.4);
   flex-shrink: 0;
-  -webkit-app-region: drag;
+  -webkit-app-region: no-drag;
+  cursor: pointer;
 }
 
 .topnav-logo .logo-gem {
