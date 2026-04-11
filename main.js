@@ -62,8 +62,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
-    minWidth: 1000,
-    minHeight: 700,
+    resizable: false,
     frame: false,
     // titleBarStyle is not applicable when frame is false (custom title bar is rendered in HTML)
     webPreferences: {
