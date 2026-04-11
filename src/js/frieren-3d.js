@@ -80,6 +80,12 @@ var FrierenCharacter = (function () {
     // Baseline rotation cache (filled after model loads)
     this._baseRot = {};
 
+    // Cursor look-at tracking
+    this._cursorNX     = 0;   // normalised cursor X relative to screen (-1…1)
+    this._cursorNY     = 0;   // normalised cursor Y relative to screen (-1…1)
+    this._cursorLookYaw   = 0; // smoothed head yaw offset (radians)
+    this._cursorLookPitch = 0; // smoothed head pitch offset (radians)
+
     this._running = false;
     this._raf     = null;
     this._model   = null;       // gltf.scene root
@@ -143,6 +149,13 @@ var FrierenCharacter = (function () {
       undefined,
       function (err) { console.error('[Frieren3D] GLB load error:', err); }
     );
+
+    // ── Cursor tracking — listen for mouse movement globally ────────────
+    this._onMouseMove = function (e) {
+      self._cursorNX = (e.clientX / window.innerWidth)  * 2 - 1;
+      self._cursorNY = -((e.clientY / window.innerHeight) * 2 - 1);
+    };
+    document.addEventListener('mousemove', this._onMouseMove);
 
     // ── Render loop ───────────────────────────────────────────────────────
     this._running = true;
@@ -526,6 +539,7 @@ var FrierenCharacter = (function () {
     this._animTime += dt;
     this._updatePeek(dt);
     this._updateIdle();
+    this._updateCursorLook(dt);
     this._updateIdleFingers();
     this._updateHairPhysics();
     this._updateSkirt();
@@ -533,6 +547,35 @@ var FrierenCharacter = (function () {
     this._updateFace(dt);
     this._updateAction(dt);
     this._updateReturnBlend(dt);
+  };
+
+  // ── Cursor look-at: head/neck subtly track the mouse position ────────────
+  FrierenCharacter.prototype._updateCursorLook = function (dt) {
+    // Target yaw/pitch from normalised cursor coords
+    var targetYaw   = clamp(this._cursorNX, -1, 1) * 0.28;
+    var targetPitch = clamp(this._cursorNY, -1, 1) * 0.14;
+
+    // Slow smooth-follow so it feels natural (not robotic)
+    var speed = this._action ? 1.5 : 3.0;
+    this._cursorLookYaw   = lerp(this._cursorLookYaw,   targetYaw,   Math.min(dt * speed, 1));
+    this._cursorLookPitch = lerp(this._cursorLookPitch, targetPitch, Math.min(dt * speed, 1));
+
+    // Only apply when no action is overriding the head bones
+    if (this._action) return;
+
+    var b  = this._bones;
+    var br = this._baseRot;
+    var head = b['head_045'];
+    var neck = b['neck_01_044'];
+
+    if (head && br['head_045']) {
+      head.rotation.y += this._cursorLookYaw;
+      head.rotation.x += this._cursorLookPitch;
+    }
+    if (neck && br['neck_01_044']) {
+      neck.rotation.y += this._cursorLookYaw * 0.35;
+      neck.rotation.x += this._cursorLookPitch * 0.35;
+    }
   };
 
   FrierenCharacter.prototype._updatePeek = function (dt) {
