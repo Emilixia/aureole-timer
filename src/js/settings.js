@@ -503,6 +503,24 @@ const Settings = (function () {
     localStorage.setItem('companionSettings', JSON.stringify(cs));
   }
 
+  // ── AI Chat key helpers (stored separately from companion layout settings) ──
+  function loadAiSettings() {
+    try {
+      const raw = localStorage.getItem('companionAiSettings');
+      return raw ? JSON.parse(raw) : { provider: 'gemini', key: '' };
+    } catch (e) {
+      return { provider: 'gemini', key: '' };
+    }
+  }
+
+  function saveAiSettings(provider, key) {
+    localStorage.setItem('companionAiSettings', JSON.stringify({ provider, key }));
+    // Notify companion module so it picks up the new key immediately
+    if (window.FrierenCompanion && window.FrierenCompanion.reloadAiSettings) {
+      window.FrierenCompanion.reloadAiSettings();
+    }
+  }
+
   function populateCompanionForm(cs) {
     const set = function (id, val) {
       const el = document.getElementById(id);
@@ -521,6 +539,11 @@ const Settings = (function () {
     set('companionSizePreset', cs.sizePreset || 'medium');
     set('companionWidth', cs.width || 340);
     set('companionHeight', cs.height || 370);
+
+    // AI Chat fields
+    const aiSettings = loadAiSettings();
+    set('companionAiProvider', aiSettings.provider || 'gemini');
+    set('companionAiKey', aiSettings.key || '');
 
     updateCompanionSliderLabels(cs);
 
@@ -655,6 +678,66 @@ const Settings = (function () {
         applyCompanionSettings(def);
         if (window.showToast) window.showToast('Companion settings reset! ↺', 'info');
       });
+    }
+
+    // AI Chat — Save Key
+    const saveAiBtn = document.getElementById('saveAiKey');
+    if (saveAiBtn) {
+      saveAiBtn.addEventListener('click', function () {
+        const provider = (document.getElementById('companionAiProvider') || {}).value || 'gemini';
+        const key = ((document.getElementById('companionAiKey') || {}).value || '').trim();
+        saveAiSettings(provider, key);
+        const statusEl = document.getElementById('aiKeyStatus');
+        if (statusEl) {
+          statusEl.style.color = 'var(--success, #4caf50)';
+          statusEl.textContent = key ? '✔ Key saved.' : '✔ Key cleared.';
+          setTimeout(function () { statusEl.textContent = ''; }, 3000);
+        }
+        if (window.showToast) window.showToast('AI key saved! 🤖', 'success');
+      });
+    }
+
+    // AI Chat — Test Connection
+    const testAiBtn = document.getElementById('testAiKey');
+    if (testAiBtn) {
+      testAiBtn.addEventListener('click', async function () {
+        const provider = (document.getElementById('companionAiProvider') || {}).value || 'gemini';
+        const key = ((document.getElementById('companionAiKey') || {}).value || '').trim();
+        const statusEl = document.getElementById('aiKeyStatus');
+        if (!key) {
+          if (statusEl) { statusEl.style.color = 'var(--danger, #e05c72)'; statusEl.textContent = '✗ No key entered.'; }
+          return;
+        }
+        testAiBtn.disabled = true;
+        if (statusEl) { statusEl.style.color = 'var(--text-muted)'; statusEl.textContent = 'Testing…'; }
+        try {
+          await testAiConnection(provider, key);
+          if (statusEl) { statusEl.style.color = 'var(--success, #4caf50)'; statusEl.textContent = '✔ Connection successful!'; }
+        } catch (err) {
+          if (statusEl) { statusEl.style.color = 'var(--danger, #e05c72)'; statusEl.textContent = '✗ ' + (err.message || 'Connection failed.'); }
+        } finally {
+          testAiBtn.disabled = false;
+        }
+      });
+    }
+  }
+
+  async function testAiConnection(provider, key) {
+    if (provider === 'openai') {
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: 'Hi' }], max_tokens: 5 }),
+      });
+      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error?.message || 'HTTP ' + res.status); }
+    } else {
+      const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + encodeURIComponent(key);
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: 'Hi' }] }], generationConfig: { maxOutputTokens: 5 } }),
+      });
+      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error?.message || 'HTTP ' + res.status); }
     }
   }
 

@@ -1118,6 +1118,28 @@
                 <button id="previewCompanionSettings" class="btn-secondary">👁 Preview</button>
                 <button id="resetCompanionSettings" class="btn-secondary">↺ Reset Defaults</button>
               </div>
+
+              <!-- ── AI Chat ────────────────────────────────────────── -->
+              <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border);">
+                <h4 style="margin:0 0 6px;font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;">🤖 AI Chat</h4>
+                <p style="font-size:0.78rem;color:var(--text-muted);margin:0 0 12px;">Power the 💬 Chat tab in the companion panel. Your key is stored only in localStorage on this device.</p>
+                <div class="setting-group">
+                  <label>Provider</label>
+                  <select id="companionAiProvider">
+                    <option value="gemini">Google Gemini (gemini-1.5-flash · free tier)</option>
+                    <option value="openai">OpenAI (gpt-4o-mini)</option>
+                  </select>
+                </div>
+                <div class="setting-group">
+                  <label>API Key</label>
+                  <input type="password" id="companionAiKey" placeholder="Paste your key here" style="width:200px;max-width:100%;">
+                </div>
+                <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+                  <button id="saveAiKey" class="btn-primary" style="font-size:0.82rem;padding:6px 14px;">💾 Save Key</button>
+                  <button id="testAiKey" class="btn-secondary" style="font-size:0.82rem;padding:6px 14px;">🔌 Test Connection</button>
+                </div>
+                <div id="aiKeyStatus" style="margin-top:8px;font-size:0.78rem;min-height:18px;"></div>
+              </div>
             </div>
 
             <!-- Timer settings -->
@@ -1469,6 +1491,7 @@
       <button class="frieren-help-tab active" data-ftab="faq">❓ FAQ</button>
       <button class="frieren-help-tab" data-ftab="tips">💡 Tips</button>
       <button class="frieren-help-tab" data-ftab="about">⚜ About</button>
+      <button class="frieren-help-tab" data-ftab="chat">💬 Chat</button>
     </div>
 
     <div class="frieren-help-body">
@@ -1545,6 +1568,24 @@
             ✔ Customisable backgrounds &amp; walker sprite<br>
             ✔ Break reminders &amp; Focus Mode
           </div>
+        </div>
+      </div>
+
+      <!-- Chat -->
+      <div class="frieren-help-section" id="ftab-chat">
+        <div class="frieren-chat-no-key" id="frierenChatNoKey" style="display:none;">
+          <div style="font-size:1.4rem;margin-bottom:8px;">🔑</div>
+          <strong style="color:var(--text-primary);">No AI key configured</strong><br>
+          Add your API key in <strong>Settings → Companion → AI Chat</strong> to start chatting with Frieren.<br><br>
+          Get a free key from:<br>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio (Gemini — free tier)</a><br>
+          <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform (GPT-4o-mini)</a>
+        </div>
+        <div class="frieren-chat-messages" id="frierenChatMessages"></div>
+        <div class="frieren-chat-thinking" id="frierenChatThinking">Frieren is pondering…</div>
+        <div class="frieren-chat-input-row" id="frierenChatInputRow">
+          <textarea class="frieren-chat-input" id="frierenChatInput" rows="1" placeholder="Ask Frieren anything…"></textarea>
+          <button class="frieren-chat-send" id="frierenChatSend" title="Send">➤</button>
         </div>
       </div>
 
