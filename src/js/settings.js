@@ -723,11 +723,15 @@ const Settings = (function () {
   }
 
   async function testAiConnection(provider, key) {
-    if (provider === 'openai') {
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    if (provider === 'openai' || provider === 'groq') {
+      const url = provider === 'groq'
+        ? 'https://api.groq.com/openai/v1/chat/completions'
+        : 'https://api.openai.com/v1/chat/completions';
+      const model = provider === 'groq' ? 'llama-3.3-70b-versatile' : 'gpt-4o-mini';
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-        body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: 'Hi' }], max_tokens: 5 }),
+        body: JSON.stringify({ model: model, messages: [{ role: 'user', content: 'Hi' }], max_tokens: 5 }),
       });
       if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error?.message || 'HTTP ' + res.status); }
     } else {

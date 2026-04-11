@@ -167,11 +167,13 @@
     if (provider === 'openai') {
       return callOpenAI(key, messages);
     }
+    if (provider === 'groq') {
+      return callGroq(key, messages);
+    }
     return callGemini(key, messages);
   }
 
-  async function callOpenAI(key, messages) {
-    var payload = {
+  async function callOpenAI(key, messages) {    var payload = {
       model: 'gpt-4o-mini',
       messages: [{ role: 'system', content: FRIEREN_SYSTEM_PROMPT }].concat(messages),
       max_tokens: 300,
@@ -185,6 +187,26 @@
     if (!res.ok) {
       var d = await res.json().catch(function () { return {}; });
       throw new Error(d.error && d.error.message ? d.error.message : 'OpenAI HTTP ' + res.status);
+    }
+    var data = await res.json();
+    return data.choices[0].message.content.trim();
+  }
+
+  async function callGroq(key, messages) {
+    var payload = {
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'system', content: FRIEREN_SYSTEM_PROMPT }].concat(messages),
+      max_tokens: 300,
+      temperature: 0.85,
+    };
+    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      var d = await res.json().catch(function () { return {}; });
+      throw new Error(d.error && d.error.message ? d.error.message : 'Groq HTTP ' + res.status);
     }
     var data = await res.json();
     return data.choices[0].message.content.trim();
