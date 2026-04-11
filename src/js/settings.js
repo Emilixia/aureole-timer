@@ -11,7 +11,7 @@ const DEFAULT_SETTINGS = {
   sidebarWidth: 220,
   progressBarStyle: 'mana',
   // Animation
-  bgEffect: 'particles',    // 'particles' | 'sparkles' | 'matrix' | 'starfield' | 'aurora' | 'none'
+  bgEffect: 'particles',    // 'particles' | 'sparkles' | 'matrix' | 'starfield' | 'aurora' | 'fireflies' | 'snow' | 'neon-grid' | 'none'
   tabTransition: 'slide',   // 'slide' | 'fade' | 'zoom' | 'none'
   uiAnimations: true,       // master toggle: ripples, hover lifts, pop-ins
   // Timer

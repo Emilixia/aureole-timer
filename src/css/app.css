@@ -388,7 +388,7 @@ body.focus-mode #tab-journey { height: calc(100vh - var(--titlebar-height)); }
   min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  background: var(--bg-base);
+  background: transparent;
   position: relative;
   height: 100%;
 }
