@@ -61,7 +61,7 @@ function createWindow() {
           "frame-src https://www.youtube.com https://youtube.com https://open.spotify.com https://w.soundcloud.com https://soundcloud.com; " +
           "img-src * blob: data:; " +
           "media-src * blob: data:; " +
-          "connect-src 'self' blob: https://open.spotify.com https://*.spotify.com https://*.scdn.co; " +
+          "connect-src 'self' blob: https://open.spotify.com https://*.spotify.com https://*.scdn.co https://api.openai.com https://generativelanguage.googleapis.com; " +
           "font-src 'self' data: https://fonts.gstatic.com; " +
           "worker-src blob: 'self';"
         ]
