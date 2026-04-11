@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -11,6 +11,52 @@ if (process.platform === 'win32') {
 }
 
 let mainWindow;
+let tray = null;
+let runInBackground = false;  // controlled by renderer settings
+
+function getOrCreateTray() {
+  if (tray) return tray;
+  try {
+    const iconPath = path.join(__dirname, 'assets', 'icon.ico');
+    const icon = nativeImage.createFromPath(iconPath);
+    tray = new Tray(icon.isEmpty() ? nativeImage.createEmpty() : icon);
+    tray.setToolTip('Frieren Chronomark');
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: 'Open',
+        click: () => {
+          if (mainWindow) {
+            mainWindow.show();
+            mainWindow.focus();
+          } else {
+            createWindow();
+          }
+        }
+      },
+      { type: 'separator' },
+      { label: 'Quit', click: () => { runInBackground = false; app.quit(); } }
+    ]);
+    tray.setContextMenu(contextMenu);
+    tray.on('double-click', () => {
+      if (mainWindow) {
+        mainWindow.show();
+        mainWindow.focus();
+      } else {
+        createWindow();
+      }
+    });
+  } catch (e) {
+    console.error('Tray creation error:', e);
+  }
+  return tray;
+}
+
+function destroyTray() {
+  if (tray) {
+    tray.destroy();
+    tray = null;
+  }
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -71,6 +117,15 @@ function createWindow() {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
+  });
+
+  // Intercept close: minimize to tray if runInBackground is enabled
+  mainWindow.on('close', (e) => {
+    if (runInBackground) {
+      e.preventDefault();
+      mainWindow.hide();
+      getOrCreateTray();
+    }
   });
 
   mainWindow.on('closed', () => {
@@ -175,9 +230,44 @@ ipcMain.on('close-window', () => {
   if (mainWindow) mainWindow.close();
 });
 
+// IPC: Run in background (minimize to tray on close)
+ipcMain.on('set-run-in-background', (event, enabled) => {
+  runInBackground = !!enabled;
+  if (enabled) {
+    getOrCreateTray();
+  } else {
+    destroyTray();
+  }
+});
+
+// IPC: Launch on startup
+ipcMain.handle('set-launch-on-startup', async (event, enabled) => {
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: !!enabled,
+      name: 'Frieren Chronomark'
+    });
+    return true;
+  } catch (e) {
+    console.error('set-launch-on-startup error:', e);
+    return false;
+  }
+});
+
+ipcMain.handle('get-launch-on-startup', async () => {
+  try {
+    const settings = app.getLoginItemSettings();
+    return settings.openAtLogin;
+  } catch (e) {
+    return false;
+  }
+});
+
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
+  // If minimized to tray, don't quit
+  if (runInBackground) return;
   if (process.platform !== 'darwin') app.quit();
 });
 

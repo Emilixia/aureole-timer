@@ -33,7 +33,10 @@ const DEFAULT_SETTINGS = {
   hyperfocusTimer: 120,
   progressPulse: true,
   timeBlindenessHelper: true,
-  encouragementMessages: true
+  encouragementMessages: true,
+  // System
+  runInBackground: false,
+  launchOnStartup: false
 };
 
 // Companion (3D character) settings stored separately for clarity
@@ -121,6 +124,11 @@ const Settings = (function () {
 
     // Progress bar style
     applyProgressBarStyle(current.progressBarStyle || 'mana');
+
+    // System: background running + startup
+    if (window.aureole && window.aureole.setRunInBackground) {
+      window.aureole.setRunInBackground(!!current.runInBackground);
+    }
   }
 
   function applyProgressBarStyle(style) {
@@ -182,7 +190,9 @@ const Settings = (function () {
       'hyperfocusTimer': current.hyperfocusTimer,
       'progressPulse': current.progressPulse,
       'timeBlindenessHelper': current.timeBlindenessHelper,
-      'encouragementMessages': current.encouragementMessages
+      'encouragementMessages': current.encouragementMessages,
+      'runInBackground': current.runInBackground,
+      'launchOnStartup': current.launchOnStartup
     };
 
     for (const [id, value] of Object.entries(fields)) {
@@ -216,7 +226,8 @@ const Settings = (function () {
       'particleEffects', 'borderAnimations', 'autoSaveSessions', 'timerSounds',
       'desktopNotifications', 'timerCompleteNotif', 'breakReminders',
       'dailyReminder', 'autoPomodoro', 'focusHidesSidebar', 'progressPulse',
-      'timeBlindenessHelper', 'encouragementMessages', 'uiAnimations'
+      'timeBlindenessHelper', 'encouragementMessages', 'uiAnimations',
+      'runInBackground', 'launchOnStartup'
     ];
 
     for (const id of fields) {
@@ -314,6 +325,36 @@ const Settings = (function () {
       uiAnimEl.addEventListener('change', function () {
         current.uiAnimations = this.checked;
         document.body.classList.toggle('no-ui-animations', !this.checked);
+      });
+    }
+
+    const runInBgEl = document.getElementById('runInBackground');
+    if (runInBgEl) {
+      runInBgEl.addEventListener('change', async function () {
+        current.runInBackground = this.checked;
+        if (window.aureole && window.aureole.setRunInBackground) {
+          window.aureole.setRunInBackground(this.checked);
+        }
+        await saveSettings();
+        if (window.showToast) window.showToast(
+          this.checked ? 'App will stay running in the tray when closed.' : 'App will quit normally when closed.',
+          'info'
+        );
+      });
+    }
+
+    const launchStartupEl = document.getElementById('launchOnStartup');
+    if (launchStartupEl) {
+      launchStartupEl.addEventListener('change', async function () {
+        current.launchOnStartup = this.checked;
+        if (window.aureole && window.aureole.setLaunchOnStartup) {
+          await window.aureole.setLaunchOnStartup(this.checked);
+        }
+        await saveSettings();
+        if (window.showToast) window.showToast(
+          this.checked ? 'App will launch on Windows startup.' : 'App will no longer launch on startup.',
+          'info'
+        );
       });
     }
   }
@@ -426,6 +467,16 @@ const Settings = (function () {
     bindLiveUpdates();
     initSettingsTabs();
     await restoreLastTab();
+
+    // Sync real OS login-item state → stored setting
+    if (window.aureole && window.aureole.getLaunchOnStartup) {
+      const realValue = await window.aureole.getLaunchOnStartup();
+      if (realValue !== current.launchOnStartup) {
+        current.launchOnStartup = realValue;
+        const el = document.getElementById('launchOnStartup');
+        if (el) el.checked = realValue;
+      }
+    }
 
     // Companion settings — load, populate, and bind controls
     const companionSaved = loadCompanionSettings();
